@@ -1,29 +1,27 @@
-import { Sidebar } from "@/components/sidebar"
-import { Feed } from "@/components/feed"
-import { DebugPanel } from "@/components/debug-panel"
+import { Header } from "@/components/header"
+import { NavigationBar } from "@/components/navigation-bar"
+import { CardList } from "@/components/card-list"
+import { DataStatus } from "@/components/data-status"
+import { JotaiProvider } from "./jotai-provider"
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 border-x max-w-2xl mx-auto">
-        <Feed />
-        <DebugPanel />
-      </main>
-      <div className="hidden lg:block w-80 p-4">
-        <div className="bg-gray-100 rounded-lg p-4">
-          <h2 className="font-bold text-xl mb-4">Tendances pour vous</h2>
-          <div className="space-y-4">
-            {["#Technologie", "#Actualités", "#Sports", "#Musique", "#Cinéma"].map((trend) => (
-              <div key={trend} className="cursor-pointer hover:bg-gray-200 p-2 rounded">
-                <p className="font-medium">{trend}</p>
-                <p className="text-sm text-gray-500">1,543 posts</p>
-              </div>
-            ))}
+    <JotaiProvider>
+      <div className="flex flex-col min-h-screen bg-mush-green/10">
+        <Header />
+        <main className="flex-1 container mx-auto p-4 pb-20 max-w-5xl">
+          <div className="relative">
+            {/* Fond décoratif en origami */}
+            <div className="absolute -top-4 -left-4 w-32 h-32 bg-mush-green/20 rounded-lg transform rotate-12 -z-10"></div>
+            <div className="absolute top-12 -right-8 w-40 h-40 bg-mush-yellow/20 rounded-lg transform -rotate-6 -z-10"></div>
+            <CardList />
           </div>
-        </div>
+          <div className="mt-4 mb-16">
+            <DataStatus />
+          </div>
+        </main>
+        <NavigationBar />
       </div>
-    </div>
+    </JotaiProvider>
   )
 }
-
