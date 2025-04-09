@@ -16,7 +16,7 @@ interface QuizProps {
 }
 
 export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
-  const [userAnswers, setUserAnswers] = useState<boolean[]>([false, false, false, false])
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -68,14 +68,14 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       if (data) {
         setRelationId(data.sequential_id)
 
-        // Si l'utilisateur a déjà répondu, charger ses réponses
-        if (data.result_1 !== null || data.result_2 !== null || data.result_3 !== null || data.result_4 !== null) {
-          setUserAnswers([
-            data.result_1 || false,
-            data.result_2 || false,
-            data.result_3 || false,
-            data.result_4 || false,
-          ])
+        // Si l'utilisateur a déjà répondu, charger sa réponse
+        if (data.result_1 || data.result_2 || data.result_3 || data.result_4) {
+          // Trouver quelle réponse a été sélectionnée
+          if (data.result_1) setSelectedAnswer(0)
+          else if (data.result_2) setSelectedAnswer(1)
+          else if (data.result_3) setSelectedAnswer(2)
+          else if (data.result_4) setSelectedAnswer(3)
+          
           setSubmitted(true)
           setPointsEarned(data.points || 0)
         }
@@ -88,34 +88,21 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   // Gérer le clic sur une option
   const handleOptionClick = (index: number) => {
     if (submitted) return
-
-    const newAnswers = [...userAnswers]
-    newAnswers[index] = !newAnswers[index]
-    setUserAnswers(newAnswers)
+    setSelectedAnswer(index)
   }
 
-  // Calculer le score en pourcentage
-  const calculateScore = () => {
+  // Vérifier si la réponse est correcte
+  const isAnswerCorrect = () => {
+    if (selectedAnswer === null) return false
+    
     const correctAnswers = [
       content.result_1 || false,
       content.result_2 || false,
       content.result_3 || false,
       content.result_4 || false,
     ]
-
-    let correct = 0
-    let total = 0
-
-    correctAnswers.forEach((isCorrect, index) => {
-      if (isCorrect !== undefined) {
-        total++
-        if (userAnswers[index] === isCorrect) {
-          correct++
-        }
-      }
-    })
-
-    return total > 0 ? correct / total : 0
+    
+    return correctAnswers[selectedAnswer] === true
   }
 
   // Soumettre les réponses
@@ -129,19 +116,19 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
         return
       }
 
-      // Calculer le score
-      const scorePercentage = calculateScore()
-      const earnedPoints = Math.round((content.points || 0) * scorePercentage)
+      // Vérifier si la réponse est correcte
+      const correct = isAnswerCorrect()
+      const earnedPoints = correct ? (content.points || 0) : 0
       setPointsEarned(earnedPoints)
 
       // Préparer les données à enregistrer
       const relationData = {
         user_id: userId,
         card_id: cardId,
-        result_1: userAnswers[0],
-        result_2: userAnswers[1],
-        result_3: userAnswers[2],
-        result_4: userAnswers[3],
+        result_1: selectedAnswer === 0,
+        result_2: selectedAnswer === 1,
+        result_3: selectedAnswer === 2,
+        result_4: selectedAnswer === 3,
         points: earnedPoints,
         state: "completed",
         last_view: new Date().toISOString(),
@@ -181,7 +168,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   // Réinitialiser le quiz
   const handleReset = () => {
     setSubmitted(false)
-    setUserAnswers([false, false, false, false])
+    setSelectedAnswer(null)
     setError(null)
   }
 
@@ -198,7 +185,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
           <h3 className="font-bold text-lg mb-4 text-gray-800">{content.question}</h3>
 
           <div className="space-y-3">
-            {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].map((answer, index) => {
+            {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].filter(Boolean).map((answer, index) => {
               if (!answer) return null
 
               // Déterminer la couleur de fond en fonction de l'état
@@ -206,17 +193,33 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
               let borderColor = "border-gray-300"
               let textColor = "text-gray-800"
               let showIcon = false
-              let iconComponent = null
+              const isCorrect = submitted && (
+                (content.result_1 && index === 0) ||
+                (content.result_2 && index === 1) ||
+                (content.result_3 && index === 2) ||
+                (content.result_4 && index === 3)
+              )
 
-              if (submitted) {
-                const isCorrect = [content.result_1, content.result_2, content.result_3, content.result_4][index]
-                const userSelected = userAnswers[index]
+              const isSelected = selectedAnswer === index
 
-                if (isCorrect && userSelected) {
-                  // Réponse correcte et sélectionnée
-                  bgColor = "bg-green-50"
-                  borderColor = "border-green-500"
-                  textColor = "text-green-800"
+              if (isCorrect && isSelected) {
+                // Réponse correcte et sélectionnée
+                bgColor = "bg-green-50"
+                borderColor = "border-green-500"
+                textColor = "text-green-800"
+                showIcon = true
+              } else if (!isCorrect && isSelected) {
+                // Réponse incorrecte et sélectionnée
+                bgColor = "bg-red-50"
+                borderColor = "border-red-500"
+                textColor = "text-red-800"
+                showIcon = true
+              } else if (isCorrect) {
+                // Réponse correcte mais non sélectionnée
+                bgColor = "bg-green-50/50"
+                borderColor = "border-green-500/50"
+                textColor = "text-green-800/70"
+                showIcon = true
                   showIcon = true
                   iconComponent = <Check className="h-5 w-5 text-green-600" />
                 } else if (!isCorrect && userSelected) {
