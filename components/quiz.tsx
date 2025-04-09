@@ -13,7 +13,8 @@ interface QuizProps {
 }
 
 export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  // Utiliser un tableau pour suivre les réponses sélectionnées (true/false pour chaque option)
+  const [userAnswers, setUserAnswers] = useState<boolean[]>([false, false, false, false])
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +61,14 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
         setRelationId(data.sequential_id)
 
         // Si des réponses existent, les afficher
-        if (data.result_1 || data.result_2 || data.result_3 || data.result_4) {
+        if (data.result_1 !== null || data.result_2 !== null || data.result_3 !== null || data.result_4 !== null) {
+          // Charger les réponses précédentes
+          setUserAnswers([
+            data.result_1 || false,
+            data.result_2 || false,
+            data.result_3 || false,
+            data.result_4 || false
+          ])
           setSubmitted(true)
           // Calculer les points gagnés
           setPointsEarned(data.points || 0)
@@ -74,26 +82,49 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   // Gérer le clic sur une option
   function handleOptionClick(index: number) {
     if (!submitted) {
-      setSelectedAnswer(index)
+      // Basculer l'état de la réponse sélectionnée
+      const newAnswers = [...userAnswers]
+      newAnswers[index] = !newAnswers[index]
+      setUserAnswers(newAnswers)
     }
   }
 
-  // Vérifier si la réponse est correcte
-  function isAnswerCorrect() {
-    if (selectedAnswer === null) return false
-
-    return (
-      (content.result_1 && selectedAnswer === 0) ||
-      (content.result_2 && selectedAnswer === 1) ||
-      (content.result_3 && selectedAnswer === 2) ||
-      (content.result_4 && selectedAnswer === 3)
-    )
+  // Calculer les points gagnés en fonction des réponses correctes
+  function calculatePoints() {
+    let correctAnswers = 0
+    let totalAnswers = 0
+    
+    // Vérifier chaque réponse
+    if (content.answer_1) {
+      totalAnswers++
+      if (userAnswers[0] === !!content.result_1) correctAnswers++
+    }
+    
+    if (content.answer_2) {
+      totalAnswers++
+      if (userAnswers[1] === !!content.result_2) correctAnswers++
+    }
+    
+    if (content.answer_3) {
+      totalAnswers++
+      if (userAnswers[2] === !!content.result_3) correctAnswers++
+    }
+    
+    if (content.answer_4) {
+      totalAnswers++
+      if (userAnswers[3] === !!content.result_4) correctAnswers++
+    }
+    
+    // Calculer les points au prorata des bonnes réponses
+    const totalPoints = content.points || 0
+    return totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * totalPoints) : 0
   }
 
   // Soumettre les réponses
   async function handleSubmit() {
-    if (selectedAnswer === null) {
-      setError("Veuillez sélectionner une réponse")
+    // Vérifier si au moins une réponse a été sélectionnée
+    if (!userAnswers.some(answer => answer)) {
+      setError("Veuillez sélectionner au moins une réponse")
       return
     }
 
@@ -101,17 +132,16 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
     setError(null)
 
     try {
-      // Vérifier si la réponse est correcte
-      const correct = isAnswerCorrect()
-      const points = correct ? (content.points || 0) : 0
+      // Calculer les points gagnés
+      const points = calculatePoints()
       setPointsEarned(points)
 
       // Créer un objet avec les résultats
       const results = {
-        result_1: selectedAnswer === 0,
-        result_2: selectedAnswer === 1,
-        result_3: selectedAnswer === 2,
-        result_4: selectedAnswer === 3,
+        result_1: userAnswers[0],
+        result_2: userAnswers[1],
+        result_3: userAnswers[2],
+        result_4: userAnswers[3],
       }
 
       // Envoyer les résultats à l'API
@@ -150,7 +180,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
 
   // Réinitialiser le quiz
   function handleReset() {
-    setSelectedAnswer(null)
+    setUserAnswers([false, false, false, false])
     setSubmitted(false)
     setError(null)
   }
@@ -220,10 +250,10 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
                 >
                   <div
                     className={`w-6 h-6 border-2 ${
-                      selectedAnswer === index && !submitted ? "bg-mush-green border-mush-green" : "bg-white border-gray-400"
+                      userAnswers[index] && !submitted ? "bg-mush-green border-mush-green" : "bg-white border-gray-400"
                     } rounded-md mr-3 flex-shrink-0 flex items-center justify-center mt-0.5 transition-colors`}
                   >
-                    {selectedAnswer === index && !submitted && <Check size={16} className="text-white" />}
+                    {userAnswers[index] && !submitted && <Check size={16} className="text-white" />}
                     {submitted && showIcon && iconComponent}
                   </div>
                   <p className={`${textColor} text-sm font-medium`}>{answer}</p>
@@ -245,7 +275,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
               <button
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-medium p-2 rounded-md"
                 onClick={handleSubmit}
-                disabled={selectedAnswer === null || isSubmitting}
+                disabled={!userAnswers.some(answer => answer) || isSubmitting}
               >
                 {isSubmitting ? "Validation en cours..." : "Valider ma réponse"}
               </button>
