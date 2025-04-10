@@ -83,22 +83,43 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
     
     setIsLoading(true)
+    console.log("Début du processus d'inscription pour:", email)
     
     try {
+      // Vérifier si l'utilisateur existe déjà
+      const { data: existingUser } = await supabase.auth.getUser()
+      if (existingUser?.user) {
+        console.log("Utilisateur déjà connecté:", existingUser.user)
+        toast.error("Vous êtes déjà connecté. Veuillez d'abord vous déconnecter.")
+        setIsLoading(false)
+        return
+      }
+
+      // Créer le nouvel utilisateur
+      console.log("Tentative de création d'utilisateur avec Supabase Auth")
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            communication: acceptCommunications
+          }
         },
       })
       
+      console.log("Réponse de Supabase Auth:", { data, error })
+      
       if (error) {
+        console.error("Erreur lors de la création de l'utilisateur:", error)
         throw error
       }
       
       if (data?.user) {
+        console.log("Utilisateur créé avec succès:", data.user.id)
+        
         // Créer le profil utilisateur avec les préférences de communication
+        console.log("Tentative de création du profil utilisateur")
         const { error: profileError } = await supabase
           .from('user_profile')
           .insert({
@@ -111,10 +132,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         
         if (profileError) {
           console.error("Erreur lors de la création du profil:", profileError)
+          toast.error("Compte créé mais erreur lors de la création du profil. Contactez l'administrateur.")
+        } else {
+          console.log("Profil utilisateur créé avec succès")
         }
         
         toast.success("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.")
         onClose()
+      } else {
+        console.error("Aucun utilisateur retourné par Supabase")
+        toast.error("Erreur lors de la création du compte")
       }
     } catch (error: any) {
       console.error("Erreur d'inscription:", error)
