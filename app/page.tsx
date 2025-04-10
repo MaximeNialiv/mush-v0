@@ -21,8 +21,11 @@ export default function Home() {
     const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession()
+        console.log("Session actuelle:", data.session)
         if (!data.session) {
           setIsAuthModalOpen(true)
+        } else {
+          setIsAuthModalOpen(false)
         }
       } catch (error) {
         console.error("Erreur lors de la vérification de l'authentification:", error)
@@ -32,7 +35,21 @@ export default function Home() {
     }
 
     checkAuth()
-  }, [supabase.auth])
+
+    // Abonnement aux changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Changement d'état d'authentification:", event, session)
+      if (event === 'SIGNED_IN' && session) {
+        setIsAuthModalOpen(false)
+      } else if (event === 'SIGNED_OUT') {
+        setIsAuthModalOpen(true)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
 
   return (
     <JotaiProvider>

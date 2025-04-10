@@ -161,19 +161,39 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
     
     setIsLoading(true)
+    console.log("Tentative de connexion avec:", email)
     
     try {
+      // Vérifier d'abord si l'utilisateur existe
+      const { data: existingUser } = await supabase.auth.getUser()
+      if (existingUser?.user) {
+        console.log("Utilisateur déjà connecté, déconnexion d'abord")
+        await supabase.auth.signOut()
+      }
+      
+      console.log("Tentative de connexion avec Supabase Auth")
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       
+      console.log("Réponse de connexion:", { data, error })
+      
       if (error) {
+        if (error.message === "Invalid login credentials") {
+          throw new Error("Email ou mot de passe incorrect")
+        }
         throw error
       }
       
-      toast.success("Connexion réussie !")
-      onClose()
+      if (data?.user) {
+        console.log("Connexion réussie pour:", data.user.email)
+        toast.success("Connexion réussie !")
+        onClose()
+      } else {
+        console.error("Connexion réussie mais aucun utilisateur retourné")
+        toast.error("Erreur lors de la connexion")
+      }
     } catch (error: any) {
       console.error("Erreur de connexion:", error)
       toast.error(error.message || "Une erreur est survenue lors de la connexion")
