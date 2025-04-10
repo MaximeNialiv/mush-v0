@@ -51,6 +51,7 @@ export interface UserProfile {
   auth_id: string
   pseu?: string
   total_points: number // Total de champignons 🍄
+  communication?: boolean // Accepte de recevoir des communications
   created_at: string
   updated_at: string
 }

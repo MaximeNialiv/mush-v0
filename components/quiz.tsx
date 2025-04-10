@@ -33,9 +33,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       if (session) {
         setUserId(session.user.id)
         // Vérifier si l'utilisateur a déjà répondu à ce quiz
-        if (session.user.id && cardId && content.sequential_id) {
-          await checkExistingAnswers(session.user.id)
-        }
+        await checkExistingAnswers(session.user.id)
       }
     } catch (error) {
       console.error("Erreur lors de la récupération de l'ID utilisateur :", error)
@@ -72,10 +70,13 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
           setSubmitted(true)
           // Calculer les points gagnés
           setPointsEarned(data.points || 0)
+          // Afficher un message indiquant que l'utilisateur a déjà répondu
+          setError("Vous avez déjà répondu à ce quiz !")
         }
       }
     } catch (error) {
       console.error("Erreur lors de la vérification des réponses existantes :", error)
+      setError("Erreur lors de la vérification des réponses existantes.")
     }
   }
 
@@ -86,6 +87,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       const newAnswers = [...userAnswers]
       newAnswers[index] = !newAnswers[index]
       setUserAnswers(newAnswers)
+      console.log("Option cliquée:", index, "Nouvel état:", newAnswers)
     }
   }
 
@@ -93,40 +95,61 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   function calculatePoints() {
     let correctAnswers = 0
     let totalAnswers = 0
+    let correctOptionsCount = 0
     
-    // Vérifier chaque réponse
+    // Compter le nombre total de réponses et de réponses correctes
     if (content.answer_1) {
       totalAnswers++
       if (userAnswers[0] === !!content.result_1) correctAnswers++
+      if (!!content.result_1) correctOptionsCount++
     }
     
     if (content.answer_2) {
       totalAnswers++
       if (userAnswers[1] === !!content.result_2) correctAnswers++
+      if (!!content.result_2) correctOptionsCount++
     }
     
     if (content.answer_3) {
       totalAnswers++
       if (userAnswers[2] === !!content.result_3) correctAnswers++
+      if (!!content.result_3) correctOptionsCount++
     }
     
     if (content.answer_4) {
       totalAnswers++
       if (userAnswers[3] === !!content.result_4) correctAnswers++
+      if (!!content.result_4) correctOptionsCount++
     }
     
-    // Calculer les points au prorata des bonnes réponses
     const totalPoints = content.points || 0
+    
+    // Exception : s'il n'y a qu'une seule réponse correcte, l'utilisateur doit l'avoir cochée pour obtenir des points
+    if (correctOptionsCount === 1) {
+      // Vérifier si l'utilisateur a coché la seule réponse correcte
+      const hasSelectedTheCorrectOption = 
+        (content.result_1 && userAnswers[0]) ||
+        (content.result_2 && userAnswers[1]) ||
+        (content.result_3 && userAnswers[2]) ||
+        (content.result_4 && userAnswers[3]);
+      
+      return hasSelectedTheCorrectOption ? totalPoints : 0;
+    }
+    
+    // Sinon, calculer les points au prorata des bonnes réponses
     return totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * totalPoints) : 0
   }
 
   // Soumettre les réponses
   async function handleSubmit() {
     // Vérifier si au moins une réponse a été sélectionnée
-    if (!userAnswers.some(answer => answer)) {
+    if (!userAnswers.some((answer: boolean) => answer)) {
       setError("Veuillez sélectionner au moins une réponse")
       return
     }
+    
+    // Afficher les réponses sélectionnées pour le débogage
+    console.log("Réponses sélectionnées:", userAnswers)
 
     setIsSubmitting(true)
     setError(null)
@@ -136,13 +159,23 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       const points = calculatePoints()
       setPointsEarned(points)
 
-      // Créer un objet avec les résultats
-      const results = {
+      // Créer un objet avec les résultats pour l'API
+      // (cette variable n'est plus utilisée mais on la garde pour référence)
+
+      // Préparer les données pour la table relation_user_content
+      const relationData = {
+        user_id: userId || "anonymous", // Utiliser "anonymous" si l'utilisateur n'est pas connecté
+        card_id: cardId,
+        state: "completed",
+        points: points,
         result_1: userAnswers[0],
         result_2: userAnswers[1],
         result_3: userAnswers[2],
         result_4: userAnswers[3],
+        last_view: new Date().toISOString()
       }
+      
+      console.log("Envoi des données:", relationData)
 
       // Envoyer les résultats à l'API
       const response = await fetch("/api/submit-quiz", {
@@ -151,11 +184,8 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          cardId,
-          contentId: content.sequential_id,
-          selectedAnswer,
-          points,
-          ...results,
+          relationData,
+          relationId
         }),
       })
 
@@ -215,7 +245,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
                 (content.result_4 && index === 3)
               )
 
-              const isSelected = selectedAnswer === index
+              const isSelected = userAnswers[index]
 
               if (submitted) {
                 if (isCorrect && isSelected) {
@@ -246,7 +276,11 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
                 <div
                   key={index}
                   className={`flex items-start p-4 border-2 rounded-lg ${bgColor} ${borderColor} cursor-pointer transition-all hover:shadow-md`}
-                  onClick={() => handleOptionClick(index)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleOptionClick(index);
+                  }}
                 >
                   <div
                     className={`w-6 h-6 border-2 ${
@@ -275,7 +309,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
               <button
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-medium p-2 rounded-md"
                 onClick={handleSubmit}
-                disabled={!userAnswers.some(answer => answer) || isSubmitting}
+                disabled={!userAnswers.some((a: boolean) => a) || isSubmitting}
               >
                 {isSubmitting ? "Validation en cours..." : "Valider ma réponse"}
               </button>
