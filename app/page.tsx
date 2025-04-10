@@ -1,18 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getSupabaseClient } from "@/utils/supabase/client-singleton"
 import { Header } from "@/components/header"
 import { NavigationBar } from "@/components/navigation-bar"
 import { CardList } from "@/components/card-list"
 import { DataStatus } from "@/components/data-status"
 import { JotaiProvider } from "./jotai-provider"
 import AuthModal from "@/components/auth-modal"
+import { useSupabase } from "@/context/supabase-provider"
 
 export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const supabase = getSupabaseClient()
+  const supabase = useSupabase()
 
   useEffect(() => {
     const checkAuth = async () => {

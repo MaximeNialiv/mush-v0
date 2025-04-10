@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { Toaster } from 'react-hot-toast'
+import { Toaster } from 'sonner'
+import AuthStatus from '@/components/auth-status'
+import SupabaseProvider from '@/context/supabase-provider'
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -14,10 +16,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <body>
-        {children}
-        <Toaster position="bottom-right" />
+        <SupabaseProvider>
+          <AuthStatus />
+          {children}
+          <Toaster position="bottom-right" />
+        </SupabaseProvider>
       </body>
     </html>
   )

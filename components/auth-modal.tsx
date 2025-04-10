@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getSupabaseClient } from "@/utils/supabase/client-singleton"
 import { Eye, EyeOff, Send } from "lucide-react"
+import { useSupabase } from "@/context/supabase-provider"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -24,7 +24,7 @@ type AuthModalProps = {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const supabase = getSupabaseClient()
+  const supabase = useSupabase()
   
   // États communs
   const [email, setEmail] = useState("")

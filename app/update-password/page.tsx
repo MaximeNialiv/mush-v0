@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { getSupabaseClient } from "@/utils/supabase/client-singleton"
 import { Eye, EyeOff } from "lucide-react"
+import { useSupabase } from "@/context/supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,7 +12,7 @@ import { toast } from "sonner"
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
-  const supabase = getSupabaseClient()
+  const supabase = useSupabase()
   
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
