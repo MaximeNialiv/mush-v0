@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { getSupabaseClient } from "@/utils/supabase/client-singleton"
 import { Header } from "@/components/header"
 import { NavigationBar } from "@/components/navigation-bar"
 import { CardList } from "@/components/card-list"
@@ -12,10 +12,7 @@ import AuthModal from "@/components/auth-modal"
 export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getSupabaseClient()
 
   useEffect(() => {
     const checkAuth = async () => {

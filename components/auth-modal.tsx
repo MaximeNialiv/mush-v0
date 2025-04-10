@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { getSupabaseClient } from "@/utils/supabase/client-singleton"
 import { Eye, EyeOff, Send } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -24,10 +24,7 @@ type AuthModalProps = {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getSupabaseClient()
   
   // États communs
   const [email, setEmail] = useState("")
@@ -95,6 +92,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         return
       }
 
+      // Déterminer si nous sommes en mode développement
+      const isDevelopment = process.env.NODE_ENV === 'development'
+      console.log("Mode développement:", isDevelopment)
+
       // Créer le nouvel utilisateur
       console.log("Tentative de création d'utilisateur avec Supabase Auth")
       const { data, error } = await supabase.auth.signUp({
@@ -104,7 +105,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             communication: acceptCommunications
-          }
+          },
+          // En mode développement, nous désactivons la confirmation d'email
+          emailConfirmationRedirectTo: isDevelopment ? undefined : `${window.location.origin}/auth/callback`
         },
       })
       
@@ -171,6 +174,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await supabase.auth.signOut()
       }
       
+      // Déterminer si nous sommes en mode développement
+      const isDevelopment = process.env.NODE_ENV === 'development'
+      console.log("Mode développement:", isDevelopment)
+
       console.log("Tentative de connexion avec Supabase Auth")
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -182,6 +189,18 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       if (error) {
         if (error.message === "Invalid login credentials") {
           throw new Error("Email ou mot de passe incorrect")
+        } else if (error.message === "Email not confirmed") {
+          console.log("Email non confirmé pour:", email)
+          if (isDevelopment) {
+            // En mode développement, afficher des instructions spéciales
+            throw new Error(
+              "Email non confirmé. En mode développement, vous pouvez confirmer manuellement l'email dans le dashboard Supabase: \n" +
+              "1. Allez sur https://app.supabase.com/project/vmrtygakzgwammtcoqts/auth/users \n" +
+              "2. Trouvez l'utilisateur et cliquez sur 'Confirm email'"
+            )
+          } else {
+            throw new Error("Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception.")
+          }
         }
         throw error
       }
