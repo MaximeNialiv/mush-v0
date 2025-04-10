@@ -4,6 +4,11 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { createBrowserClient } from "@supabase/ssr"
 import { SupabaseClient } from "@supabase/supabase-js"
 
+// Définir une propriété globale pour stocker l'instance Supabase
+declare global {
+  var supabaseClient: SupabaseClient | undefined
+}
+
 // Créer le contexte
 const SupabaseContext = createContext<SupabaseClient | null>(null)
 
@@ -21,24 +26,35 @@ interface SupabaseProviderProps {
   children: ReactNode
 }
 
-// Créer une seule instance du client Supabase
-let supabaseInstance: SupabaseClient | null = null
+// Fonction pour créer ou récupérer l'instance Supabase
+const getSupabaseInstance = (): SupabaseClient => {
+  // Vérifier si nous sommes côté client
+  if (typeof window === "undefined") {
+    // Côté serveur, créer une nouvelle instance à chaque fois
+    return createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+
+  // Côté client, utiliser l'instance globale
+  if (!global.supabaseClient) {
+    console.log("Création d'une nouvelle instance de Supabase client (globale)")
+    global.supabaseClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  } else {
+    console.log("Utilisation de l'instance globale existante de Supabase client")
+  }
+
+  return global.supabaseClient
+}
 
 // Provider pour fournir le client Supabase à toute l'application
 export default function SupabaseProvider({ children }: SupabaseProviderProps) {
-  const [supabase] = useState(() => {
-    // S'assurer qu'une seule instance est créée
-    if (!supabaseInstance) {
-      console.log("Création d'une nouvelle instance de Supabase client")
-      supabaseInstance = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-    } else {
-      console.log("Utilisation de l'instance existante de Supabase client")
-    }
-    return supabaseInstance
-  })
+  // Utiliser useState pour initialiser le client une seule fois
+  const [supabase] = useState(getSupabaseInstance)
 
   return (
     <SupabaseContext.Provider value={supabase}>
