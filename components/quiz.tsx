@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import type { Content } from "@/types"
-import { supabase } from "@/utils/supabase/client"
 import { Check, X, AlertCircle } from "lucide-react"
+import { useSupabase } from "@/context/supabase-provider"
 
 interface QuizProps {
   content: Content
@@ -13,6 +13,8 @@ interface QuizProps {
 }
 
 export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
+  const supabase = useSupabase()
+  
   // Utiliser un tableau pour suivre les réponses sélectionnées (true/false pour chaque option)
   const [userAnswers, setUserAnswers] = useState<boolean[]>([false, false, false, false])
   const [submitted, setSubmitted] = useState(false)

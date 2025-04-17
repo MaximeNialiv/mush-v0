@@ -56,13 +56,13 @@ export default function AuthStatus() {
   }
 
   return (
-    <div className="fixed left-0 top-1/2 transform -translate-y-1/2 bg-green-600 text-white p-2 rounded-r-lg shadow-lg z-50 flex flex-col items-center gap-4">
+    <div className="fixed left-0 top-1/2 transform -translate-y-1/2 text-black p-2 rounded-r-lg z-50 flex flex-col items-center gap-4">
       <div className="text-xs font-medium whitespace-nowrap origin-center -rotate-90 translate-x-[-30%] translate-y-[150%]">
         <span className="font-bold">Connecté:</span> {user.email}
       </div>
       <button 
         onClick={handleLogout}
-        className="mt-4 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+        className="mt-4 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
         title="Déconnexion"
       >
         <LogOut size={16} />
