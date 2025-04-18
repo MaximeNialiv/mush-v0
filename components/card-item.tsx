@@ -80,11 +80,17 @@ export function CardItem({ card }: CardItemProps) {
                 {card.ownerName || card.owner}
               </a>
             </div>
-            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border-2 border-gray-200">
-              <span className="text-mush-red mr-1">🍄</span>
-              <span className="font-bold">
-                {card.earnedPoints || 0}/{card.totalPoints || 0}
-              </span>
+            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <span className="text-mush-red mr-1.5 text-lg">🍄</span>
+              <div className="flex flex-col items-end">
+                <span className="font-bold text-sm">
+                  <span className={card.earnedPoints ? "text-mush-green" : "text-gray-500"}>{card.earnedPoints || 0}</span>
+                  <span className="text-gray-400">/{card.totalPoints || 0}</span>
+                </span>
+                {card.earnedPoints > 0 && (
+                  <span className="text-xs text-mush-green -mt-0.5">Points gagnés</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

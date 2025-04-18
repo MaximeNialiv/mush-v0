@@ -240,38 +240,44 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
               let showIcon = false
               let iconComponent = null
 
-              const isCorrect = submitted && (
-                (content.result_1 && index === 0) ||
-                (content.result_2 && index === 1) ||
-                (content.result_3 && index === 2) ||
-                (content.result_4 && index === 3)
+              // Déterminer si cette réponse est correcte selon le contenu
+              const isCorrectAnswer = (
+                (index === 0 && content.result_1) ||
+                (index === 1 && content.result_2) ||
+                (index === 2 && content.result_3) ||
+                (index === 3 && content.result_4)
               )
 
+              // Déterminer si l'utilisateur a sélectionné cette réponse
               const isSelected = userAnswers[index]
 
               if (submitted) {
-                if (isCorrect && isSelected) {
-                  // Réponse correcte et sélectionnée
+                // CAS 1: TRUE / TRUE - Réponse correcte et sélectionnée par l'utilisateur
+                if (isCorrectAnswer && isSelected) {
                   bgColor = "bg-green-50"
                   borderColor = "border-green-500"
                   textColor = "text-green-800"
                   showIcon = true
                   iconComponent = <Check className="h-5 w-5 text-green-600" />
-                } else if (!isCorrect && isSelected) {
-                  // Réponse incorrecte et sélectionnée
-                  bgColor = "bg-red-50"
-                  borderColor = "border-red-500"
-                  textColor = "text-red-800"
-                  showIcon = true
-                  iconComponent = <X className="h-5 w-5 text-red-600" />
-                } else if (isCorrect) {
-                  // Réponse correcte mais non sélectionnée
+                }
+                // CAS 2: TRUE / FALSE - Réponse correcte mais non sélectionnée par l'utilisateur
+                else if (isCorrectAnswer && !isSelected) {
                   bgColor = "bg-green-50/50"
                   borderColor = "border-green-500/50"
                   textColor = "text-green-800/70"
                   showIcon = true
                   iconComponent = <Check className="h-5 w-5 text-green-600/50" />
                 }
+                // CAS 3: FALSE / TRUE - Réponse incorrecte mais sélectionnée par l'utilisateur
+                else if (!isCorrectAnswer && isSelected) {
+                  bgColor = "bg-red-50"
+                  borderColor = "border-red-500"
+                  textColor = "text-red-800"
+                  showIcon = true
+                  iconComponent = <X className="h-5 w-5 text-red-600" />
+                }
+                // CAS 4: FALSE / FALSE - Réponse incorrecte et non sélectionnée par l'utilisateur
+                // Pas de style spécial, on garde le style par défaut
               }
 
               return (
