@@ -223,13 +223,10 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   return (
     <div className="relative">
       {/* Effet d'ombre origami */}
-      <div className="absolute inset-0 bg-mush-yellow/30 rounded-xl transform translate-x-1 translate-y-1 -z-10"></div>
-
-      <div className="bg-white rounded-xl border-2 border-gray-200">
-        <div className="p-5">
+      <div className="p-5">
           <h3 className="font-bold text-lg mb-4 text-gray-800">{content.question}</h3>
 
-          <div className="space-y-3">
+          <div className="space-y-3 mb-4">
             {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].filter(Boolean).map((answer, index) => {
               if (!answer) return null
 
@@ -285,12 +282,12 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
                   className={`flex items-center p-3 border rounded-md mb-2 ${submitted ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
                   onClick={() => !submitted && handleOptionClick(index)}
                 >
-                  <div className={`flex-shrink-0 w-6 h-6 border-2 rounded-full mr-3 flex items-center justify-center ${submitted ? checkboxColor : (isSelected ? 'border-mush-green' : 'border-gray-300')}`}>
-                    {/* Afficher un point vert quand l'utilisateur sélectionne une réponse avant soumission */}
-                    {!submitted && isSelected && <div className="w-3 h-3 bg-mush-green rounded-full"></div>}
+                  <div className={`flex-shrink-0 w-6 h-6 border-2 rounded-md mr-3 flex items-center justify-center ${submitted ? checkboxColor : (isSelected ? 'border-mush-green' : 'border-gray-300')}`}>
+                    {/* Afficher une coche verte quand l'utilisateur sélectionne une réponse avant soumission */}
+                    {!submitted && isSelected && <Check className="h-4 w-4 text-mush-green" />}
                     
-                    {/* Afficher une coche quand la réponse est sélectionnée après soumission */}
-                    {submitted && isSelected && <Check className="h-4 w-4" />}
+                    {/* Afficher une coche de la couleur appropriée quand la réponse est sélectionnée après soumission */}
+                    {submitted && isSelected && <Check className={`h-4 w-4 ${isCorrectAnswer ? 'text-green-600' : 'text-red-600'}`} />}
                   </div>
                   <span className={`${textColor} flex-grow`}>{answer}</span>
                 </div>
@@ -302,6 +299,14 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             <div className="bg-red-50 p-3 rounded-lg mt-4 flex items-start">
               <AlertCircle className="text-red-500 h-5 w-5 mt-0.5 mr-2 flex-shrink-0" />
               <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
+          
+          {/* Texte de correction qui apparaît après validation */}
+          {submitted && content.correction_all && (
+            <div className="bg-gray-50 p-3 rounded-lg mt-4 border border-gray-200">
+              <h4 className="font-medium text-gray-800 mb-1">Explication :</h4>
+              <p className="text-gray-700 text-sm">{content.correction_all}</p>
             </div>
           )}
 
@@ -325,7 +330,6 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             )}
           </div>
         </div>
-      </div>
     </div>
   )
 }
