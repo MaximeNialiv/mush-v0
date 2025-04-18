@@ -83,16 +83,16 @@ export function UserProfileMenu() {
 
       {/* Menu déroulant */}
       {isMenuOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-20 border-2 border-gray-200">
+        <div className="absolute right-0 mt-2 min-w-[200px] max-w-[300px] bg-white rounded-lg shadow-lg py-1 z-20 border-2 border-gray-200">
           <div className="px-4 py-2 border-b border-gray-200">
-            <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
+            <p className="text-sm font-medium text-gray-900 break-words">{user.email}</p>
           </div>
           <button
             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Se déconnecter du compte {user.email}
+            Se déconnecter
           </button>
         </div>
       )}

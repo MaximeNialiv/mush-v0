@@ -52,14 +52,6 @@ export function Header() {
               </button>
             </div>
 
-            {/* Notifications */}
-            <button className="relative p-2 rounded-full hover:bg-gray-100">
-              <Bell className="h-5 w-5 text-gray-700" />
-              <span className="absolute top-0 right-0 w-5 h-5 bg-mush-red rounded-full text-white text-xs flex items-center justify-center font-bold shadow-sm">
-                2
-              </span>
-            </button>
-
             {/* Compteur de champignons */}
             <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full border-2 border-gray-200 shadow-sm">
               <span className="text-mush-red text-xl mr-1.5">🍄</span>

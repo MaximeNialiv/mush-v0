@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
-import { NavigationBar } from "@/components/navigation-bar"
 import { CardList } from "@/components/card-list"
 import { DataStatus } from "@/components/data-status"
 import { JotaiProvider } from "./jotai-provider"
@@ -52,7 +51,7 @@ export default function Home() {
     <JotaiProvider>
       <div className="flex flex-col min-h-screen bg-mush-green/10">
         <Header />
-        <main className="flex-1 container mx-auto p-4 pb-20 max-w-5xl">
+        <main className="flex-1 container mx-auto p-4 pb-8 max-w-5xl">
           {isCheckingAuth ? (
             <div className="flex items-center justify-center h-full">
               <p>Chargement...</p>
@@ -71,7 +70,6 @@ export default function Home() {
             </>
           )}
         </main>
-        <NavigationBar />
         <AuthModal 
           isOpen={isAuthModalOpen} 
           onClose={() => setIsAuthModalOpen(false)} 
