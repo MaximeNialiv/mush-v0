@@ -28,7 +28,7 @@ export function Header() {
           <div className="hidden md:flex relative flex-1 max-w-md mx-4">
             <input
               type="text"
-              placeholder="Rechercher..."
+              placeholder="Rechercher... (wip)"
               className="w-full py-2 pl-10 pr-4 border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-mush-green shadow-sm"
             />
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />

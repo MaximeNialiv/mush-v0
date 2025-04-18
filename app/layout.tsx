@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Toaster } from 'sonner'
-import AuthStatus from '@/components/auth-status'
 import SupabaseProvider from '@/context/supabase-provider'
 
 export const metadata: Metadata = {
@@ -19,7 +18,6 @@ export default function RootLayout({
     <html lang="fr">
       <body>
         <SupabaseProvider>
-          <AuthStatus />
           {children}
           <Toaster position="bottom-right" />
         </SupabaseProvider>
