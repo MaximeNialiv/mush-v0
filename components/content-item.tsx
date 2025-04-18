@@ -41,7 +41,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
             .from("relation_user_content")
             .select("points")
             .eq("user_id", user.id)
-            .eq("card_id", cardId)
+            .eq("content_id", content.sequential_id)
             .maybeSingle()
           
           if (data && data.points) {
@@ -61,8 +61,12 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
 
   // Gérer la complétion du quiz
   const handleQuizComplete = (points: number) => {
-    setMushPoints(points)
-    setHasCompletedQuiz(true)
+    // Si points est négatif, c'est une réinitialisation
+    const isReset = points < 0
+    
+    // Mettre à jour les points locaux
+    setMushPoints(isReset ? 0 : points)
+    setHasCompletedQuiz(!isReset)
     
     // Mettre à jour le compteur global de champignons
     setMushroomCount((prev) => prev + points)
@@ -73,7 +77,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
         if (card.sequential_id === cardId) {
           // Calculer les nouveaux points gagnés pour cette carte
           const currentEarnedPoints = card.earnedPoints || 0
-          const newEarnedPoints = currentEarnedPoints + points
+          const newEarnedPoints = Math.max(0, currentEarnedPoints + points) // Empêcher les points négatifs
           
           return {
             ...card,
@@ -124,10 +128,10 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
 
         {/* Afficher le quiz si demandé */}
         {content.question && showQuiz && (
-          <div className="mt-3">
-            <Quiz
-              content={content}
-              cardId={cardId}
+          <div>
+            <Quiz 
+              content={content} 
+              cardId={cardId} 
               onComplete={handleQuizComplete}
               onClose={() => setShowQuiz(false)}
             />

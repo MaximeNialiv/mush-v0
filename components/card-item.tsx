@@ -71,6 +71,18 @@ export function CardItem({ card }: CardItemProps) {
           </div>
         )}
 
+        {/* Affichage des points totaux gagnés en bas de la carte s'il y a plusieurs contenus */}
+        {card.contents && card.contents.length > 1 && card.earnedPoints && card.earnedPoints > 0 && (
+          <div className="mt-4 border-t border-dashed border-gray-300 pt-4 flex justify-center">
+            <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
+              <span className="font-medium text-mush-green flex items-center">
+                <span className="mr-1">🍄</span>
+                Total : {card.earnedPoints} point{card.earnedPoints > 1 ? 's' : ''} gagné{card.earnedPoints > 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Pied de page de la carte */}
         <div className="p-4 bg-gray-50 text-sm">
           <div className="flex items-center justify-between">

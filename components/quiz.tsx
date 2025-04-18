@@ -49,7 +49,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
         .from("relation_user_content")
         .select("*")
         .eq("user_id", uid)
-        .eq("card_id", cardId)
+        .eq("content_id", content.sequential_id)
         .maybeSingle()
 
       if (error) {
@@ -167,7 +167,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       // Préparer les données pour la table relation_user_content
       const relationData = {
         user_id: userId || "anonymous", // Utiliser "anonymous" si l'utilisateur n'est pas connecté
-        card_id: cardId,
+        content_id: content.sequential_id,
         state: "completed",
         points: points,
         result_1: userAnswers[0],
@@ -210,11 +210,33 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
     }
   }
 
-  // Réinitialiser le quiz
-  const handleReset = () => {
-    setUserAnswers(Array(4).fill(false))
-    setSubmitted(false)
-    setPointsEarned(0)
+  // Réinitialiser le quiz et supprimer la relation existante
+  const handleReset = async () => {
+    try {
+      // Supprimer la relation existante pour permettre un nouveau test
+      if (userId && relationId) {
+        await supabase
+          .from("relation_user_content")
+          .delete()
+          .eq("sequential_id", relationId)
+        
+        console.log("Relation supprimée avec succès")
+        setRelationId(null)
+      }
+      
+      // Réinitialiser l'état local
+      setUserAnswers(Array(4).fill(false))
+      setSubmitted(false)
+      setPointsEarned(0)
+      
+      // Informer le parent que les points ont été réinitialisés
+      if (onComplete) {
+        onComplete(-pointsEarned) // Soustraire les points précédemment gagnés
+      }
+    } catch (error) {
+      console.error("Erreur lors de la réinitialisation du quiz:", error)
+      setError("Erreur lors de la réinitialisation. Veuillez réessayer.")
+    }
   }
 
   // Si le contenu n'est pas un quiz, ne rien afficher
@@ -307,6 +329,18 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             <div className="bg-gray-50 p-3 rounded-lg mt-4 border border-gray-200">
               <h4 className="font-medium text-gray-800 mb-1">Explication :</h4>
               <p className="text-gray-700 text-sm">{content.correction_all}</p>
+            </div>
+          )}
+          
+          {/* Affichage des points gagnés */}
+          {submitted && (
+            <div className="mt-4 flex items-center justify-center">
+              <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
+                <span className="font-medium text-mush-green flex items-center">
+                  <span className="mr-1">🍄</span>
+                  {pointsEarned} point{pointsEarned > 1 ? 's' : ''} gagné{pointsEarned > 1 ? 's' : ''}
+                </span>
+              </div>
             </div>
           )}
 

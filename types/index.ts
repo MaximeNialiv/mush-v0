@@ -32,17 +32,18 @@ export interface Content {
   correction_all?: string
 }
 
-export interface UserContentRelation {
+export interface RelationUserContent {
   sequential_id: string
   user_id: string
-  card_id: string
+  content_id: string // Renommé de card_id à content_id
   state: string
-  points_a: number
-  result_1?: boolean
-  result_2?: boolean
-  result_3?: boolean
-  result_4?: boolean
+  sender_id: string
   created_at: string
+  points: number
+  result_1: boolean
+  result_2: boolean
+  result_3: boolean
+  result_4: boolean
   last_view: string
 }
 
@@ -58,7 +59,7 @@ export interface UserProfile {
 
 export interface CardWithContent extends Card {
   contents?: Content[]
-  userRelation?: UserContentRelation
+  userRelation?: RelationUserContent
   totalPoints?: number // Total des points disponibles
   earnedPoints?: number // Points gagnés par l'utilisateur
   ownerName?: string // Nom de l'owner de la carte
