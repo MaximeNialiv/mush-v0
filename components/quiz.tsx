@@ -233,13 +233,6 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].filter(Boolean).map((answer, index) => {
               if (!answer) return null
 
-              // Déterminer la couleur de fond en fonction de l'état
-              let bgColor = "bg-white"
-              let borderColor = "border-gray-300"
-              let textColor = "text-gray-800"
-              let showIcon = false
-              let iconComponent = null
-
               // Déterminer si cette réponse est correcte selon le contenu
               const isCorrectAnswer = (
                 (index === 0 && content.result_1) ||
@@ -250,34 +243,55 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
 
               // Déterminer si l'utilisateur a sélectionné cette réponse
               const isSelected = userAnswers[index]
+              
+              // Valeurs par défaut (non soumis)
+              let bgColor = "bg-white"
+              let borderColor = "border-gray-300"
+              let textColor = "text-gray-800"
+              let showIcon = false
+              let iconComponent = null
 
               if (submitted) {
-                // CAS 1: TRUE / TRUE - Réponse correcte et sélectionnée par l'utilisateur
-                if (isCorrectAnswer && isSelected) {
+                // Selon la maquette fournie, nous avons 4 cas:
+                
+                // CAS 1: FALSE / FALSE - Réponse incorrecte et non sélectionnée
+                if (!isCorrectAnswer && !isSelected) {
+                  // Aucun style spécial, on garde le style par défaut
+                  bgColor = "bg-white"
+                  borderColor = "border-gray-300"
+                  textColor = "text-gray-800"
+                  showIcon = false
+                }
+                
+                // CAS 2: TRUE / TRUE - Réponse correcte et sélectionnée
+                else if (isCorrectAnswer && isSelected) {
+                  // Fond vert, texte vert, coche verte
                   bgColor = "bg-green-50"
                   borderColor = "border-green-500"
                   textColor = "text-green-800"
                   showIcon = true
                   iconComponent = <Check className="h-5 w-5 text-green-600" />
                 }
-                // CAS 2: TRUE / FALSE - Réponse correcte mais non sélectionnée par l'utilisateur
-                else if (isCorrectAnswer && !isSelected) {
-                  bgColor = "bg-green-50/50"
-                  borderColor = "border-green-500/50"
-                  textColor = "text-green-800/70"
-                  showIcon = true
-                  iconComponent = <Check className="h-5 w-5 text-green-600/50" />
-                }
-                // CAS 3: FALSE / TRUE - Réponse incorrecte mais sélectionnée par l'utilisateur
+                
+                // CAS 3: TRUE / FALSE - Réponse incorrecte mais sélectionnée
                 else if (!isCorrectAnswer && isSelected) {
+                  // Fond rouge, texte rouge, X rouge
                   bgColor = "bg-red-50"
                   borderColor = "border-red-500"
                   textColor = "text-red-800"
                   showIcon = true
                   iconComponent = <X className="h-5 w-5 text-red-600" />
                 }
-                // CAS 4: FALSE / FALSE - Réponse incorrecte et non sélectionnée par l'utilisateur
-                // Pas de style spécial, on garde le style par défaut
+                
+                // CAS 4: FALSE / TRUE - Réponse correcte mais non sélectionnée
+                else if (isCorrectAnswer && !isSelected) {
+                  // Fond vert clair, texte vert clair, coche verte claire
+                  bgColor = "bg-green-50/50"
+                  borderColor = "border-green-500/50"
+                  textColor = "text-green-800/70"
+                  showIcon = true
+                  iconComponent = <Check className="h-5 w-5 text-green-600/50" />
+                }
               }
 
               return (
