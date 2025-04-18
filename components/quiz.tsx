@@ -211,10 +211,10 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   }
 
   // Réinitialiser le quiz
-  function handleReset() {
-    setUserAnswers([false, false, false, false])
+  const handleReset = () => {
+    setUserAnswers(Array(4).fill(false))
     setSubmitted(false)
-    setError(null)
+    setPointsEarned(0)
   }
 
   // Si le contenu n'est pas un quiz, ne rien afficher
@@ -245,74 +245,54 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
               const isSelected = userAnswers[index]
               
               // Valeurs par défaut (non soumis)
-              let bgColor = "bg-white"
-              let borderColor = "border-gray-300"
               let textColor = "text-gray-800"
-              let showIcon = false
-              let iconComponent = null
-
+              let checkboxColor = "border-gray-300"
+              
               if (submitted) {
-                // Selon la maquette fournie, nous avons 4 cas:
+                // Appliquer les règles exactes spécifiées :
+                // - Lorsqu'une réponse devait être cochée, son texte apparait en vert.
+                // - Les checkboxes cochées sont celles qui ont été cochées par l'utilisateur.
+                // - Si la réponse est juste, la checkbox est verte, qu'elle soit cochée ou non.
+                // - Si la réponse est fausse, la checkbox est rouge, qu'elle soit cochée ou non.
                 
-                // CAS 1: FALSE / FALSE - Réponse incorrecte et non sélectionnée
+                // CAS 1: FALSE / FALSE - Réponse incorrecte et non sélectionnée → Texte noir, checkbox verte
+                // CAS 2: TRUE / TRUE - Réponse correcte et sélectionnée → Texte vert, coche verte
+                // CAS 3: TRUE / FALSE - Réponse incorrecte mais sélectionnée → Texte noir, coche rouge
+                // CAS 4: FALSE / TRUE - Réponse correcte mais non sélectionnée → Texte vert, checkbox rouge
+                
+                // 1. Couleur du texte : vert si la réponse est correcte
+                textColor = isCorrectAnswer ? "text-green-600" : "text-gray-800"
+                
+                // 2. Couleur de la checkbox : selon les cas spécifiques
                 if (!isCorrectAnswer && !isSelected) {
-                  // Aucun style spécial, on garde le style par défaut
-                  bgColor = "bg-white"
-                  borderColor = "border-gray-300"
-                  textColor = "text-gray-800"
-                  showIcon = false
-                }
-                
-                // CAS 2: TRUE / TRUE - Réponse correcte et sélectionnée
-                else if (isCorrectAnswer && isSelected) {
-                  // Fond vert, texte vert, coche verte
-                  bgColor = "bg-green-50"
-                  borderColor = "border-green-500"
-                  textColor = "text-green-800"
-                  showIcon = true
-                  iconComponent = <Check className="h-5 w-5 text-green-600" />
-                }
-                
-                // CAS 3: TRUE / FALSE - Réponse incorrecte mais sélectionnée
-                else if (!isCorrectAnswer && isSelected) {
-                  // Fond rouge, texte rouge, X rouge
-                  bgColor = "bg-red-50"
-                  borderColor = "border-red-500"
-                  textColor = "text-red-800"
-                  showIcon = true
-                  iconComponent = <X className="h-5 w-5 text-red-600" />
-                }
-                
-                // CAS 4: FALSE / TRUE - Réponse correcte mais non sélectionnée
-                else if (isCorrectAnswer && !isSelected) {
-                  // Fond vert clair, texte vert clair, coche verte claire
-                  bgColor = "bg-green-50/50"
-                  borderColor = "border-green-500/50"
-                  textColor = "text-green-800/70"
-                  showIcon = true
-                  iconComponent = <Check className="h-5 w-5 text-green-600/50" />
+                  // CAS 1: FALSE / FALSE - checkbox verte
+                  checkboxColor = "border-green-600"
+                } else if (isCorrectAnswer && isSelected) {
+                  // CAS 2: TRUE / TRUE - checkbox verte
+                  checkboxColor = "border-green-600"
+                } else if (!isCorrectAnswer && isSelected) {
+                  // CAS 3: TRUE / FALSE - checkbox rouge
+                  checkboxColor = "border-red-600"
+                } else if (isCorrectAnswer && !isSelected) {
+                  // CAS 4: FALSE / TRUE - checkbox rouge
+                  checkboxColor = "border-red-600"
                 }
               }
 
               return (
                 <div
                   key={index}
-                  className={`flex items-start p-4 border-2 rounded-lg ${bgColor} ${borderColor} cursor-pointer transition-all hover:shadow-md`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleOptionClick(index);
-                  }}
+                  className={`flex items-center p-3 border rounded-md mb-2 ${submitted ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
+                  onClick={() => !submitted && handleOptionClick(index)}
                 >
-                  <div
-                    className={`w-6 h-6 border-2 ${
-                      userAnswers[index] && !submitted ? "bg-mush-green border-mush-green" : "bg-white border-gray-400"
-                    } rounded-md mr-3 flex-shrink-0 flex items-center justify-center mt-0.5 transition-colors`}
-                  >
-                    {userAnswers[index] && !submitted && <Check size={16} className="text-white" />}
-                    {submitted && showIcon && iconComponent}
+                  <div className={`flex-shrink-0 w-6 h-6 border-2 rounded-full mr-3 flex items-center justify-center ${submitted ? checkboxColor : (isSelected ? 'border-mush-green' : 'border-gray-300')}`}>
+                    {/* Afficher un point vert quand l'utilisateur sélectionne une réponse avant soumission */}
+                    {!submitted && isSelected && <div className="w-3 h-3 bg-mush-green rounded-full"></div>}
+                    
+                    {/* Afficher une coche quand la réponse est sélectionnée après soumission */}
+                    {submitted && isSelected && <Check className="h-4 w-4" />}
                   </div>
-                  <p className={`${textColor} text-sm font-medium`}>{answer}</p>
+                  <span className={`${textColor} flex-grow`}>{answer}</span>
                 </div>
               )
             })}
@@ -326,30 +306,21 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
           )}
 
           {/* Boutons d'action */}
-          <div className="mt-6 flex flex-col space-y-3">
-            {!submitted ? (
+          <div className="flex space-x-2 mt-4">
+            {submitted ? (
+              <button
+                onClick={handleReset}
+                className="flex-1 py-2 px-4 bg-mush-green text-white rounded-md hover:bg-mush-green/90"
+              >
+                Réessayer
+              </button>
+            ) : (
               <button
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-medium p-2 rounded-md"
                 onClick={handleSubmit}
                 disabled={!userAnswers.some((a: boolean) => a) || isSubmitting}
               >
                 {isSubmitting ? "Validation en cours..." : "Valider ma réponse"}
-              </button>
-            ) : (
-              <button
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-2 rounded-md"
-                onClick={onClose}
-              >
-                Continuer
-              </button>
-            )}
-
-            {onClose && (
-              <button
-                className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 p-2 rounded-md"
-                onClick={onClose}
-              >
-                Fermer
               </button>
             )}
           </div>
