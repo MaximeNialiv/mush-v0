@@ -3,6 +3,7 @@
 import { useAtom } from "jotai"
 import { mushroomCountAtom, viewModeAtom } from "@/store/atoms"
 import { Search, Grid, List, Bell } from "lucide-react"
+import { UserProfileMenu } from "@/components/user-profile-menu"
 
 export function Header() {
   const [mushroomCount] = useAtom(mushroomCountAtom)
@@ -65,10 +66,8 @@ export function Header() {
               <span className="font-bold">{mushroomCount}</span>
             </div>
 
-            {/* Avatar utilisateur */}
-            <div className="w-10 h-10 rounded-full bg-mush-green flex items-center justify-center text-white shadow-md">
-              <span className="font-bold text-lg">F</span>
-            </div>
+            {/* Menu de profil utilisateur */}
+            <UserProfileMenu />
           </div>
         </div>
       </div>
