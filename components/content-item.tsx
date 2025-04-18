@@ -41,7 +41,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
             .from("relation_user_content")
             .select("points")
             .eq("user_id", user.id)
-            .eq("card_id", cardId)
+            .eq("content_id", content.sequential_id)
             .maybeSingle()
           
           if (data && data.points) {

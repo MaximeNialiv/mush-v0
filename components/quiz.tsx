@@ -49,7 +49,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
         .from("relation_user_content")
         .select("*")
         .eq("user_id", uid)
-        .eq("card_id", cardId)
+        .eq("content_id", content.sequential_id)
         .maybeSingle()
 
       if (error) {
@@ -167,7 +167,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       // Préparer les données pour la table relation_user_content
       const relationData = {
         user_id: userId || "anonymous", // Utiliser "anonymous" si l'utilisateur n'est pas connecté
-        card_id: cardId,
+        content_id: content.sequential_id,
         state: "completed",
         points: points,
         result_1: userAnswers[0],
