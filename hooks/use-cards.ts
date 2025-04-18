@@ -50,7 +50,7 @@ export function useCards() {
     }
   }
 
-  // Écouter les changements de points
+  // Écouter les changements de points et d'authentification
   useEffect(() => {
     loadCards()
     loadUserProfile()
@@ -72,9 +72,20 @@ export function useCards() {
         },
       )
       .subscribe()
+    
+    // Écouter les changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event)
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Recharger les cartes et le profil utilisateur lorsqu'un utilisateur se connecte
+        loadCards()
+        loadUserProfile()
+      }
+    })
 
     return () => {
       supabase.removeChannel(channel)
+      subscription.unsubscribe()
     }
   }, [])
 

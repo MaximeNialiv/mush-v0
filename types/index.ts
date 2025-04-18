@@ -35,7 +35,7 @@ export interface Content {
 export interface RelationUserContent {
   sequential_id: string
   user_id: string
-  content_id: string // Renommé de card_id à content_id
+  card_id: string // Utilisation de card_id pour compatibilité avec la base de données actuelle
   state: string
   sender_id: string
   created_at: string

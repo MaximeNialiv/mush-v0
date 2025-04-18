@@ -245,7 +245,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   return (
     <div className="relative">
       {/* Effet d'ombre origami */}
-      <div className="p-5">
+      <div>
           <h3 className="font-bold text-lg mb-4 text-gray-800">{content.question}</h3>
 
           <div className="space-y-3 mb-4">
