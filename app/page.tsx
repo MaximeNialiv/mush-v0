@@ -49,7 +49,7 @@ export default function Home() {
 
   return (
     <JotaiProvider>
-      <div className="flex flex-col min-h-screen bg-mush-green/10">
+      <div className="flex flex-col min-h-screen bg-white">
         <Header />
         <main className="flex-1 container mx-auto p-4 pb-8 max-w-5xl">
           {isCheckingAuth ? (

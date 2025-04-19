@@ -1,7 +1,8 @@
 "use client"
 
 import { useAtom } from "jotai"
-import { useEffect } from "react"
+import { atom } from "jotai"
+import { useEffect, useRef } from "react"
 import { cardsAtom, loadingAtom, errorAtom, mushroomCountAtom } from "@/store/atoms"
 import { fetchCards } from "@/utils/supabase/client"
 import { supabase } from "@/utils/supabase/client"
@@ -50,10 +51,32 @@ export function useCards() {
     }
   }
 
+  // Variable pour suivre si les cartes ont été chargées
+  const [cardsLoaded, setCardsLoaded] = useAtom(atom(false))
+  
+  // Charger les cartes avec un délai minimal entre les rechargements
+  const lastLoadTime = useRef(0)
+  const loadCardsThrottled = async () => {
+    const now = Date.now()
+    const minDelay = 5000 // 5 secondes minimum entre les rechargements
+    
+    if (now - lastLoadTime.current < minDelay) {
+      console.log("Rechargement des cartes ignoré (trop fréquent)")
+      return
+    }
+    
+    lastLoadTime.current = now
+    await loadCards()
+    setCardsLoaded(true)
+  }
+
   // Écouter les changements de points et d'authentification
   useEffect(() => {
-    loadCards()
-    loadUserProfile()
+    // Chargement initial des cartes et du profil
+    if (!cardsLoaded) {
+      loadCardsThrottled()
+      loadUserProfile()
+    }
 
     // Abonnement aux changements de points
     const channel = supabase
@@ -76,10 +99,12 @@ export function useCards() {
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event)
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Recharger les cartes et le profil utilisateur lorsqu'un utilisateur se connecte
-        loadCards()
+      if (event === 'SIGNED_IN') {
+        // Recharger le profil utilisateur immédiatement
         loadUserProfile()
+        
+        // Recharger les cartes avec le throttling
+        loadCardsThrottled()
       }
     })
 
@@ -87,7 +112,7 @@ export function useCards() {
       supabase.removeChannel(channel)
       subscription.unsubscribe()
     }
-  }, [])
+  }, [cardsLoaded])
 
   return {
     cards,
