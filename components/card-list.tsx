@@ -37,11 +37,13 @@ export function CardList() {
 
   return (
     <div className={viewMode === "grid" 
-      ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-white p-3 rounded-lg" 
+      ? "columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4" 
       : "space-y-4"
     }>
       {cards.map((card) => (
-        <CardItem key={card.sequential_id} card={card} />
+        <div key={card.sequential_id} className="break-inside-avoid mb-4">
+          <CardItem card={card} />
+        </div>
       ))}
     </div>
   )

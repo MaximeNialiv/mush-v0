@@ -31,6 +31,13 @@ export default function Home() {
     }
 
     checkAuth()
+    
+    // Écouteur d'événement pour ouvrir la modale d'authentification
+    const handleOpenAuthModal = () => {
+      setIsAuthModalOpen(true)
+    }
+    
+    window.addEventListener('open-auth-modal', handleOpenAuthModal)
 
     // Abonnement aux changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -43,13 +50,14 @@ export default function Home() {
     })
 
     return () => {
+      window.removeEventListener('open-auth-modal', handleOpenAuthModal)
       subscription.unsubscribe()
     }
   }, [])
 
   return (
     <JotaiProvider>
-      <div className="flex flex-col min-h-screen bg-white">
+      <div className="flex flex-col min-h-screen bg-mush-green/10">
         <Header />
         <main className="flex-1 container mx-auto p-4 pb-8 max-w-5xl">
           {isCheckingAuth ? (

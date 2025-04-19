@@ -77,13 +77,13 @@ export function UserProfileMenu() {
             <div className="px-4 py-2 border-b border-gray-200">
               <p className="text-sm font-medium text-gray-900">Non connecté</p>
             </div>
-            <a
-              href="/login"
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))}
               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
               <span className="h-4 w-4 mr-2">⏻</span>
               Se connecter
-            </a>
+            </button>
           </div>
         )}
       </div>
