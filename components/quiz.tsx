@@ -72,8 +72,6 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
           setSubmitted(true)
           // Calculer les points gagnés
           setPointsEarned(data.points || 0)
-          // Afficher un message indiquant que l'utilisateur a déjà répondu
-          setError("Vous avez déjà répondu à ce quiz !")
         }
       }
     } catch (error) {
@@ -248,74 +246,95 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       <div>
           <h3 className="font-bold text-lg mb-4 text-gray-800">{content.question}</h3>
 
-          <div className="space-y-3 mb-4">
-            {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].filter(Boolean).map((answer, index) => {
-              if (!answer) return null
-
-              // Déterminer si cette réponse est correcte selon le contenu
-              const isCorrectAnswer = (
-                (index === 0 && content.result_1) ||
-                (index === 1 && content.result_2) ||
-                (index === 2 && content.result_3) ||
-                (index === 3 && content.result_4)
-              )
-
-              // Déterminer si l'utilisateur a sélectionné cette réponse
-              const isSelected = userAnswers[index]
-              
-              // Valeurs par défaut (non soumis)
-              let textColor = "text-gray-800"
-              let checkboxColor = "border-gray-300"
-              
-              if (submitted) {
-                // Appliquer les règles exactes spécifiées :
-                // - Lorsqu'une réponse devait être cochée, son texte apparait en vert.
-                // - Les checkboxes cochées sont celles qui ont été cochées par l'utilisateur.
-                // - Si la réponse est juste, la checkbox est verte, qu'elle soit cochée ou non.
-                // - Si la réponse est fausse, la checkbox est rouge, qu'elle soit cochée ou non.
-                
-                // CAS 1: FALSE / FALSE - Réponse incorrecte et non sélectionnée → Texte noir, checkbox verte
-                // CAS 2: TRUE / TRUE - Réponse correcte et sélectionnée → Texte vert, coche verte
-                // CAS 3: TRUE / FALSE - Réponse incorrecte mais sélectionnée → Texte noir, coche rouge
-                // CAS 4: FALSE / TRUE - Réponse correcte mais non sélectionnée → Texte vert, checkbox rouge
-                
-                // 1. Couleur du texte : vert si la réponse est correcte
-                textColor = isCorrectAnswer ? "text-green-600" : "text-gray-800"
-                
-                // 2. Couleur de la checkbox : selon les cas spécifiques
-                if (!isCorrectAnswer && !isSelected) {
-                  // CAS 1: FALSE / FALSE - checkbox verte
-                  checkboxColor = "border-green-600"
-                } else if (isCorrectAnswer && isSelected) {
-                  // CAS 2: TRUE / TRUE - checkbox verte
-                  checkboxColor = "border-green-600"
-                } else if (!isCorrectAnswer && isSelected) {
-                  // CAS 3: TRUE / FALSE - checkbox rouge
-                  checkboxColor = "border-red-600"
-                } else if (isCorrectAnswer && !isSelected) {
-                  // CAS 4: FALSE / TRUE - checkbox rouge
-                  checkboxColor = "border-red-600"
-                }
-              }
-
-              return (
-                <div
-                  key={index}
-                  className={`flex items-center p-3 border rounded-md mb-2 ${submitted ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
-                  onClick={() => !submitted && handleOptionClick(index)}
-                >
-                  <div className={`flex-shrink-0 w-6 h-6 border-2 rounded-md mr-3 flex items-center justify-center ${submitted ? checkboxColor : (isSelected ? 'border-mush-green' : 'border-gray-300')}`}>
-                    {/* Afficher une coche verte quand l'utilisateur sélectionne une réponse avant soumission */}
-                    {!submitted && isSelected && <Check className="h-4 w-4 text-mush-green" />}
-                    
-                    {/* Afficher une coche de la couleur appropriée quand la réponse est sélectionnée après soumission */}
-                    {submitted && isSelected && <Check className={`h-4 w-4 ${isCorrectAnswer ? 'text-green-600' : 'text-red-600'}`} />}
-                  </div>
-                  <span className={`${textColor} flex-grow`}>{answer}</span>
+          {/* Affichage différent selon que le quiz a déjà été répondu ou non */}
+          {submitted && relationId ? (
+            // Quiz déjà répondu - Affichage simplifié
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
+                  <span className="font-medium text-mush-green flex items-center">
+                    <span className="mr-1">🍄</span>
+                    {pointsEarned} point{pointsEarned > 1 ? 's' : ''} gagné{pointsEarned > 1 ? 's' : ''}
+                  </span>
                 </div>
-              )
-            })}
-          </div>
+              </div>
+              {content.correction_all && (
+                <div className="text-sm text-gray-600 mb-4 text-center">
+                  <p>{content.correction_all}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Quiz non répondu - Affichage normal des options
+            <div className="space-y-3 mb-4">
+              {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].filter(Boolean).map((answer, index) => {
+                if (!answer) return null
+
+                // Déterminer si cette réponse est correcte selon le contenu
+                const isCorrectAnswer = (
+                  (index === 0 && content.result_1) ||
+                  (index === 1 && content.result_2) ||
+                  (index === 2 && content.result_3) ||
+                  (index === 3 && content.result_4)
+                )
+
+                // Déterminer si l'utilisateur a sélectionné cette réponse
+                const isSelected = userAnswers[index]
+                
+                // Valeurs par défaut (non soumis)
+                let textColor = "text-gray-800"
+                let checkboxColor = "border-gray-300"
+                
+                if (submitted) {
+                  // Appliquer les règles exactes spécifiées :
+                  // - Lorsqu'une réponse devait être cochée, son texte apparait en vert.
+                  // - Les checkboxes cochées sont celles qui ont été cochées par l'utilisateur.
+                  // - Si la réponse est juste, la checkbox est verte, qu'elle soit cochée ou non.
+                  // - Si la réponse est fausse, la checkbox est rouge, qu'elle soit cochée ou non.
+                  
+                  // CAS 1: FALSE / FALSE - Réponse incorrecte et non sélectionnée → Texte noir, checkbox verte
+                  // CAS 2: TRUE / TRUE - Réponse correcte et sélectionnée → Texte vert, coche verte
+                  // CAS 3: TRUE / FALSE - Réponse incorrecte mais sélectionnée → Texte noir, coche rouge
+                  // CAS 4: FALSE / TRUE - Réponse correcte mais non sélectionnée → Texte vert, checkbox rouge
+                  
+                  // 1. Couleur du texte : vert si la réponse est correcte
+                  textColor = isCorrectAnswer ? "text-green-600" : "text-gray-800"
+                  
+                  // 2. Couleur de la checkbox : selon les cas spécifiques
+                  if (!isCorrectAnswer && !isSelected) {
+                    // CAS 1: FALSE / FALSE - checkbox verte
+                    checkboxColor = "border-green-600"
+                  } else if (isCorrectAnswer && isSelected) {
+                    // CAS 2: TRUE / TRUE - checkbox verte
+                    checkboxColor = "border-green-600"
+                  } else if (!isCorrectAnswer && isSelected) {
+                    // CAS 3: TRUE / FALSE - checkbox rouge
+                    checkboxColor = "border-red-600"
+                  } else if (isCorrectAnswer && !isSelected) {
+                    // CAS 4: FALSE / TRUE - checkbox rouge
+                    checkboxColor = "border-red-600"
+                  }
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center p-3 border rounded-md mb-2 ${submitted ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
+                    onClick={() => !submitted && handleOptionClick(index)}
+                  >
+                    <div className={`flex-shrink-0 w-6 h-6 border-2 rounded-md mr-3 flex items-center justify-center ${submitted ? checkboxColor : (isSelected ? 'border-mush-green' : 'border-gray-300')}`}>
+                      {/* Afficher une coche verte quand l'utilisateur sélectionne une réponse avant soumission */}
+                      {!submitted && isSelected && <Check className="h-4 w-4 text-mush-green" />}
+                      
+                      {/* Afficher une coche de la couleur appropriée quand la réponse est sélectionnée après soumission */}
+                      {submitted && isSelected && <Check className={`h-4 w-4 ${isCorrectAnswer ? 'text-green-600' : 'text-red-600'}`} />}
+                    </div>
+                    <span className={`${textColor} flex-grow`}>{answer}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 p-3 rounded-lg mt-4 flex items-start">
@@ -324,16 +343,16 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             </div>
           )}
           
-          {/* Texte de correction qui apparaît après validation */}
-          {submitted && content.correction_all && (
+          {/* Texte de correction qui apparaît après validation - seulement pour les quiz non déjà répondus */}
+          {submitted && !relationId && content.correction_all && (
             <div className="bg-gray-50 p-3 rounded-lg mt-4 border border-gray-200">
               <h4 className="font-medium text-gray-800 mb-1">Explication :</h4>
               <p className="text-gray-700 text-sm">{content.correction_all}</p>
             </div>
           )}
           
-          {/* Affichage des points gagnés */}
-          {submitted && (
+          {/* Affichage des points gagnés - seulement pour les quiz non déjà répondus */}
+          {submitted && !relationId && (
             <div className="mt-4 flex items-center justify-center">
               <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
                 <span className="font-medium text-mush-green flex items-center">

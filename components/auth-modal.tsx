@@ -25,6 +25,19 @@ type AuthModalProps = {
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const supabase = useSupabase()
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false)
+  
+  // Vérifier si l'utilisateur est authentifié
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getUser()
+      setIsUserAuthenticated(!!data.user)
+    }
+    
+    if (isOpen) {
+      checkAuth()
+    }
+  }, [isOpen, supabase.auth])
   
   // États communs
   const [email, setEmail] = useState("")
@@ -102,12 +115,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
-            communication: acceptCommunications
+            acceptCommunications,
           },
-          // En mode développement, nous désactivons la confirmation d'email
-          emailConfirmationRedirectTo: isDevelopment ? undefined : `${window.location.origin}/auth/callback`
+          // Redirection après confirmation de l'email
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         },
       })
       
@@ -251,15 +263,38 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   }
 
+  // Gérer la fermeture de la modale - empêcher toute fermeture sauf si l'utilisateur est authentifié
+  const handleOpenChange = (open: boolean) => {
+    // Si la modale tente de se fermer
+    if (!open) {
+      // Vérifier si l'utilisateur est authentifié
+      const checkAuth = async () => {
+        const { data } = await supabase.auth.getUser()
+        // Permettre la fermeture uniquement si l'utilisateur est authentifié
+        if (data.user) {
+          setIsUserAuthenticated(true)
+          onClose()
+        } else {
+          // Bloquer toute tentative de fermeture
+          console.log("Tentative de fermeture bloquée : utilisateur non authentifié")
+        }
+      }
+      checkAuth()
+      return
+    }
+  }
+  
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e: React.PointerEvent) => {
+        // Empêcher la fermeture par clic extérieur dans tous les cas
+        e.preventDefault()
+      }} onEscapeKeyDown={(e: React.KeyboardEvent) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold text-mush-green">
             Rejoignez Mush !
           </DialogTitle>
         </DialogHeader>
-        
         <Tabs defaultValue="signup" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="signup">Inscription</TabsTrigger>

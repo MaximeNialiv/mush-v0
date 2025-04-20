@@ -13,24 +13,45 @@ export default function Home() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const supabase = useSupabase()
 
+  // Fonction de vérification d'authentification immédiate et prioritaire
+  const checkAuth = async () => {
+    setIsCheckingAuth(true)
+    try {
+      const { data } = await supabase.auth.getSession()
+      if (!data.session) {
+        setIsAuthModalOpen(true)
+      } else {
+        setIsAuthModalOpen(false)
+      }
+    } catch (error) {
+      console.error("Erreur lors de la vérification de l'authentification:", error)
+      // En cas d'erreur, on ouvre la modale par sécurité
+      setIsAuthModalOpen(true)
+    } finally {
+      setIsCheckingAuth(false)
+    }
+  }
+
+  // Vérification immédiate au chargement de la page
   useEffect(() => {
-    const checkAuth = async () => {
+    // Exécution prioritaire et synchrone
+    checkAuth()
+    
+    // Vérification périodique silencieuse de l'authentification
+    const periodicCheckAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession()
-        console.log("Session actuelle:", data.session)
-        if (!data.session) {
+        if (!data.session && !isAuthModalOpen) {
+          // Si l'utilisateur n'est plus authentifié et que la modale n'est pas déjà ouverte
           setIsAuthModalOpen(true)
-        } else {
-          setIsAuthModalOpen(false)
         }
       } catch (error) {
-        console.error("Erreur lors de la vérification de l'authentification:", error)
-      } finally {
-        setIsCheckingAuth(false)
+        console.error("Erreur lors de la vérification périodique de l'authentification:", error)
       }
     }
-
-    checkAuth()
+    
+    // Vérifier toutes les 60 secondes
+    const authCheckInterval = setInterval(periodicCheckAuth, 60000)
     
     // Écouteur d'événement pour ouvrir la modale d'authentification
     const handleOpenAuthModal = () => {
@@ -41,7 +62,6 @@ export default function Home() {
 
     // Abonnement aux changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Changement d'état d'authentification:", event, session)
       if (event === 'SIGNED_IN' && session) {
         setIsAuthModalOpen(false)
       } else if (event === 'SIGNED_OUT') {
@@ -50,6 +70,7 @@ export default function Home() {
     })
 
     return () => {
+      clearInterval(authCheckInterval)
       window.removeEventListener('open-auth-modal', handleOpenAuthModal)
       subscription.unsubscribe()
     }
