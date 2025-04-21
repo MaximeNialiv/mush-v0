@@ -9,9 +9,8 @@ export async function POST(request: Request) {
     console.log("Données reçues par l'API:", { relationData, relationId })
 
     // Vérifier que l'utilisateur est authentifié
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: sessionData } = await supabase.auth.getSession()
+    const user = sessionData.session?.user
 
     // Mode développement: permettre les soumissions anonymes
     const isDevelopment = process.env.NODE_ENV === 'development'

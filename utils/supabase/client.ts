@@ -1,22 +1,15 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Card, Content, CardWithContent } from "@/types"
 
+// Clé globale pour identifier notre instance unique de Supabase
+const SUPABASE_CLIENT_KEY = 'MUSH_SUPABASE_CLIENT'
+
 // Créer une instance unique de Supabase pour éviter les problèmes de connexion multiples
 let supabaseInstance: any = null
 
-export const supabase = (() => {
-  if (typeof window === 'undefined') {
-    // Côté serveur - créer une nouvelle instance à chaque fois
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  }
-  
-  // Côté client - utiliser un singleton
-  if (supabaseInstance) return supabaseInstance
-  
-  supabaseInstance = createClient(
+// Fonction pour créer un client avec une configuration standardisée
+function createSupabaseClient() {
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -24,6 +17,7 @@ export const supabase = (() => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: false, // Désactiver la détection automatique pour éviter les instances multiples
+        storageKey: SUPABASE_CLIENT_KEY, // Utiliser une clé unique pour éviter les conflits
         storage: {
           getItem: (key) => {
             try { return localStorage.getItem(key) } catch (e) { return null }
@@ -38,7 +32,32 @@ export const supabase = (() => {
       }
     }
   )
+}
 
+// Fonction pour obtenir l'instance unique de Supabase
+export const supabase = (() => {
+  // Côté serveur - créer une nouvelle instance à chaque fois
+  if (typeof window === 'undefined') {
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+  
+  // Côté client - utiliser un singleton
+  if (supabaseInstance) return supabaseInstance
+  
+  // Nettoyer toute instance existante avant de créer une nouvelle
+  try {
+    // Supprimer les données de session existantes pour éviter les conflits
+    localStorage.removeItem(`${SUPABASE_CLIENT_KEY}-auth-token`)
+  } catch (e) {
+    console.warn("Impossible de nettoyer les données de session existantes", e)
+  }
+  
+  // Créer une nouvelle instance
+  supabaseInstance = createSupabaseClient()
+  
   return supabaseInstance
 })()
 
