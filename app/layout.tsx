@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Toaster } from 'sonner'
+import SupabaseProvider from '@/context/supabase-provider'
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -13,8 +15,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="fr">
+      <body>
+        <SupabaseProvider>
+          {children}
+          <Toaster position="bottom-right" />
+        </SupabaseProvider>
+      </body>
     </html>
   )
 }

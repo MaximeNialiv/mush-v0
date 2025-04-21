@@ -2,11 +2,8 @@
 
 import { useState, useEffect } from "react"
 import type { Content } from "@/types"
-import { supabase } from "@/utils/supabase/client"
-import { Button } from "@/components/ui/button"
 import { Check, X, AlertCircle } from "lucide-react"
-import { useAtom } from "jotai"
-import { mushroomCountAtom } from "@/store/atoms"
+import { useSupabase } from "@/context/supabase-provider"
 
 interface QuizProps {
   content: Content
@@ -16,6 +13,9 @@ interface QuizProps {
 }
 
 export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
+  const supabase = useSupabase()
+  
+  // Utiliser un tableau pour suivre les réponses sélectionnées (true/false pour chaque option)
   const [userAnswers, setUserAnswers] = useState<boolean[]>([false, false, false, false])
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -23,166 +23,225 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   const [pointsEarned, setPointsEarned] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
   const [relationId, setRelationId] = useState<string | null>(null)
-  const [, setMushroomCount] = useAtom(mushroomCountAtom)
 
   // Récupérer l'ID de l'utilisateur actuel
   useEffect(() => {
-    async function getUserId() {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (user) {
-          setUserId(user.id)
-          // Vérifier si l'utilisateur a déjà répondu à ce quiz
-          checkExistingAnswers(user.id)
-        } else {
-          // Pour le développement, utiliser un ID fictif
-          setUserId("dev-user-id")
-        }
-      } catch (err) {
-        console.error("Erreur lors de la récupération de l'utilisateur:", err)
-        setUserId("dev-user-id")
-      }
-    }
-
     getUserId()
-  }, [cardId, content.sequential_id])
+  }, [])
+
+  async function getUserId() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setUserId(session.user.id)
+        // Vérifier si l'utilisateur a déjà répondu à ce quiz
+        await checkExistingAnswers(session.user.id)
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'ID utilisateur :", error)
+    }
+  }
 
   // Vérifier si l'utilisateur a déjà répondu à ce quiz
   async function checkExistingAnswers(uid: string) {
     try {
+      // Utiliser limit(1) pour éviter l'erreur PGRST116 (multiple rows returned)
       const { data, error } = await supabase
         .from("relation_user_content")
         .select("*")
         .eq("user_id", uid)
-        .eq("card_id", cardId)
-        .maybeSingle()
+        .eq("content_id", content.sequential_id)
+        .order('created_at', { ascending: false }) // Prendre la relation la plus récente
+        .limit(1)
+        .single()
 
       if (error) {
-        console.error("Erreur lors de la vérification des réponses existantes:", error)
-        return
+        // Si c'est une erreur "No rows found", ce n'est pas un problème
+        if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
+          return // Pas de réponse existante, c'est normal
+        }
+        throw error
       }
 
       if (data) {
+        // L'utilisateur a déjà répondu à ce quiz
         setRelationId(data.sequential_id)
 
-        // Si l'utilisateur a déjà répondu, charger ses réponses
+        // Si des réponses existent, les afficher
         if (data.result_1 !== null || data.result_2 !== null || data.result_3 !== null || data.result_4 !== null) {
+          // Charger les réponses précédentes
           setUserAnswers([
             data.result_1 || false,
             data.result_2 || false,
             data.result_3 || false,
-            data.result_4 || false,
+            data.result_4 || false
           ])
           setSubmitted(true)
+          // Calculer les points gagnés
           setPointsEarned(data.points || 0)
         }
       }
-    } catch (err) {
-      console.error("Erreur lors de la vérification des réponses:", err)
+    } catch (error) {
+      console.error("Erreur lors de la vérification des réponses existantes :", error)
+      setError("Erreur lors de la vérification des réponses existantes.")
     }
   }
 
   // Gérer le clic sur une option
-  const handleOptionClick = (index: number) => {
-    if (submitted) return
-
-    const newAnswers = [...userAnswers]
-    newAnswers[index] = !newAnswers[index]
-    setUserAnswers(newAnswers)
+  function handleOptionClick(index: number) {
+    if (!submitted) {
+      // Basculer l'état de la réponse sélectionnée
+      const newAnswers = [...userAnswers]
+      newAnswers[index] = !newAnswers[index]
+      setUserAnswers(newAnswers)
+      console.log("Option cliquée:", index, "Nouvel état:", newAnswers)
+    }
   }
 
-  // Calculer le score en pourcentage
-  const calculateScore = () => {
-    const correctAnswers = [
-      content.result_1 || false,
-      content.result_2 || false,
-      content.result_3 || false,
-      content.result_4 || false,
-    ]
-
-    let correct = 0
-    let total = 0
-
-    correctAnswers.forEach((isCorrect, index) => {
-      if (isCorrect !== undefined) {
-        total++
-        if (userAnswers[index] === isCorrect) {
-          correct++
-        }
-      }
-    })
-
-    return total > 0 ? correct / total : 0
+  // Calculer les points gagnés en fonction des réponses correctes
+  function calculatePoints() {
+    let correctAnswers = 0
+    let totalAnswers = 0
+    let correctOptionsCount = 0
+    
+    // Compter le nombre total de réponses et de réponses correctes
+    if (content.answer_1) {
+      totalAnswers++
+      if (userAnswers[0] === !!content.result_1) correctAnswers++
+      if (!!content.result_1) correctOptionsCount++
+    }
+    
+    if (content.answer_2) {
+      totalAnswers++
+      if (userAnswers[1] === !!content.result_2) correctAnswers++
+      if (!!content.result_2) correctOptionsCount++
+    }
+    
+    if (content.answer_3) {
+      totalAnswers++
+      if (userAnswers[2] === !!content.result_3) correctAnswers++
+      if (!!content.result_3) correctOptionsCount++
+    }
+    
+    if (content.answer_4) {
+      totalAnswers++
+      if (userAnswers[3] === !!content.result_4) correctAnswers++
+      if (!!content.result_4) correctOptionsCount++
+    }
+    
+    const totalPoints = content.points || 0
+    
+    // Exception : s'il n'y a qu'une seule réponse correcte, l'utilisateur doit l'avoir cochée pour obtenir des points
+    if (correctOptionsCount === 1) {
+      // Vérifier si l'utilisateur a coché la seule réponse correcte
+      const hasSelectedTheCorrectOption = 
+        (content.result_1 && userAnswers[0]) ||
+        (content.result_2 && userAnswers[1]) ||
+        (content.result_3 && userAnswers[2]) ||
+        (content.result_4 && userAnswers[3]);
+      
+      return hasSelectedTheCorrectOption ? totalPoints : 0;
+    }
+    
+    // Sinon, calculer les points au prorata des bonnes réponses
+    return totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * totalPoints) : 0
   }
 
   // Soumettre les réponses
-  const handleSubmit = async () => {
+  async function handleSubmit() {
+    // Vérifier si au moins une réponse a été sélectionnée
+    if (!userAnswers.some((answer: boolean) => answer)) {
+      setError("Veuillez sélectionner au moins une réponse")
+      return
+    }
+    
+    // Afficher les réponses sélectionnées pour le débogage
+    console.log("Réponses sélectionnées:", userAnswers)
+
+    setIsSubmitting(true)
+    setError(null)
+
     try {
-      setIsSubmitting(true)
-      setError(null)
+      // Calculer les points gagnés
+      const points = calculatePoints()
+      setPointsEarned(points)
 
-      if (!userId) {
-        setError("Vous devez être connecté pour soumettre un quiz")
-        return
-      }
+      // Créer un objet avec les résultats pour l'API
+      // (cette variable n'est plus utilisée mais on la garde pour référence)
 
-      // Calculer le score
-      const scorePercentage = calculateScore()
-      const earnedPoints = Math.round((content.points || 0) * scorePercentage)
-      setPointsEarned(earnedPoints)
-
-      // Préparer les données à enregistrer
+      // Préparer les données pour la table relation_user_content
       const relationData = {
-        user_id: userId,
-        card_id: cardId,
+        user_id: userId || "anonymous", // Utiliser "anonymous" si l'utilisateur n'est pas connecté
+        content_id: content.sequential_id,
+        state: "completed",
+        points: points,
         result_1: userAnswers[0],
         result_2: userAnswers[1],
         result_3: userAnswers[2],
         result_4: userAnswers[3],
-        points: earnedPoints,
-        state: "completed",
-        last_view: new Date().toISOString(),
+        last_view: new Date().toISOString()
       }
+      
+      console.log("Envoi des données:", relationData)
 
-      // Utiliser l'API serveur pour contourner les restrictions RLS
+      // Envoyer les résultats à l'API
       const response = await fetch("/api/submit-quiz", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ relationData, relationId }),
+        body: JSON.stringify({
+          relationData,
+          relationId
+        }),
       })
 
-      const result = await response.json()
-
       if (!response.ok) {
-        console.error("Erreur lors de la soumission des réponses:", result.error)
-        setError(result.error || "Erreur lors de l'enregistrement des réponses")
-        return
+        throw new Error("Erreur lors de la soumission du quiz")
       }
 
-      // Notifier le composant parent
-      if (onComplete) {
-        onComplete(earnedPoints)
-      }
-
+      // Mettre à jour l'état
       setSubmitted(true)
-    } catch (err) {
-      console.error("Erreur lors de la soumission du quiz:", err)
-      setError("Une erreur est survenue lors de la soumission du quiz")
+
+      // Mettre à jour les points de l'utilisateur
+      if (points > 0 && onComplete) {
+        onComplete(points)
+      }
+    } catch (error) {
+      console.error("Erreur lors de la soumission du quiz :", error)
+      setError("Une erreur est survenue lors de la soumission du quiz. Veuillez réessayer.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Réinitialiser le quiz
-  const handleReset = () => {
-    setSubmitted(false)
-    setUserAnswers([false, false, false, false])
-    setError(null)
+  // Réinitialiser le quiz et supprimer la relation existante
+  const handleReset = async () => {
+    try {
+      // Supprimer la relation existante pour permettre un nouveau test
+      if (userId && relationId) {
+        await supabase
+          .from("relation_user_content")
+          .delete()
+          .eq("sequential_id", relationId)
+        
+        console.log("Relation supprimée avec succès")
+        setRelationId(null)
+      }
+      
+      // Réinitialiser l'état local
+      setUserAnswers(Array(4).fill(false))
+      setSubmitted(false)
+      setPointsEarned(0)
+      
+      // Informer le parent que les points ont été réinitialisés
+      if (onComplete) {
+        onComplete(-pointsEarned) // Soustraire les points précédemment gagnés
+      }
+    } catch (error) {
+      console.error("Erreur lors de la réinitialisation du quiz:", error)
+      setError("Erreur lors de la réinitialisation. Veuillez réessayer.")
+    }
   }
 
   // Si le contenu n'est pas un quiz, ne rien afficher
@@ -191,124 +250,142 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   return (
     <div className="relative">
       {/* Effet d'ombre origami */}
-      <div className="absolute inset-0 bg-mush-yellow/30 rounded-xl transform translate-x-1 translate-y-1 -z-10"></div>
-
-      <div className="bg-white rounded-xl border-2 border-gray-200">
-        <div className="p-5">
+      <div>
           <h3 className="font-bold text-lg mb-4 text-gray-800">{content.question}</h3>
 
-          <div className="space-y-3">
-            {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].map((answer, index) => {
-              if (!answer) return null
-
-              // Déterminer la couleur de fond en fonction de l'état
-              let bgColor = "bg-white"
-              let borderColor = "border-gray-300"
-              let textColor = "text-gray-800"
-              let showIcon = false
-              let iconComponent = null
-
-              if (submitted) {
-                const isCorrect = [content.result_1, content.result_2, content.result_3, content.result_4][index]
-                const userSelected = userAnswers[index]
-
-                if (isCorrect && userSelected) {
-                  // Réponse correcte et sélectionnée
-                  bgColor = "bg-green-50"
-                  borderColor = "border-green-500"
-                  textColor = "text-green-800"
-                  showIcon = true
-                  iconComponent = <Check className="h-5 w-5 text-green-600" />
-                } else if (!isCorrect && userSelected) {
-                  // Réponse incorrecte et sélectionnée
-                  bgColor = "bg-red-50"
-                  borderColor = "border-red-500"
-                  textColor = "text-red-800"
-                  showIcon = true
-                  iconComponent = <X className="h-5 w-5 text-red-600" />
-                } else if (isCorrect) {
-                  // Réponse correcte mais non sélectionnée
-                  bgColor = "bg-green-50/50"
-                  borderColor = "border-green-500/50"
-                  textColor = "text-green-800/70"
-                  showIcon = true
-                  iconComponent = <Check className="h-5 w-5 text-green-600/50" />
-                }
-              }
-
-              return (
-                <div
-                  key={index}
-                  className={`flex items-start p-4 border-2 rounded-lg ${bgColor} ${borderColor} cursor-pointer transition-all hover:shadow-md`}
-                  onClick={() => handleOptionClick(index)}
-                >
-                  <div
-                    className={`w-6 h-6 border-2 ${
-                      userAnswers[index] && !submitted ? "bg-mush-green border-mush-green" : "bg-white border-gray-400"
-                    } rounded-md mr-3 flex-shrink-0 flex items-center justify-center mt-0.5 transition-colors`}
-                  >
-                    {userAnswers[index] && !submitted && <Check size={16} className="text-white" />}
-                    {submitted && showIcon && iconComponent}
-                  </div>
-                  <p className={`${textColor} text-sm font-medium`}>{answer}</p>
-                </div>
-              )
-            })}
-          </div>
-
-          {error && (
-            <div className="mt-4 bg-red-50 border-2 border-red-300 text-red-700 p-3 rounded-lg flex items-start">
-              <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-              <p className="text-sm font-medium">{error}</p>
-            </div>
-          )}
-
-          {submitted ? (
-            <div className="mt-4">
-              <div className="bg-gray-50 p-5 rounded-lg mb-4 border-2 border-gray-200">
-                <div className="mb-3 flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-mush-green text-white flex items-center justify-center mr-3">
-                    <span className="text-xl">🍄</span>
-                  </div>
-                  <p className="font-bold text-lg">Gains : {pointsEarned} champignons</p>
-                </div>
-                <div>
-                  <p className="font-bold mb-2 text-gray-700">ℹ️ Explication :</p>
-                  <p className="text-sm text-gray-700">{content.correction_all}</p>
+          {/* Affichage différent selon que le quiz a déjà été répondu ou non */}
+          {submitted && relationId ? (
+            // Quiz déjà répondu - Affichage simplifié sans texte de correction
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+              <div className="flex items-center justify-end">
+                <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
+                  <span className="font-medium text-mush-green flex items-center">
+                    <span className="mr-1">🍄</span>
+                    {pointsEarned} point{pointsEarned > 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
-              <div className="flex gap-3">
-                <Button
-                  className="flex-1 bg-mush-green hover:bg-mush-green/90 text-white font-bold hover:shadow-md"
-                  onClick={handleReset}
-                >
-                  Réessayer
-                </Button>
-                {onClose && (
-                  <Button variant="outline" className="flex-1 font-bold border-2" onClick={onClose}>
-                    Fermer
-                  </Button>
-                )}
-              </div>
+              {/* Texte de correction supprimé pour économiser de l'espace */}
             </div>
           ) : (
-            <div className="mt-4 flex gap-3">
-              <Button
-                className="flex-1 bg-mush-green hover:bg-mush-green/90 text-white font-bold hover:shadow-md"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Validation en cours..." : "Valider"}
-              </Button>
-              {onClose && (
-                <Button variant="outline" className="flex-1 font-bold border-2" onClick={onClose}>
-                  Annuler
-                </Button>
-              )}
+            // Quiz non répondu - Affichage normal des options
+            <div className="space-y-3 mb-4">
+              {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].filter(Boolean).map((answer, index) => {
+                if (!answer) return null
+
+                // Déterminer si cette réponse est correcte selon le contenu
+                const isCorrectAnswer = (
+                  (index === 0 && content.result_1) ||
+                  (index === 1 && content.result_2) ||
+                  (index === 2 && content.result_3) ||
+                  (index === 3 && content.result_4)
+                )
+
+                // Déterminer si l'utilisateur a sélectionné cette réponse
+                const isSelected = userAnswers[index]
+                
+                // Valeurs par défaut (non soumis)
+                let textColor = "text-gray-800"
+                let checkboxColor = "border-gray-300"
+                
+                if (submitted) {
+                  // Appliquer les règles exactes spécifiées :
+                  // - Lorsqu'une réponse devait être cochée, son texte apparait en vert.
+                  // - Les checkboxes cochées sont celles qui ont été cochées par l'utilisateur.
+                  // - Si la réponse est juste, la checkbox est verte, qu'elle soit cochée ou non.
+                  // - Si la réponse est fausse, la checkbox est rouge, qu'elle soit cochée ou non.
+                  
+                  // CAS 1: FALSE / FALSE - Réponse incorrecte et non sélectionnée → Texte noir, checkbox verte
+                  // CAS 2: TRUE / TRUE - Réponse correcte et sélectionnée → Texte vert, coche verte
+                  // CAS 3: TRUE / FALSE - Réponse incorrecte mais sélectionnée → Texte noir, coche rouge
+                  // CAS 4: FALSE / TRUE - Réponse correcte mais non sélectionnée → Texte vert, checkbox rouge
+                  
+                  // 1. Couleur du texte : vert si la réponse est correcte
+                  textColor = isCorrectAnswer ? "text-green-600" : "text-gray-800"
+                  
+                  // 2. Couleur de la checkbox : selon les cas spécifiques
+                  if (!isCorrectAnswer && !isSelected) {
+                    // CAS 1: FALSE / FALSE - checkbox verte
+                    checkboxColor = "border-green-600"
+                  } else if (isCorrectAnswer && isSelected) {
+                    // CAS 2: TRUE / TRUE - checkbox verte
+                    checkboxColor = "border-green-600"
+                  } else if (!isCorrectAnswer && isSelected) {
+                    // CAS 3: TRUE / FALSE - checkbox rouge
+                    checkboxColor = "border-red-600"
+                  } else if (isCorrectAnswer && !isSelected) {
+                    // CAS 4: FALSE / TRUE - checkbox rouge
+                    checkboxColor = "border-red-600"
+                  }
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center p-3 border rounded-md mb-2 ${submitted ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50'}`}
+                    onClick={() => !submitted && handleOptionClick(index)}
+                  >
+                    <div className={`flex-shrink-0 w-6 h-6 border-2 rounded-md mr-3 flex items-center justify-center ${submitted ? checkboxColor : (isSelected ? 'border-mush-green' : 'border-gray-300')}`}>
+                      {/* Afficher une coche verte quand l'utilisateur sélectionne une réponse avant soumission */}
+                      {!submitted && isSelected && <Check className="h-4 w-4 text-mush-green" />}
+                      
+                      {/* Afficher une coche de la couleur appropriée quand la réponse est sélectionnée après soumission */}
+                      {submitted && isSelected && <Check className={`h-4 w-4 ${isCorrectAnswer ? 'text-green-600' : 'text-red-600'}`} />}
+                    </div>
+                    <span className={`${textColor} flex-grow`}>{answer}</span>
+                  </div>
+                )
+              })}
             </div>
           )}
+
+          {error && (
+            <div className="bg-red-50 p-3 rounded-lg mt-4 flex items-start">
+              <AlertCircle className="text-red-500 h-5 w-5 mt-0.5 mr-2 flex-shrink-0" />
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
+          
+          {/* Texte de correction qui apparaît après validation - seulement pour les quiz non déjà répondus */}
+          {submitted && !relationId && content.correction_all && (
+            <div className="bg-gray-50 p-3 rounded-lg mt-4 border border-gray-200">
+              <h4 className="font-medium text-gray-800 mb-1">Explication :</h4>
+              <p className="text-gray-700 text-sm">{content.correction_all}</p>
+            </div>
+          )}
+          
+          {/* Affichage des points gagnés - seulement pour les quiz non déjà répondus */}
+          {submitted && !relationId && (
+            <div className="mt-4 flex items-center justify-center">
+              <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
+                <span className="font-medium text-mush-green flex items-center">
+                  <span className="mr-1">🍄</span>
+                  {pointsEarned} point{pointsEarned > 1 ? 's' : ''} gagné{pointsEarned > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Boutons d'action */}
+          <div className="flex space-x-2 mt-4">
+            {submitted ? (
+              <button
+                onClick={handleReset}
+                className="flex-1 py-2 px-4 bg-mush-green text-white rounded-md hover:bg-mush-green/90"
+              >
+                Réessayer
+              </button>
+            ) : (
+              <button
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium p-2 rounded-md"
+                onClick={handleSubmit}
+                disabled={!userAnswers.some((a: boolean) => a) || isSubmitting}
+              >
+                {isSubmitting ? "Validation en cours..." : "Valider ma réponse"}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
     </div>
   )
 }

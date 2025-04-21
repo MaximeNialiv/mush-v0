@@ -1,7 +1,46 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Card, Content, CardWithContent } from "@/types"
 
-export const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+// Créer une instance unique de Supabase pour éviter les problèmes de connexion multiples
+let supabaseInstance: any = null
+
+export const supabase = (() => {
+  if (typeof window === 'undefined') {
+    // Côté serveur - créer une nouvelle instance à chaque fois
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+  
+  // Côté client - utiliser un singleton
+  if (supabaseInstance) return supabaseInstance
+  
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false, // Désactiver la détection automatique pour éviter les instances multiples
+        storage: {
+          getItem: (key) => {
+            try { return localStorage.getItem(key) } catch (e) { return null }
+          },
+          setItem: (key, value) => {
+            try { localStorage.setItem(key, value) } catch (e) {}
+          },
+          removeItem: (key) => {
+            try { localStorage.removeItem(key) } catch (e) {}
+          }
+        }
+      }
+    }
+  )
+
+  return supabaseInstance
+})()
 
 // Données statiques pour le développement
 const mockCards: Card[] = [
@@ -183,7 +222,7 @@ export async function fetchCards(): Promise<CardWithContent[]> {
     if (!cards || cards.length === 0) return []
 
     // Récupérer les contenus associés à chaque carte
-    const contentIds = cards.flatMap((card) => card.content_ids || card.child_ids || [])
+    const contentIds = cards.flatMap((card: Card) => card.content_ids || [])
 
     const { data: contents, error: contentsError } = await supabase
       .from("content")
@@ -193,7 +232,7 @@ export async function fetchCards(): Promise<CardWithContent[]> {
     if (contentsError) throw contentsError
 
     // Récupérer les relations utilisateur-contenu si l'utilisateur est connecté
-    let userRelations = []
+    let userRelations: any[] = []
     if (userId) {
       const { data: relations, error: relationsError } = await supabase
         .from("relation_user_content")
@@ -206,30 +245,38 @@ export async function fetchCards(): Promise<CardWithContent[]> {
     }
 
     // Récupérer les informations sur les propriétaires
-    const ownerIds = [...new Set(cards.map((card) => card.owner).filter(Boolean))]
-    let ownerNames = {}
+    const ownerIds = [...new Set(cards.map((card: Card) => card.owner).filter(Boolean))]
+    let ownerNames: Record<string, string> = {}
 
     if (ownerIds.length > 0) {
-      const { data: owners, error: ownersError } = await supabase
-        .from("user_profile")
-        .select("auth_id, pseu")
-        .in("auth_id", ownerIds)
+      try {
+        // Récupérer les profils un par un pour éviter les erreurs 400
+        for (const ownerId of ownerIds) {
+          if (!ownerId) continue
+          
+          const { data: owner, error } = await supabase
+            .from("user_profile")
+            .select("auth_id, pseu")
+            .eq("auth_id", ownerId)
+            .single()
 
-      if (!ownersError && owners) {
-        ownerNames = owners.reduce((acc, owner) => {
-          acc[owner.auth_id] = owner.pseu || "Utilisateur"
-          return acc
-        }, {})
+          if (!error && owner) {
+            ownerNames[owner.auth_id] = owner.pseu || "Utilisateur"
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des noms d'utilisateurs:", error)
+        // En cas d'erreur, continuer avec un objet vide
       }
     }
 
     // Associer les contenus et les relations à chaque carte
-    const cardsWithContent = cards.map((card) => {
-      // Utiliser content_ids s'il existe, sinon utiliser child_ids pour la compatibilité
-      const cardContentIds = card.content_ids || card.child_ids || []
+    const cardsWithContent = cards.map((card: Card) => {
+      // Utiliser uniquement content_ids (child_ids a été renommé en content_ids)
+      const cardContentIds = card.content_ids || []
 
       const cardContents = cardContentIds
-        .map((id) => contents?.find((content) => content.sequential_id === id))
+        .map((id: string) => contents?.find((content: Content) => content.sequential_id === id))
         .filter(Boolean) as Content[]
 
       // Calculer le total des points disponibles
@@ -241,7 +288,7 @@ export async function fetchCards(): Promise<CardWithContent[]> {
       if (userId) {
         earnedPoints = cardContents.reduce((sum, content) => {
           const relation = userRelations.find(
-            (r) => r.card_id === card.sequential_id && cardContentIds.includes(content.sequential_id),
+            (r: any) => r.card_id === card.sequential_id && cardContentIds.includes(content.sequential_id),
           )
           return sum + (relation?.points || 0)
         }, 0)
@@ -252,7 +299,7 @@ export async function fetchCards(): Promise<CardWithContent[]> {
         contents: cardContents,
         totalPoints,
         earnedPoints,
-        ownerName: ownerNames[card.owner] || card.owner,
+        ownerName: card.owner ? (ownerNames[card.owner] || card.owner) : 'Système',
       }
     })
 
@@ -263,7 +310,7 @@ export async function fetchCards(): Promise<CardWithContent[]> {
     // En cas d'erreur, utiliser les données statiques avec les mêmes calculs
     const cardsWithContent = mockCards.map((card) => {
       const contents = card.content_ids
-        .map((id) => mockContents.find((content) => content.sequential_id === id))
+        .map((id: string) => mockContents.find((content) => content.sequential_id === id))
         .filter(Boolean) as Content[]
 
       const totalPoints = contents.reduce((sum, content) => sum + (content.points || 0), 0)

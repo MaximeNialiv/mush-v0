@@ -5,6 +5,7 @@ export interface Card {
   type: string
   owner: string
   content_ids: string[] // Renommé de child_ids à content_ids
+  child_ids?: string[] // Pour la compatibilité avec les anciennes données
   created_at: string
   updated_at: string
 }
@@ -32,17 +33,18 @@ export interface Content {
   correction_all?: string
 }
 
-export interface UserContentRelation {
+export interface RelationUserContent {
   sequential_id: string
   user_id: string
-  card_id: string
+  content_id: string // ID du contenu associé à la relation
   state: string
-  points_a: number
-  result_1?: boolean
-  result_2?: boolean
-  result_3?: boolean
-  result_4?: boolean
+  sender_id: string
   created_at: string
+  points: number
+  result_1: boolean
+  result_2: boolean
+  result_3: boolean
+  result_4: boolean
   last_view: string
 }
 
@@ -51,13 +53,14 @@ export interface UserProfile {
   auth_id: string
   pseu?: string
   total_points: number // Total de champignons 🍄
+  communication?: boolean // Accepte de recevoir des communications
   created_at: string
   updated_at: string
 }
 
 export interface CardWithContent extends Card {
   contents?: Content[]
-  userRelation?: UserContentRelation
+  userRelation?: RelationUserContent
   totalPoints?: number // Total des points disponibles
   earnedPoints?: number // Points gagnés par l'utilisateur
   ownerName?: string // Nom de l'owner de la carte

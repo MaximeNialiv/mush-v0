@@ -3,6 +3,7 @@
 import { useAtom } from "jotai"
 import { mushroomCountAtom, viewModeAtom } from "@/store/atoms"
 import { Search, Grid, List, Bell } from "lucide-react"
+import { UserProfileMenu } from "@/components/user-profile-menu"
 
 export function Header() {
   const [mushroomCount] = useAtom(mushroomCountAtom)
@@ -27,7 +28,7 @@ export function Header() {
           <div className="hidden md:flex relative flex-1 max-w-md mx-4">
             <input
               type="text"
-              placeholder="Rechercher..."
+              placeholder="Rechercher... (wip)"
               className="w-full py-2 pl-10 pr-4 border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-mush-green shadow-sm"
             />
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
@@ -51,24 +52,14 @@ export function Header() {
               </button>
             </div>
 
-            {/* Notifications */}
-            <button className="relative p-2 rounded-full hover:bg-gray-100">
-              <Bell className="h-5 w-5 text-gray-700" />
-              <span className="absolute top-0 right-0 w-5 h-5 bg-mush-red rounded-full text-white text-xs flex items-center justify-center font-bold shadow-sm">
-                2
-              </span>
-            </button>
-
             {/* Compteur de champignons */}
             <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full border-2 border-gray-200 shadow-sm">
               <span className="text-mush-red text-xl mr-1.5">🍄</span>
               <span className="font-bold">{mushroomCount}</span>
             </div>
 
-            {/* Avatar utilisateur */}
-            <div className="w-10 h-10 rounded-full bg-mush-green flex items-center justify-center text-white shadow-md">
-              <span className="font-bold text-lg">F</span>
-            </div>
+            {/* Menu de profil utilisateur */}
+            <UserProfileMenu />
           </div>
         </div>
       </div>

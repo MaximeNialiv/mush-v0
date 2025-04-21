@@ -11,12 +11,12 @@ export function NavigationBar() {
     { icon: <Home className="w-6 h-6" />, href: "/", label: "Accueil" },
     { icon: <Tree className="w-6 h-6" />, href: "/mush", label: "Mush" },
     { icon: <Video className="w-6 h-6" />, href: "/videos", label: "Vidéos" },
-    { icon: <MessageSquare className="w-6 h-6" />, href: "/messages", label: "Messages", badge: 2 },
+    { icon: <MessageSquare className="w-6 h-6" />, href: "/messages", label: "Messages" },
     { icon: <Menu className="w-6 h-6" />, href: "/menu", label: "Menu" },
   ]
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-mush-yellow border-t border-mush-yellow shadow-lg h-16 flex items-center justify-around px-2">
+    <div className="fixed bottom-0 left-0 right-0 bg-transparent h-16 flex items-center justify-around px-2">
       {navItems.map((item, index) => {
         const isActive = pathname === item.href || (item.href === "/mush" && pathname === "/")
 
