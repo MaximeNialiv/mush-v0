@@ -73,11 +73,11 @@ export function CardItem({ card }: CardItemProps) {
 
         {/* Affichage des points totaux gagnés en bas de la carte s'il y a plusieurs contenus */}
         {card.contents && card.contents.length > 1 && card.earnedPoints && card.earnedPoints > 0 && (
-          <div className="mt-4 border-t border-dashed border-gray-300 pt-4 flex justify-center">
+          <div className="mt-4 border-t border-dashed border-gray-300 pt-4 flex justify-end">
             <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
               <span className="font-medium text-mush-green flex items-center">
                 <span className="mr-1">🍄</span>
-                Total : {card.earnedPoints} point{card.earnedPoints > 1 ? 's' : ''} gagné{card.earnedPoints > 1 ? 's' : ''}
+                Total : {card.earnedPoints} point{card.earnedPoints > 1 ? 's' : ''}
               </span>
             </div>
           </div>
@@ -92,12 +92,15 @@ export function CardItem({ card }: CardItemProps) {
                 {card.ownerName || card.owner}
               </a>
             </div>
-            <div className="flex items-center bg-white px-3 py-1.5 rounded-full border-2 border-gray-200">
-              <span className="text-mush-red mr-1">🍄</span>
-              <span className="font-bold">
-                {card.earnedPoints || 0}/{card.totalPoints || 0}
-              </span>
-            </div>
+            {/* Afficher les points uniquement si la carte a des points disponibles */}
+            {(card.totalPoints && card.totalPoints > 0) && (
+              <div className="flex items-center bg-white px-3 py-1.5 rounded-full border-2 border-gray-200">
+                <span className="text-mush-red mr-1">🍄</span>
+                <span className="font-bold">
+                  {card.earnedPoints || 0}/{card.totalPoints || 0}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

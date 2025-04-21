@@ -54,14 +54,23 @@ export default function Home() {
       }
     }
     
-    // Vérifier périodiquement l'authentification
-    const authCheckInterval = setInterval(periodicCheckAuth, 60000) // 1 minute
+    // Vérifier périodiquement l'authentification mais moins fréquemment
+    const authCheckInterval = setInterval(periodicCheckAuth, 300000) // 5 minutes
     
     // Écouteur d'événement pour ouvrir la modale d'authentification
     const handleOpenAuthModal = () => {
       setIsAuthModalOpen(true)
     }
     
+    // Désactiver le rechargement automatique lors du focus de l'onglet
+    const handleVisibilityChange = () => {
+      // Ne rien faire lorsque l'onglet reprend le focus
+      if (document.visibilityState === 'visible') {
+        console.log('Onglet actif, mais rechargement désactivé')
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('open-auth-modal', handleOpenAuthModal)
 
     // Abonnement aux changements d'authentification
@@ -75,6 +84,7 @@ export default function Home() {
 
     return () => {
       clearInterval(authCheckInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('open-auth-modal', handleOpenAuthModal)
       subscription.unsubscribe()
     }

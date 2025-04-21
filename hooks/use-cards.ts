@@ -13,13 +13,66 @@ export function useCards() {
   const [error, setError] = useAtom(errorAtom)
   const [mushroomCount, setMushroomCount] = useAtom(mushroomCountAtom)
 
-  // Charger les cartes
+  // Charger les cartes et calculer les points
   const loadCards = async () => {
     try {
       setLoading(true)
       setError(null)
+      
+      // Récupérer les cartes
       const cardsData = await fetchCards()
-      setCards(cardsData)
+      
+      // Récupérer les réponses de l'utilisateur pour calculer les points
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Récupérer toutes les relations utilisateur-contenu
+        const { data: relations, error } = await supabase
+          .from("relation_user_content")
+          .select("content_id, points")
+          .eq("user_id", user.id)
+        
+        if (relations && !error) {
+          // Créer un dictionnaire pour un accès rapide
+          const pointsByContent: Record<string, number> = {}
+          relations.forEach((rel: { content_id: string; points: number | null }) => {
+            pointsByContent[rel.content_id] = rel.points || 0
+          })
+          
+          // Mettre à jour les points gagnés pour chaque carte
+          const updatedCards = cardsData.map(card => {
+            let earnedPoints = 0
+            let totalPoints = 0
+            
+            // Calculer les points gagnés et totaux pour cette carte
+            if (card.contents && card.contents.length > 0) {
+              card.contents.forEach(content => {
+                // Points totaux disponibles pour ce contenu
+                totalPoints += content.points || 0
+                
+                // Points gagnés par l'utilisateur pour ce contenu
+                if (pointsByContent[content.sequential_id]) {
+                  earnedPoints += pointsByContent[content.sequential_id]
+                }
+              })
+            }
+            
+            return {
+              ...card,
+              earnedPoints,
+              totalPoints
+            }
+          })
+          
+          setCards(updatedCards)
+        } else {
+          console.error("Erreur lors de la récupération des relations:", error)
+          setCards(cardsData)
+        }
+      } else {
+        // Utilisateur non connecté, afficher les cartes sans points
+        setCards(cardsData)
+      }
     } catch (err) {
       console.error("Erreur lors du chargement des cartes:", err)
       setError("Impossible de charger les cartes")

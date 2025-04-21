@@ -255,21 +255,17 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
 
           {/* Affichage différent selon que le quiz a déjà été répondu ou non */}
           {submitted && relationId ? (
-            // Quiz déjà répondu - Affichage simplifié
+            // Quiz déjà répondu - Affichage simplifié sans texte de correction
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
-              <div className="flex items-center justify-center mb-4">
+              <div className="flex items-center justify-end">
                 <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
                   <span className="font-medium text-mush-green flex items-center">
                     <span className="mr-1">🍄</span>
-                    {pointsEarned} point{pointsEarned > 1 ? 's' : ''} gagné{pointsEarned > 1 ? 's' : ''}
+                    {pointsEarned} point{pointsEarned > 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
-              {content.correction_all && (
-                <div className="text-sm text-gray-600 mb-4 text-center">
-                  <p>{content.correction_all}</p>
-                </div>
-              )}
+              {/* Texte de correction supprimé pour économiser de l'espace */}
             </div>
           ) : (
             // Quiz non répondu - Affichage normal des options
