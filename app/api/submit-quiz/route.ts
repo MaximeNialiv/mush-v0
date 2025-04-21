@@ -59,27 +59,49 @@ export async function POST(request: Request) {
     if (isDevelopment && relationData.user_id === "anonymous") {
       console.log("Mode développement: simulation de mise à jour des points")
     } else if (user) {
-      const { data: profile, error: profileError } = await supabase
-        .from("user_profile")
-        .select("total_points")
-        .eq("auth_id", user.id)
-        .single()
+      // Utiliser une requête RPC pour mettre à jour les points en une seule opération atomique
+      // Cela évite les problèmes de concurrence et réduit le nombre de requêtes
+      try {
+        // Utiliser une transaction pour garantir l'atomicité
+        const { data, error } = await supabase.rpc('increment_user_points', {
+          user_auth_id: user.id,
+          points_to_add: relationData.points
+        })
 
-      if (profileError) {
-        console.error("Erreur lors de la récupération du profil:", profileError)
-        return NextResponse.json({ error: profileError.message }, { status: 500 })
-      }
+        if (error) {
+          console.error("Erreur lors de la mise à jour des points via RPC:", error)
+          
+          // Fallback: méthode traditionnelle en cas d'échec de la RPC
+          const { data: profile, error: profileError } = await supabase
+            .from("user_profile")
+            .select("total_points")
+            .eq("auth_id", user.id)
+            .single()
 
-      newTotal = (profile.total_points || 0) + relationData.points
+          if (profileError) {
+            console.error("Erreur lors de la récupération du profil:", profileError)
+            return NextResponse.json({ error: profileError.message }, { status: 500 })
+          }
 
-      const { error: updateError } = await supabase
-        .from("user_profile")
-        .update({ total_points: newTotal })
-        .eq("auth_id", user.id)
-        
-      if (updateError) {
-        console.error("Erreur lors de la mise à jour des points:", updateError)
-        return NextResponse.json({ error: updateError.message }, { status: 500 })
+          newTotal = (profile.total_points || 0) + relationData.points
+
+          const { error: updateError } = await supabase
+            .from("user_profile")
+            .update({ total_points: newTotal })
+            .eq("auth_id", user.id)
+            
+          if (updateError) {
+            console.error("Erreur lors de la mise à jour des points:", updateError)
+            return NextResponse.json({ error: updateError.message }, { status: 500 })
+          }
+        } else {
+          // Si la RPC a réussi, elle renvoie le nouveau total
+          newTotal = data || newTotal
+          console.log("Points mis à jour avec succès via RPC, nouveau total:", newTotal)
+        }
+      } catch (err) {
+        console.error("Erreur lors de la mise à jour des points:", err)
+        return NextResponse.json({ error: "Erreur lors de la mise à jour des points" }, { status: 500 })
       }
     }
 

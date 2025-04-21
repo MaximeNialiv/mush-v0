@@ -265,31 +265,38 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   // Gérer la fermeture de la modale - empêcher toute fermeture sauf si l'utilisateur est authentifié
   const handleOpenChange = (open: boolean) => {
-    // Si la modale tente de se fermer
-    if (!open) {
-      // Vérifier si l'utilisateur est authentifié
-      const checkAuth = async () => {
-        const { data } = await supabase.auth.getUser()
-        // Permettre la fermeture uniquement si l'utilisateur est authentifié
-        if (data.user) {
-          setIsUserAuthenticated(true)
-          onClose()
-        } else {
-          // Bloquer toute tentative de fermeture
-          console.log("Tentative de fermeture bloquée : utilisateur non authentifié")
-        }
-      }
-      checkAuth()
-      return
+    // Si la modale tente de se fermer et que l'utilisateur n'est pas authentifié, bloquer la fermeture
+    if (!open && !isUserAuthenticated) {
+      console.log("Tentative de fermeture bloquée : utilisateur non authentifié")
+      return false
     }
+    
+    // Si l'utilisateur est authentifié, permettre la fermeture
+    if (!open && isUserAuthenticated) {
+      onClose()
+    }
+    
+    return true
   }
   
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e: React.PointerEvent) => {
-        // Empêcher la fermeture par clic extérieur dans tous les cas
-        e.preventDefault()
-      }} onEscapeKeyDown={(e: React.KeyboardEvent) => e.preventDefault()}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={handleOpenChange}
+    >
+      <DialogContent 
+        className="sm:max-w-md" 
+        // Empêcher la fermeture par clic extérieur
+        onPointerDownOutside={(e) => e.preventDefault()}
+        // Empêcher la fermeture par touche Escape
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        // Ajouter une description pour corriger l'avertissement d'accessibilité
+        aria-describedby="auth-modal-description"
+      >
+        <div id="auth-modal-description" className="sr-only">
+          Modale d'authentification pour accéder à l'application Mush
+        </div>
+        {/* Pas de bouton de fermeture */}
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold text-mush-green">
             Rejoignez Mush !

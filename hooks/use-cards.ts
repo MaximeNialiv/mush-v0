@@ -28,9 +28,21 @@ export function useCards() {
     }
   }
 
-  // Charger le profil utilisateur
-  const loadUserProfile = async () => {
+  // Cache pour les points utilisateur
+  const pointsCache = useRef({ value: 0, timestamp: 0 })
+  const CACHE_TTL = 60000 // 60 secondes en millisecondes
+
+  // Charger le profil utilisateur avec mise en cache
+  const loadUserProfile = async (forceRefresh = false) => {
     try {
+      // Vérifier si on peut utiliser le cache
+      const now = Date.now()
+      if (!forceRefresh && now - pointsCache.current.timestamp < CACHE_TTL) {
+        // Utiliser la valeur en cache si elle est récente
+        setMushroomCount(pointsCache.current.value)
+        return pointsCache.current.value
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -43,11 +55,17 @@ export function useCards() {
           .single()
 
         if (data && !error) {
-          setMushroomCount(data.total_points || 0)
+          const points = data.total_points || 0
+          // Mettre à jour le cache
+          pointsCache.current = { value: points, timestamp: now }
+          setMushroomCount(points)
+          return points
         }
       }
+      return null
     } catch (err) {
       console.error("Erreur lors du chargement du profil:", err)
+      return null
     }
   }
 
@@ -58,13 +76,30 @@ export function useCards() {
   const lastLoadTime = useRef(0)
   const loadCardsThrottled = async () => {
     const now = Date.now()
-    const minDelay = 5000 // 5 secondes minimum entre les rechargements
+    const minDelay = 30000 // 30 secondes minimum entre les rechargements (augmenté pour réduire les perturbations)
     
     if (now - lastLoadTime.current < minDelay) {
       console.log("Rechargement des cartes ignoré (trop fréquent)")
       return
     }
     
+    // Vérifier si des cartes sont déjà chargées pour éviter les rechargements inutiles
+    if (cards && cards.length > 0 && cardsLoaded) {
+      console.log("Cartes déjà chargées, rechargement silencieux")
+      // Rechargement silencieux en arrière-plan sans modifier l'état de chargement
+      try {
+        const cardsData = await fetchCards()
+        // Mettre à jour uniquement si les données ont changé
+        if (JSON.stringify(cardsData) !== JSON.stringify(cards)) {
+          setCards(cardsData)
+        }
+      } catch (err) {
+        console.error("Erreur lors du rechargement silencieux des cartes:", err)
+      }
+      return
+    }
+    
+    // Premier chargement ou rechargement forcé
     lastLoadTime.current = now
     await loadCards()
     setCardsLoaded(true)
@@ -72,10 +107,16 @@ export function useCards() {
 
   // Écouter les changements de points et d'authentification
   useEffect(() => {
-    // Chargement initial des cartes et du profil
+    // Chargement initial immédiat des cartes et du profil
     if (!cardsLoaded) {
-      loadCardsThrottled()
-      loadUserProfile()
+      // Charger le profil utilisateur en priorité
+      const loadInitialData = async () => {
+        // Charger le profil en premier (plus rapide)
+        await loadUserProfile(true) // Force refresh
+        // Puis charger les cartes
+        loadCardsThrottled()
+      }
+      loadInitialData()
     }
 
     // Abonnement aux changements de points
@@ -88,8 +129,13 @@ export function useCards() {
           schema: "public",
           table: "user_profile",
         },
-        (payload) => {
+        (payload: any) => {
           if (payload.new && payload.new.total_points !== undefined) {
+            // Mettre à jour le cache et l'état
+            pointsCache.current = { 
+              value: payload.new.total_points, 
+              timestamp: Date.now() 
+            }
             setMushroomCount(payload.new.total_points)
           }
         },
@@ -97,11 +143,15 @@ export function useCards() {
       .subscribe()
     
     // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+      // Limiter les logs pour éviter de polluer la console
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        console.log("Auth state changed:", event)
+      }
+      
       if (event === 'SIGNED_IN') {
-        // Recharger le profil utilisateur immédiatement
-        loadUserProfile()
+        // Recharger le profil utilisateur immédiatement avec force refresh
+        loadUserProfile(true)
         
         // Recharger les cartes avec le throttling
         loadCardsThrottled()
@@ -120,5 +170,11 @@ export function useCards() {
     error,
     mushroomCount,
     refreshCards: loadCards,
+    refreshUserProfile: () => loadUserProfile(true), // Méthode pour rafraîchir le profil
+    silentRefresh: async () => {
+      // Méthode pour rafraîchir silencieusement sans changer l'état de chargement
+      await loadUserProfile(false) // Utiliser le cache si possible
+      // Ne pas recharger les cartes pour éviter de perturber l'expérience utilisateur
+    }
   }
 }

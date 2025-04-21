@@ -13,14 +13,17 @@ export default function Home() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const supabase = useSupabase()
 
-  // Fonction de vérification d'authentification immédiate et prioritaire
+  // Fonction de vérification d'authentification simple
   const checkAuth = async () => {
     setIsCheckingAuth(true)
     try {
+      // Vérifier avec Supabase si l'utilisateur est connecté
       const { data } = await supabase.auth.getSession()
       if (!data.session) {
+        // Si l'utilisateur n'est pas connecté, afficher la modale d'authentification
         setIsAuthModalOpen(true)
       } else {
+        // Si l'utilisateur est connecté, s'assurer que la modale est fermée
         setIsAuthModalOpen(false)
       }
     } catch (error) {
@@ -34,24 +37,25 @@ export default function Home() {
 
   // Vérification immédiate au chargement de la page
   useEffect(() => {
-    // Exécution prioritaire et synchrone
+    // Vérifier l'authentification au chargement de la page
     checkAuth()
     
-    // Vérification périodique silencieuse de l'authentification
+    // Vérification périodique simple de l'authentification
     const periodicCheckAuth = async () => {
       try {
+        // Vérifier uniquement si l'utilisateur est connecté
         const { data } = await supabase.auth.getSession()
         if (!data.session && !isAuthModalOpen) {
-          // Si l'utilisateur n'est plus authentifié et que la modale n'est pas déjà ouverte
+          // Si l'utilisateur n'est pas connecté et que la modale n'est pas déjà ouverte, l'afficher
           setIsAuthModalOpen(true)
         }
       } catch (error) {
-        console.error("Erreur lors de la vérification périodique de l'authentification:", error)
+        console.error("Erreur lors de la vérification de l'authentification:", error)
       }
     }
     
-    // Vérifier toutes les 60 secondes
-    const authCheckInterval = setInterval(periodicCheckAuth, 60000)
+    // Vérifier périodiquement l'authentification
+    const authCheckInterval = setInterval(periodicCheckAuth, 60000) // 1 minute
     
     // Écouteur d'événement pour ouvrir la modale d'authentification
     const handleOpenAuthModal = () => {

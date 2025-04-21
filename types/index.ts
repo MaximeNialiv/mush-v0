@@ -5,6 +5,7 @@ export interface Card {
   type: string
   owner: string
   content_ids: string[] // Renommé de child_ids à content_ids
+  child_ids?: string[] // Pour la compatibilité avec les anciennes données
   created_at: string
   updated_at: string
 }
