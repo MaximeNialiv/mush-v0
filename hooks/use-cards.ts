@@ -122,13 +122,15 @@ export function useCards() {
             if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
               console.log("Profil utilisateur non trouvé, création d'un nouveau profil")
               
-              // Créer un nouveau profil utilisateur
+              // Créer un nouveau profil utilisateur avec des champs valides
               const { data: newProfile, error: insertError } = await supabase
                 .from("user_profile")
                 .insert({
                   auth_id: user.id,
                   total_points: 0,
-                  pseudo: user.email?.split('@')[0] || 'Utilisateur'
+                  pseudo: user.email?.split('@')[0] || 'Utilisateur',
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
                 })
                 .select("total_points")
                 .single()
