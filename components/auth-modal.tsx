@@ -292,6 +292,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         onEscapeKeyDown={(e) => e.preventDefault()}
         // Ajouter une description pour corriger l'avertissement d'accessibilité
         aria-describedby="auth-modal-description"
+        // Supprimer le bouton de fermeture (X)
+        hideCloseButton={true}
       >
         <div id="auth-modal-description" className="sr-only">
           Modale d'authentification pour accéder à l'application Mush

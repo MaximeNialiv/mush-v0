@@ -1,24 +1,44 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Card, Content, CardWithContent } from "@/types"
 
-// Utiliser un singleton pour éviter les instances multiples de GoTrueClient
+// Créer une instance unique de Supabase pour éviter les problèmes de connexion multiples
 let supabaseInstance: any = null
 
 export const supabase = (() => {
+  if (typeof window === 'undefined') {
+    // Côté serveur - créer une nouvelle instance à chaque fois
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+  
+  // Côté client - utiliser un singleton
   if (supabaseInstance) return supabaseInstance
   
   supabaseInstance = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!, 
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: false, // Désactiver la détection automatique pour éviter les instances multiples
+        storage: {
+          getItem: (key) => {
+            try { return localStorage.getItem(key) } catch (e) { return null }
+          },
+          setItem: (key, value) => {
+            try { localStorage.setItem(key, value) } catch (e) {}
+          },
+          removeItem: (key) => {
+            try { localStorage.removeItem(key) } catch (e) {}
+          }
+        }
       }
     }
   )
-  
+
   return supabaseInstance
 })()
 
@@ -230,19 +250,19 @@ export async function fetchCards(): Promise<CardWithContent[]> {
 
     if (ownerIds.length > 0) {
       try {
-        // Utiliser une requête plus sécurisée qui ne génère pas d'erreur 400
-        const { data: owners, error: ownersError } = await supabase
-          .from("user_profile")
-          .select("auth_id, pseu")
-          .filter('auth_id', 'in', `(${ownerIds.map(id => `'${id}'`).join(',')})`) // Format sécurisé
+        // Récupérer les profils un par un pour éviter les erreurs 400
+        for (const ownerId of ownerIds) {
+          if (!ownerId) continue
+          
+          const { data: owner, error } = await supabase
+            .from("user_profile")
+            .select("auth_id, pseu")
+            .eq("auth_id", ownerId)
+            .single()
 
-        if (!ownersError && owners && Array.isArray(owners)) {
-          ownerNames = owners.reduce((acc: Record<string, string>, owner: any) => {
-            if (owner && owner.auth_id) {
-              acc[owner.auth_id] = owner.pseu || "Utilisateur"
-            }
-            return acc
-          }, {})
+          if (!error && owner) {
+            ownerNames[owner.auth_id] = owner.pseu || "Utilisateur"
+          }
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des noms d'utilisateurs:", error)

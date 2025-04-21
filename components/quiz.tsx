@@ -45,14 +45,21 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   // Vérifier si l'utilisateur a déjà répondu à ce quiz
   async function checkExistingAnswers(uid: string) {
     try {
+      // Utiliser limit(1) pour éviter l'erreur PGRST116 (multiple rows returned)
       const { data, error } = await supabase
         .from("relation_user_content")
         .select("*")
         .eq("user_id", uid)
         .eq("content_id", content.sequential_id)
-        .maybeSingle()
+        .order('created_at', { ascending: false }) // Prendre la relation la plus récente
+        .limit(1)
+        .single()
 
       if (error) {
+        // Si c'est une erreur "No rows found", ce n'est pas un problème
+        if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
+          return // Pas de réponse existante, c'est normal
+        }
         throw error
       }
 
