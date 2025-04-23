@@ -66,6 +66,7 @@ export interface CardWithContent extends Card {
   totalPoints?: number // Total des points disponibles
   earnedPoints?: number // Points gagnés par l'utilisateur
   ownerName?: string // Nom de l'owner de la carte
+  ownerAvatar?: string // Avatar de l'owner de la carte
   isFolder?: boolean // Indique si la carte est un dossier
   isExpanded?: boolean // État d'expansion du dossier
 }

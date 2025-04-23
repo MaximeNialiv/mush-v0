@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { Content } from "@/types"
-import { HelpCircle } from "lucide-react"
+import { HelpCircle, Trophy, Music, Video, Newspaper, FileText } from "lucide-react"
 import { OpenGraphPreview } from "./open-graph-preview"
 import { Quiz } from "./quiz"
 import { atom, useAtom } from "jotai"
@@ -30,6 +30,15 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
   const [, setMushroomCount] = useAtom(mushroomCountAtom)
   const [cards, setCards] = useAtom(cardsAtom)
   const [hasCompletedQuiz, setHasCompletedQuiz] = useState(false)
+  
+  // Déterminer l'icône à afficher en fonction du type de contenu
+  const getContentIcon = () => {
+    if (content.type === "quiz") return <Trophy className="w-5 h-5" />
+    if (content.media_url?.includes("podcast") || content.media_url?.includes(".mp3")) return <Music className="w-5 h-5" />
+    if (content.media_url?.includes("video") || content.media_url?.includes("youtube") || content.media_url?.includes(".mp4")) return <Video className="w-5 h-5" />
+    if (content.media_url?.includes("article") || content.description?.includes("article")) return <Newspaper className="w-5 h-5" />
+    return <FileText className="w-5 h-5" />
+  }
   
   // Vérifier si l'utilisateur a déjà complété ce quiz
   useEffect(() => {
@@ -99,28 +108,35 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
     <div className="w-full relative">
       {/* En-tête du contenu avec ID et points */}
       <div className="p-4">
-        {content.question && (
-          <div className="flex items-center justify-between mb-2">
-            <div className="bg-gray-100 px-3 py-1 rounded-full text-gray-700 text-sm font-medium">
-              #{content.sequential_id}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            {/* Icône de type de contenu */}
+            <div className="w-6 h-6 rounded-full bg-mush-green flex items-center justify-center mr-2 text-white">
+              {getContentIcon()}
             </div>
-            {totalPoints > 0 && (
-              <div className="bg-mush-green/10 px-3 py-1 rounded-full border border-mush-green/30">
-                <span className="text-mush-green text-sm font-medium flex items-center">
-                  <span className="mr-1">🍄</span>
-                  {mushPoints}/{totalPoints}
-                </span>
+            
+            {/* ID du contenu */}
+            {content.sequential_id && (
+              <div className="bg-mush-green/10 px-3 py-1 rounded-full border border-mush-green/30 text-mush-green text-sm font-medium">
+                #{content.sequential_id}
               </div>
             )}
           </div>
-        )}
-        
-        {/* Afficher la question */}
-        <div>
-          {/* Afficher la question seulement si le quiz n'est pas ouvert ou si ce n'est pas un quiz */}
-          {(!content.question || !showQuiz) && (
-            <h4 className="font-bold text-gray-800">{content.question ? content.question : content.description}</h4>
+          
+          {/* Points */}
+          {totalPoints > 0 && (
+            <div className="bg-mush-green/10 px-3 py-1 rounded-full border border-mush-green/30">
+              <span className="text-mush-green text-sm font-medium flex items-center">
+                <span className="mr-1">🍄</span>
+                {mushPoints}/{totalPoints}
+              </span>
+            </div>
           )}
+        </div>
+        
+        {/* Afficher la question - toujours visible */}
+        <div className="mt-2">
+          <h4 className="font-bold text-gray-800">{content.question ? content.question : content.description}</h4>
         </div>
       </div>
 
@@ -142,7 +158,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
 
         {/* Afficher le quiz si demandé */}
         {content.question && showQuiz && (
-          <div>
+          <div className="mt-2">
             <Quiz 
               content={content} 
               cardId={cardId} 

@@ -249,11 +249,8 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
 
   return (
     <div className="relative">
-      {/* Affichage de la question */}
       <div>
-          <h3 className="font-bold text-lg mb-4 text-gray-800">{content.question}</h3>
-
-          {/* Options de réponse */}
+          {/* Options de réponse - sans répéter la question qui est déjà affichée dans le ContentItem */}
           <div className="space-y-3 mb-4">
             {[content.answer_1, content.answer_2, content.answer_3, content.answer_4].filter(Boolean).map((answer, index) => {
               if (!answer) return null

@@ -1,7 +1,7 @@
 "use client"
 
 import type { CardWithContent } from "@/types"
-import { FileText } from "lucide-react"
+import { FileText, Music, Video, Newspaper, Trophy } from "lucide-react"
 import { ContentItem } from "./content-item"
 import { atom, useAtom } from "jotai"
 import { atomFamily } from "jotai/utils"
@@ -21,9 +21,18 @@ export function CardItem({ card }: CardItemProps) {
   const expandedAtom = expandedAtomFamily(card.sequential_id)
   const [isExpanded, setIsExpanded] = useAtom(expandedAtom)
   
-  // S'assurer que les propriétés numériques existent pour éviter d'afficher des 0 orphelins
-  const earnedPoints = card.earnedPoints && card.earnedPoints > 0 ? card.earnedPoints : null
-  const totalPoints = card.totalPoints && card.totalPoints > 0 ? card.totalPoints : null
+  // Fonction pour générer les initiales du créateur
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2)
+  }
+  
+  // Obtenir les initiales du créateur
+  const ownerInitials = getInitials(card.ownerName || card.owner || 'User')
 
   return (
     <div className="relative mb-8 max-w-[400px] mx-auto w-full">
@@ -34,9 +43,13 @@ export function CardItem({ card }: CardItemProps) {
         {/* En-tête de la carte */}
         <div className="p-4 flex items-center justify-between border-b-2 border-gray-200">
           <div className="flex items-center">
-            {/* Icône de type de contenu au lieu de l'avatar */}
+            {/* Photo de profil du créateur ou initiales */}
             <div className="w-10 h-10 rounded-full bg-mush-green flex items-center justify-center mr-3 text-white">
-              <FileText className="w-5 h-5" />
+              {card.ownerAvatar ? (
+                <img src={card.ownerAvatar} alt={card.ownerName || card.owner} className="w-10 h-10 rounded-full object-cover" />
+              ) : (
+                <span className="font-bold">{ownerInitials}</span>
+              )}
             </div>
             <div>
               <h3 className="text-lg font-bold">{card.title}</h3>
@@ -54,21 +67,7 @@ export function CardItem({ card }: CardItemProps) {
           </div>
         )}
 
-        {/* Suppression de l'affichage des points totaux gagnés en bas de la carte */}
-
-        {/* Pied de page de la carte */}
-        <div className="border-t-2 border-gray-200"></div>
-        <div className="p-4 bg-gray-50 text-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <span className="text-gray-700">Créé par</span>
-              <a href="#" className="ml-1 text-mush-green font-bold hover:underline">
-                {card.ownerName || card.owner}
-              </a>
-            </div>
-            {/* Suppression de l'affichage des points dans le footer de la carte */}
-          </div>
-        </div>
+        {/* Suppression complète du footer */}
       </div>
     </div>
   )
