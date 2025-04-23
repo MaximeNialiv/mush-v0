@@ -282,26 +282,16 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
 
   // Réinitialiser le quiz sans supprimer la relation existante
   const handleReset = () => {
-    // Réinitialiser l'état local complètement pour ne plus afficher la correction
+    // Réinitialiser l'état local complètement pour permettre une nouvelle soumission
     setUserAnswers(Array(4).fill(false))
-    setSubmitted(false) // Important : ceci cache la correction
+    setSubmitted(false) // Important : ceci cache la correction et permet une nouvelle soumission
     setPointsEarned(0)
     setError(null)
+    setIsSubmitting(false) // S'assurer que le bouton de soumission est actif
     
     // Informer le parent pour mettre à jour l'affichage des points
-    // Cela permet de réinitialiser visuellement les points sans modifier la base de données
     if (onComplete) {
       onComplete(0) // Indiquer 0 point pour réinitialiser l'affichage
-    }
-    
-    // Faire défiler vers le haut du quiz si nécessaire
-    if (onClose) {
-      // Fermer et rouvrir le quiz pour un réel reset visuel
-      onClose()
-      setTimeout(() => {
-        // Réouvrir le quiz après une courte pause
-        if (onComplete) onComplete(0)
-      }, 50)
     }
   }
 
