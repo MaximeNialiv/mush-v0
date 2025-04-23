@@ -30,37 +30,25 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   // Fonction pour mettre à jour le total des points de l'utilisateur
   const updateUserTotalPoints = async (userId: string) => {
     try {
-      // Récupérer toutes les relations de l'utilisateur
-      const { data: relations, error: relationsError } = await supabase
-        .from("relation_user_content")
-        .select("points")
-        .eq("user_id", userId)
-      
-      if (relationsError) {
-        console.error("Erreur lors de la récupération des relations:", relationsError)
-        return
-      }
-      
-      // Calculer le total des points
-      const totalPoints = relations.reduce((sum, relation) => sum + (relation.points || 0), 0)
-      
-      // Mettre à jour le profil utilisateur
-      const { error: updateError } = await supabase
+      // Récupérer le total des points directement depuis la table user_profile
+      const { data: userProfile, error: userError } = await supabase
         .from("user_profile")
-        .update({ total_points: totalPoints })
+        .select("total_points")
         .eq("auth_id", userId)
+        .single()
       
-      if (updateError) {
-        console.error("Erreur lors de la mise à jour du total des points:", updateError)
+      if (userError) {
+        console.error("Erreur lors de la récupération du profil utilisateur:", userError)
         return
       }
       
-      // Mettre à jour l'atom global pour l'affichage immédiat
-      setMushroomCount(totalPoints)
-      
-      console.log("Total des points utilisateur mis à jour:", totalPoints)
+      // Mettre à jour l'atom global pour l'affichage immédiat avec la valeur de la base de données
+      if (userProfile) {
+        setMushroomCount(userProfile.total_points || 0)
+        console.log("Total des points utilisateur récupéré de la base de données:", userProfile.total_points)
+      }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du total des points:", error)
+      console.error("Erreur lors de la récupération du total des points:", error)
     }
   }
 
@@ -294,9 +282,9 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
 
   // Réinitialiser le quiz sans supprimer la relation existante
   const handleReset = () => {
-    // Réinitialiser l'état local uniquement
+    // Réinitialiser l'état local complètement pour ne plus afficher la correction
     setUserAnswers(Array(4).fill(false))
-    setSubmitted(false)
+    setSubmitted(false) // Important : ceci cache la correction
     setPointsEarned(0)
     setError(null)
     
@@ -304,6 +292,16 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
     // Cela permet de réinitialiser visuellement les points sans modifier la base de données
     if (onComplete) {
       onComplete(0) // Indiquer 0 point pour réinitialiser l'affichage
+    }
+    
+    // Faire défiler vers le haut du quiz si nécessaire
+    if (onClose) {
+      // Fermer et rouvrir le quiz pour un réel reset visuel
+      onClose()
+      setTimeout(() => {
+        // Réouvrir le quiz après une courte pause
+        if (onComplete) onComplete(0)
+      }, 50)
     }
   }
 
@@ -385,7 +383,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             </div>
           )}
           
-          {/* Texte de correction qui apparaît après validation */}
+          {/* Texte de correction qui apparaît uniquement après validation et avant de cliquer sur Réessayer */}
           {submitted && content.correction_all && (
             <div className="bg-gray-50 p-3 rounded-lg mt-4 border border-gray-200">
               <h4 className="font-medium text-gray-800 mb-1">Explication :</h4>

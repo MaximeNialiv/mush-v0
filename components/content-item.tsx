@@ -89,6 +89,13 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
     // 2. points = 0 : Réinitialisation de l'affichage pour réessai
     // 3. points < 0 : Suppression de points (non utilisé actuellement)
     
+    // Si points est 0 et showQuiz est false, c'est une réinitialisation complète
+    if (points === 0 && !showQuiz) {
+      // Réouvrir le quiz après réinitialisation
+      setShowQuiz(true)
+      return
+    }
+    
     // Mettre à jour les points locaux
     setMushPoints(points <= 0 ? 0 : points)
     setHasCompletedQuiz(points > 0) // Considérer comme complété uniquement si points > 0
