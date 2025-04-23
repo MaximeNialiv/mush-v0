@@ -30,25 +30,36 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   // Fonction pour mettre à jour le total des points de l'utilisateur
   const updateUserTotalPoints = async (userId: string) => {
     try {
-      // Récupérer le total des points directement depuis la table user_profile
-      const { data: userProfile, error: userError } = await supabase
-        .from("user_profile")
-        .select("total_points")
-        .eq("auth_id", userId)
-        .single()
+      // 1. Récupérer toutes les relations de l'utilisateur pour calculer la somme des points
+      const { data: relations, error: relationsError } = await supabase
+        .from("relation_user_content")
+        .select("points")
+        .eq("user_id", userId)
       
-      if (userError) {
-        console.error("Erreur lors de la récupération du profil utilisateur:", userError)
+      if (relationsError) {
+        console.error("Erreur lors de la récupération des relations:", relationsError)
         return
       }
       
-      // Mettre à jour l'atom global pour l'affichage immédiat avec la valeur de la base de données
-      if (userProfile) {
-        setMushroomCount(userProfile.total_points || 0)
-        console.log("Total des points utilisateur récupéré de la base de données:", userProfile.total_points)
+      // 2. Calculer le total des points en additionnant tous les points des relations
+      const totalPoints = relations.reduce((sum, relation) => sum + (relation.points || 0), 0)
+      console.log("Somme des points calculée:", totalPoints, "depuis", relations.length, "relations")
+      
+      // 3. Mettre à jour le profil utilisateur avec le total calculé
+      const { error: updateError } = await supabase
+        .from("user_profile")
+        .update({ total_points: totalPoints })
+        .eq("auth_id", userId)
+      
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour du total des points:", updateError)
+        return
       }
+      
+      // 4. Mettre à jour l'atom global pour l'affichage immédiat
+      setMushroomCount(totalPoints)
     } catch (error) {
-      console.error("Erreur lors de la récupération du total des points:", error)
+      console.error("Erreur lors de la mise à jour du total des points:", error)
     }
   }
 

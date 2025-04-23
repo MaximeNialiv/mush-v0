@@ -32,20 +32,24 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
   const [hasCompletedQuiz, setHasCompletedQuiz] = useState(false)
   
   // Déterminer l'icône et le label à afficher en fonction du type de contenu
+  // Toutes les pilules utilisent maintenant la même couleur que la pilule de score (mush-green)
   const getContentTypeInfo = () => {
+    // Couleur commune pour toutes les pilules
+    const commonColor = "bg-mush-green/10 border-mush-green/30 text-mush-green"
+    
     if (content.type === "quiz") {
-      return { icon: <Trophy className="w-4 h-4 mr-1" />, label: "Quiz", color: "bg-yellow-100 border-yellow-300 text-yellow-700" }
+      return { icon: <Trophy className="w-4 h-4 mr-1" />, label: "Quiz", color: commonColor }
     }
     if (content.media_url?.includes("podcast") || content.media_url?.includes(".mp3")) {
-      return { icon: <Music className="w-4 h-4 mr-1" />, label: "Podcast", color: "bg-purple-100 border-purple-300 text-purple-700" }
+      return { icon: <Music className="w-4 h-4 mr-1" />, label: "Podcast", color: commonColor }
     }
     if (content.media_url?.includes("video") || content.media_url?.includes("youtube") || content.media_url?.includes(".mp4")) {
-      return { icon: <Video className="w-4 h-4 mr-1" />, label: "Vidéo", color: "bg-red-100 border-red-300 text-red-700" }
+      return { icon: <Video className="w-4 h-4 mr-1" />, label: "Vidéo", color: commonColor }
     }
     if (content.media_url?.includes("article") || content.description?.includes("article")) {
-      return { icon: <Newspaper className="w-4 h-4 mr-1" />, label: "Article", color: "bg-blue-100 border-blue-300 text-blue-700" }
+      return { icon: <Newspaper className="w-4 h-4 mr-1" />, label: "Article", color: commonColor }
     }
-    return { icon: <FileText className="w-4 h-4 mr-1" />, label: "Document", color: "bg-gray-100 border-gray-300 text-gray-700" }
+    return { icon: <FileText className="w-4 h-4 mr-1" />, label: "Document", color: commonColor }
   }
   
   // Vérifier si l'utilisateur a déjà complété ce quiz
