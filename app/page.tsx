@@ -62,15 +62,8 @@ export default function Home() {
       setIsAuthModalOpen(true)
     }
     
-    // Désactiver le rechargement automatique lors du focus de l'onglet
-    const handleVisibilityChange = () => {
-      // Ne rien faire lorsque l'onglet reprend le focus
-      if (document.visibilityState === 'visible') {
-        console.log('Onglet actif, mais rechargement désactivé')
-      }
-    }
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    // Suppression complète du gestionnaire d'événement visibilitychange
+    // pour éviter tout rechargement au refocus
     window.addEventListener('open-auth-modal', handleOpenAuthModal)
 
     // Abonnement aux changements d'authentification
@@ -84,7 +77,7 @@ export default function Home() {
 
     return () => {
       clearInterval(authCheckInterval)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      // Suppression de la référence au gestionnaire d'événement visibilitychange
       window.removeEventListener('open-auth-modal', handleOpenAuthModal)
       subscription.unsubscribe()
     }

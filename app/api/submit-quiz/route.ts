@@ -53,7 +53,9 @@ export async function POST(request: Request) {
     }
 
     // Mettre à jour le total de points de l'utilisateur (seulement si authentifié)
-    let newTotal = relationData.points
+    // Vérifier d'abord si l'utilisateur a déjà répondu à ce quiz pour éviter de compter les points plusieurs fois
+    let newTotal = 0
+    let shouldAddPoints = true
     
     if (isDevelopment && relationData.user_id === "anonymous") {
       console.log("Mode développement: simulation de mise à jour des points")
@@ -61,10 +63,41 @@ export async function POST(request: Request) {
       // Utiliser une requête RPC pour mettre à jour les points en une seule opération atomique
       // Cela évite les problèmes de concurrence et réduit le nombre de requêtes
       try {
+        // Vérifier si l'utilisateur a déjà répondu à ce quiz et gagné des points
+        if (!relationId) { // Seulement si c'est une nouvelle relation
+          const { data: existingRelation } = await supabase
+            .from("relation_user_content")
+            .select("points")
+            .eq("user_id", user.id)
+            .eq("content_id", relationData.content_id)
+            .gt("points", 0) // Points déjà gagnés
+            .maybeSingle()
+          
+          if (existingRelation) {
+            console.log("L'utilisateur a déjà répondu à ce quiz et gagné des points")
+            shouldAddPoints = false
+          }
+        } else if (relationId) {
+          // Si c'est une mise à jour, vérifier si des points ont déjà été attribués
+          const { data: existingRelation } = await supabase
+            .from("relation_user_content")
+            .select("points")
+            .eq("sequential_id", relationId)
+            .single()
+          
+          if (existingRelation && existingRelation.points > 0) {
+            console.log("Points déjà attribués pour cette relation")
+            shouldAddPoints = false
+          }
+        }
+        
+        // N'ajouter des points que si l'utilisateur n'a pas déjà répondu à ce quiz
+        const pointsToAdd = shouldAddPoints ? relationData.points : 0
+        
         // Utiliser une transaction pour garantir l'atomicité
         const { data, error } = await supabase.rpc('increment_user_points', {
           user_auth_id: user.id,
-          points_to_add: relationData.points
+          points_to_add: pointsToAdd
         })
 
         if (error) {
@@ -82,7 +115,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: profileError.message }, { status: 500 })
           }
 
-          newTotal = (profile.total_points || 0) + relationData.points
+          // N'ajouter des points que si l'utilisateur n'a pas déjà répondu à ce quiz
+          const pointsToAdd = shouldAddPoints ? relationData.points : 0
+          newTotal = (profile.total_points || 0) + pointsToAdd
 
           const { error: updateError } = await supabase
             .from("user_profile")

@@ -94,7 +94,10 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
       {/* En-tête du contenu */}
       <div className="p-4">
         <div>
-          <h4 className="font-bold text-gray-800">{content.question ? content.question : content.description}</h4>
+          {/* Afficher la question seulement si le quiz n'est pas ouvert */}
+          {(!content.question || !showQuiz) && (
+            <h4 className="font-bold text-gray-800">{content.question ? content.question : content.description}</h4>
+          )}
         </div>
       </div>
 
@@ -110,7 +113,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
             onClick={() => setShowQuiz(true)}
           >
             <HelpCircle className="w-5 h-5 mr-2 text-white" />
-            {hasCompletedQuiz ? 'Quiz complété' : 'Répondre au quiz'}
+            {hasCompletedQuiz ? 'Réessayer le quiz' : 'Répondre au quiz'}
           </button>
         )}
 
