@@ -94,7 +94,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
       {/* En-tête du contenu */}
       <div className="p-4">
         <div>
-          <h4 className="font-bold text-gray-800">{content.description}</h4>
+          <h4 className="font-bold text-gray-800">{content.question ? content.question : content.description}</h4>
         </div>
       </div>
 
@@ -110,7 +110,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
             onClick={() => setShowQuiz(true)}
           >
             <HelpCircle className="w-5 h-5 mr-2 text-white" />
-            {hasCompletedQuiz ? `Quiz complété (${mushPoints} 🍄)` : 'Répondre au quiz'}
+            {hasCompletedQuiz ? 'Quiz complété' : 'Répondre au quiz'}
           </button>
         )}
 

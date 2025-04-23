@@ -174,35 +174,17 @@ export function useCards() {
   // Variable pour suivre si les cartes ont été chargées
   const [cardsLoaded, setCardsLoaded] = useAtom(atom(false))
   
-  // Charger les cartes avec un délai minimal entre les rechargements
+  // Fonction simplifiée pour charger les cartes une seule fois
   const lastLoadTime = useRef(0)
   const loadCardsThrottled = async () => {
-    const now = Date.now()
-    const minDelay = 30000 // 30 secondes minimum entre les rechargements (augmenté pour réduire les perturbations)
-    
-    if (now - lastLoadTime.current < minDelay) {
-      console.log("Rechargement des cartes ignoré (trop fréquent)")
-      return
-    }
-    
-    // Vérifier si des cartes sont déjà chargées pour éviter les rechargements inutiles
+    // Si les cartes sont déjà chargées, ne rien faire
     if (cards && cards.length > 0 && cardsLoaded) {
-      console.log("Cartes déjà chargées, rechargement silencieux")
-      // Rechargement silencieux en arrière-plan sans modifier l'état de chargement
-      try {
-        const cardsData = await fetchCards(supabase)
-        // Mettre à jour uniquement si les données ont changé
-        if (JSON.stringify(cardsData) !== JSON.stringify(cards)) {
-          setCards(cardsData)
-        }
-      } catch (err) {
-        console.error("Erreur lors du rechargement silencieux des cartes:", err)
-      }
+      console.log("Cartes déjà chargées, pas de rechargement")
       return
     }
     
     // Premier chargement ou rechargement forcé
-    lastLoadTime.current = now
+    lastLoadTime.current = Date.now()
     await loadCards()
     setCardsLoaded(true)
   }
@@ -285,22 +267,8 @@ export function useCards() {
     }
   }, [cardsLoaded])
 
-  // Désactiver le rechargement automatique lors du changement de focus de la fenêtre
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      // Ne rien faire lorsque l'onglet reprend le focus
-      // Cela empêche le rechargement automatique des cartes
-      if (document.visibilityState === 'visible') {
-        console.log('Onglet actif, mais rechargement désactivé')
-      }
-    }
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [])
+  // Suppression complète du gestionnaire de changement de visibilité
+  // Aucun rechargement ne sera effectué lors du changement de focus
 
   return {
     cards,

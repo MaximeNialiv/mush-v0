@@ -100,7 +100,8 @@ export function Feed() {
         // Récupérer les profils séparément pour simplifier
         const userIds = [...new Set(data.map((tweet) => tweet.user_id).filter(Boolean))]
 
-        let profiles = {}
+        // Définir le type de profiles pour éviter l'erreur d'indexation avec any
+        let profiles: Record<string, { id: string; name?: string; handle?: string; avatar_url?: string }> = {}
         if (userIds.length > 0) {
           const { data: profilesData, error: profilesError } = await supabase
             .from("profiles")
@@ -108,7 +109,7 @@ export function Feed() {
             .in("id", userIds)
 
           if (!profilesError && profilesData) {
-            profiles = profilesData.reduce<Record<string, any>>((acc, profile) => {
+            profiles = profilesData.reduce<Record<string, { id: string; name?: string; handle?: string; avatar_url?: string }>>((acc, profile) => {
               acc[profile.id] = profile
               return acc
             }, {})
