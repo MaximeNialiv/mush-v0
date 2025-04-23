@@ -241,8 +241,6 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             last_view: new Date().toISOString()
           }
         ])
-        .select()
-        .single()
 
       if (relationError) {
         console.error("Erreur lors de l'enregistrement de la relation:", relationError)
@@ -250,10 +248,8 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
         return
       }
 
-      // Sauvegarder l'ID de la relation pour pouvoir la supprimer plus tard
-      if (data) {
-        setRelationId(data.sequential_id)
-      }
+      // Ne plus sauvegarder l'ID de la relation car nous n'avons plus besoin de la supprimer
+      // lors du réessai du quiz
       
       // Mettre à jour le total des points de l'utilisateur
       await updateUserTotalPoints(user.id)
@@ -273,34 +269,10 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
     }
   }
 
-  // Réinitialiser le quiz et supprimer la relation existante
+  // Réinitialiser le quiz sans supprimer la relation existante
   const handleReset = async () => {
     try {
-      // Supprimer la relation existante pour permettre un nouveau test
-      if (userId && content.sequential_id) {
-        // Supprimer toutes les relations existantes pour ce contenu et cet utilisateur
-        // pour éviter les doublons
-        const { error } = await supabase
-          .from("relation_user_content")
-          .delete()
-          .match({
-            user_id: userId,
-            content_id: content.sequential_id
-          })
-        
-        if (error) {
-          console.error("Erreur lors de la suppression de la relation:", error)
-          throw error
-        }
-        
-        console.log("Relation(s) supprimée(s) avec succès")
-        setRelationId(null)
-        
-        // Mettre à jour le total des points de l'utilisateur
-        await updateUserTotalPoints(userId)
-      }
-      
-      // Réinitialiser l'état local
+      // Réinitialiser l'état local uniquement
       setUserAnswers(Array(4).fill(false))
       setSubmitted(false)
       setPointsEarned(0)

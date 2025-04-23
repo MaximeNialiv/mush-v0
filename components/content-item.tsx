@@ -129,12 +129,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
               );
             })()}
             
-            {/* ID du contenu */}
-            {content.sequential_id && (
-              <div className="bg-mush-green/10 px-3 py-1 rounded-full border border-mush-green/30 text-mush-green text-sm font-medium">
-                #{content.sequential_id}
-              </div>
-            )}
+            {/* ID du contenu supprimé comme demandé */}
           </div>
           
           {/* Points */}
