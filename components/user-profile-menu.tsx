@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react"
 import { User } from "@supabase/supabase-js"
-import { supabase } from "@/utils/supabase/client"
+import { useSupabase } from "@/utils/supabase/client"
 import { LogOut } from "lucide-react"
 import { toast } from "sonner"
 
 export function UserProfileMenu() {
+  const supabase = useSupabase()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isMenuOpen, setIsMenuOpen] = useState(false)

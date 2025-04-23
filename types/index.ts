@@ -2,10 +2,11 @@ export interface Card {
   sequential_id: string
   title: string
   description: string
-  type: string
+  type: string // Ajouter 'folder' comme type possible
   owner: string
-  content_ids: string[] // Renommé de child_ids à content_ids
-  child_ids?: string[] // Pour la compatibilité avec les anciennes données
+  content_ids: string[] // IDs des contenus associés à cette carte
+  child_ids: string[] | null // IDs des cartes enfants (pour les dossiers)
+  parent_id?: string | null // ID de la carte parent (pour la navigation)
   created_at: string
   updated_at: string
 }
@@ -60,8 +61,11 @@ export interface UserProfile {
 
 export interface CardWithContent extends Card {
   contents?: Content[]
+  children?: CardWithContent[] // Cartes enfants (pour les dossiers)
   userRelation?: RelationUserContent
   totalPoints?: number // Total des points disponibles
   earnedPoints?: number // Points gagnés par l'utilisateur
   ownerName?: string // Nom de l'owner de la carte
+  isFolder?: boolean // Indique si la carte est un dossier
+  isExpanded?: boolean // État d'expansion du dossier
 }

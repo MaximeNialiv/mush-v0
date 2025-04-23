@@ -9,7 +9,7 @@ import { Quiz } from "./quiz"
 import { atom, useAtom } from "jotai"
 import { atomFamily } from "jotai/utils"
 import { mushroomCountAtom, cardsAtom } from "@/store/atoms"
-import { supabase } from "@/utils/supabase/client"
+import { useSupabase } from "@/utils/supabase/client"
 
 // Créer une famille d'atomes pour l'état du quiz de chaque contenu
 const quizVisibleAtomFamily = atomFamily(
@@ -23,6 +23,7 @@ interface ContentItemProps {
 }
 
 export function ContentItem({ content, cardId }: ContentItemProps) {
+  const supabase = useSupabase()
   const quizVisibleAtom = quizVisibleAtomFamily(content.sequential_id)
   const [showQuiz, setShowQuiz] = useAtom(quizVisibleAtom)
   const [mushPoints, setMushPoints] = useState(0)

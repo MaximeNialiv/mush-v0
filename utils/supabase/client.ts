@@ -1,65 +1,32 @@
-import { createClient } from "@supabase/supabase-js"
 import type { Card, Content, CardWithContent } from "@/types"
+import { useSupabase } from "@/context/supabase-provider"
 
-// Clé globale pour identifier notre instance unique de Supabase
-const SUPABASE_CLIENT_KEY = 'MUSH_SUPABASE_CLIENT'
+// Exporter le hook pour être utilisé dans les composants
+export { useSupabase }
 
-// Créer une instance unique de Supabase pour éviter les problèmes de connexion multiples
-let supabaseInstance: any = null
-
-// Fonction pour créer un client avec une configuration standardisée
-function createSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false, // Désactiver la détection automatique pour éviter les instances multiples
-        storageKey: SUPABASE_CLIENT_KEY, // Utiliser une clé unique pour éviter les conflits
-        storage: {
-          getItem: (key) => {
-            try { return localStorage.getItem(key) } catch (e) { return null }
-          },
-          setItem: (key, value) => {
-            try { localStorage.setItem(key, value) } catch (e) {}
-          },
-          removeItem: (key) => {
-            try { localStorage.removeItem(key) } catch (e) {}
-          }
-        }
-      }
-    }
+// Pour les appels hors des composants React (comme les tests ou les scripts)
+export const getSupabaseForNonReactContext = () => {
+  // Avertissement pour éviter l'utilisation incorrecte
+  console.warn(
+    "getSupabaseForNonReactContext est utilisé en dehors d'un composant React. " +
+    "Préférez utiliser useSupabase() dans les composants React."
   )
-}
-
-// Fonction pour obtenir l'instance unique de Supabase
-export const supabase = (() => {
-  // Côté serveur - créer une nouvelle instance à chaque fois
+  
+  // En environnement serveur ou pour les tests
   if (typeof window === 'undefined') {
+    // Importer dynamiquement pour éviter les erreurs de référence circulaire
+    const { createClient } = require("@supabase/supabase-js")
     return createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
   }
   
-  // Côté client - utiliser un singleton
-  if (supabaseInstance) return supabaseInstance
-  
-  // Nettoyer toute instance existante avant de créer une nouvelle
-  try {
-    // Supprimer les données de session existantes pour éviter les conflits
-    localStorage.removeItem(`${SUPABASE_CLIENT_KEY}-auth-token`)
-  } catch (e) {
-    console.warn("Impossible de nettoyer les données de session existantes", e)
-  }
-  
-  // Créer une nouvelle instance
-  supabaseInstance = createSupabaseClient()
-  
-  return supabaseInstance
-})()
+  throw new Error(
+    "getSupabaseForNonReactContext ne peut pas être utilisé côté client. " +
+    "Utilisez useSupabase() dans un composant React."
+  )
+}
 
 // Données statiques pour le développement
 const mockCards: Card[] = [
@@ -70,6 +37,8 @@ const mockCards: Card[] = [
     type: "doc",
     owner: "system",
     content_ids: ["content_1"],
+    child_ids: [],
+    parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -80,6 +49,8 @@ const mockCards: Card[] = [
     type: "doc",
     owner: "system",
     content_ids: ["content_2"],
+    child_ids: [],
+    parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -90,6 +61,8 @@ const mockCards: Card[] = [
     type: "doc",
     owner: "system",
     content_ids: ["content_3"],
+    child_ids: [],
+    parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -100,6 +73,8 @@ const mockCards: Card[] = [
     type: "quiz",
     owner: "system",
     content_ids: ["content_quiz_1"],
+    child_ids: [],
+    parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -110,6 +85,8 @@ const mockCards: Card[] = [
     type: "collection",
     owner: "system",
     content_ids: ["content_1", "content_quiz_1", "content_quiz_2"],
+    child_ids: [],
+    parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -195,7 +172,7 @@ const mockContents: Content[] = [
 ]
 
 // Mettre à jour la fonction fetchCards pour calculer les points totaux et gagnés
-export async function fetchCards(): Promise<CardWithContent[]> {
+export async function fetchCards(supabase: any, folderId?: string | null) {
   try {
     // Vérifier si les tables existent
     const { error } = await supabase.from("cards").select("count")
@@ -204,14 +181,52 @@ export async function fetchCards(): Promise<CardWithContent[]> {
     if (error && error.message.includes("does not exist")) {
       console.log("Utilisation des données statiques car les tables n'existent pas encore")
 
+      // Créer une carte racine si elle n'existe pas dans les données statiques
+      const rootFolder = mockCards.find(card => card.type === 'folder' && !card.parent_id)
+      
+      // Si aucune carte racine n'existe, en créer une
+      if (!rootFolder) {
+        const rootCard: Card = {
+          sequential_id: "root_folder",
+          title: "Racine",
+          description: "Dossier racine",
+          type: "folder",
+          owner: "system",
+          content_ids: [],
+          child_ids: mockCards.filter(card => !card.parent_id).map(card => card.sequential_id),
+          parent_id: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        
+        // Ajouter la racine aux données statiques
+        mockCards.push(rootCard)
+        
+        // Mettre à jour les cartes de premier niveau pour qu'elles aient la racine comme parent
+        mockCards.forEach(card => {
+          if (!card.parent_id && card.sequential_id !== "root_folder") {
+            card.parent_id = "root_folder"
+          }
+        })
+      }
+
+      // Si un folderId est spécifié, ne retourner que les cartes enfants de ce dossier
+      let filteredCards = mockCards
+      if (folderId) {
+        filteredCards = mockCards.filter(card => card.parent_id === folderId)
+      }
+
       // Associer les contenus à chaque carte et calculer les totaux de points
-      const cardsWithContent = mockCards.map((card) => {
-        const contents = card.content_ids
+      const cardsWithContent = filteredCards.map((card) => {
+        const contents = (card.content_ids || [])
           .map((id) => mockContents.find((content) => content.sequential_id === id))
           .filter(Boolean) as Content[]
 
         // Calculer le total des points disponibles
         const totalPoints = contents.reduce((sum, content) => sum + (content.points || 0), 0)
+
+        // Déterminer si c'est un dossier
+        const isFolder = card.type === 'folder'
 
         return {
           ...card,
@@ -219,6 +234,8 @@ export async function fetchCards(): Promise<CardWithContent[]> {
           totalPoints,
           earnedPoints: 0, // Par défaut 0 pour les données statiques
           ownerName: "Fabien Mush", // Nom par défaut pour les données statiques
+          isFolder,
+          isExpanded: false,
         }
       })
 
@@ -226,15 +243,22 @@ export async function fetchCards(): Promise<CardWithContent[]> {
     }
 
     // Si les tables existent, récupérer les données depuis Supabase
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    const userId = user?.id
-
-    const { data: cards, error: cardsError } = await supabase
-      .from("cards")
-      .select("*")
-      .order("created_at", { ascending: false })
+    const { data: sessionData } = await supabase.auth.getSession()
+    const userId = sessionData.session?.user?.id
+    
+    // Construire la requête de base
+    let cardsQuery = supabase.from("cards").select("*")
+    
+    // Si un ID de dossier est spécifié, filtrer par parent_id
+    if (folderId) {
+      cardsQuery = cardsQuery.eq("parent_id", folderId)
+    }
+    
+    // Ordonner les résultats
+    cardsQuery = cardsQuery.order("created_at", { ascending: false })
+    
+    // Exécuter la requête
+    const { data: cards, error: cardsError } = await cardsQuery
 
     if (cardsError) throw cardsError
 
@@ -291,7 +315,7 @@ export async function fetchCards(): Promise<CardWithContent[]> {
 
     // Associer les contenus et les relations à chaque carte
     const cardsWithContent = cards.map((card: Card) => {
-      // Utiliser uniquement content_ids (child_ids a été renommé en content_ids)
+      // Utiliser uniquement content_ids (child_ids contient maintenant les IDs des cartes enfants)
       const cardContentIds = card.content_ids || []
 
       const cardContents = cardContentIds
@@ -312,6 +336,9 @@ export async function fetchCards(): Promise<CardWithContent[]> {
           return sum + (relation?.points || 0)
         }, 0)
       }
+      
+      // Déterminer si c'est un dossier
+      const isFolder = card.type === 'folder'
 
       return {
         ...card,
@@ -319,6 +346,8 @@ export async function fetchCards(): Promise<CardWithContent[]> {
         totalPoints,
         earnedPoints,
         ownerName: card.owner ? (ownerNames[card.owner] || card.owner) : 'Système',
+        isFolder,
+        isExpanded: false,
       }
     })
 
@@ -348,6 +377,8 @@ export async function fetchCards(): Promise<CardWithContent[]> {
 }
 
 export async function testConnection() {
+  const supabase = useSupabase()
+
   try {
     const { data, error } = await supabase.from("cards").select("*").limit(1)
     if (error) {

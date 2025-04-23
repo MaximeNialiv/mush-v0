@@ -2,17 +2,22 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { testConnection } from "@/utils/supabase/client"
+import { useSupabase } from "@/utils/supabase/client"
 
 export function DebugPanel() {
-  const [result, setResult] = useState(null)
+  const supabase = useSupabase()
+  const [result, setResult] = useState<{success: boolean, data?: any, error?: string} | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function handleTest() {
     setLoading(true)
     try {
-      const res = await testConnection()
-      setResult(res)
+      const { data, error } = await supabase.from("cards").select("count")
+      if (error) {
+        setResult({ success: false, error: error.message })
+      } else {
+        setResult({ success: true, data })
+      }
     } catch (error) {
       setResult({ success: false, error: String(error) })
     } finally {

@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { Tweet } from "@/components/tweet"
 import { ComposeBox } from "@/components/compose-box"
-import { supabase } from "@/utils/supabase/client"
+import { useSupabase } from "@/utils/supabase/client"
 
 export function Feed() {
+  const supabase = useSupabase()
   const [tweets, setTweets] = useState([])
   const [loading, setLoading] = useState(true)
 

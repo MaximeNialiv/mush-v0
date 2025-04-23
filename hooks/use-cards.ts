@@ -4,10 +4,10 @@ import { useAtom } from "jotai"
 import { atom } from "jotai"
 import { useEffect, useRef } from "react"
 import { cardsAtom, loadingAtom, errorAtom, mushroomCountAtom } from "@/store/atoms"
-import { fetchCards } from "@/utils/supabase/client"
-import { supabase } from "@/utils/supabase/client"
+import { useSupabase, fetchCards } from "@/utils/supabase/client"
 
 export function useCards() {
+  const supabase = useSupabase()
   const [cards, setCards] = useAtom(cardsAtom)
   const [loading, setLoading] = useAtom(loadingAtom)
   const [error, setError] = useAtom(errorAtom)
@@ -20,7 +20,7 @@ export function useCards() {
       setError(null)
       
       // Récupérer les cartes
-      const cardsData = await fetchCards()
+      const cardsData = await fetchCards(supabase)
       
       // Récupérer les réponses de l'utilisateur pour calculer les points
       const { data: { user } } = await supabase.auth.getUser()
@@ -40,13 +40,13 @@ export function useCards() {
           })
           
           // Mettre à jour les points gagnés pour chaque carte
-          const updatedCards = cardsData.map(card => {
+          const updatedCards = cardsData.map((card: any) => {
             let earnedPoints = 0
             let totalPoints = 0
             
             // Calculer les points gagnés et totaux pour cette carte
             if (card.contents && card.contents.length > 0) {
-              card.contents.forEach(content => {
+              card.contents.forEach((content: any) => {
                 // Points totaux disponibles pour ce contenu
                 totalPoints += content.points || 0
                 
@@ -190,7 +190,7 @@ export function useCards() {
       console.log("Cartes déjà chargées, rechargement silencieux")
       // Rechargement silencieux en arrière-plan sans modifier l'état de chargement
       try {
-        const cardsData = await fetchCards()
+        const cardsData = await fetchCards(supabase)
         // Mettre à jour uniquement si les données ont changé
         if (JSON.stringify(cardsData) !== JSON.stringify(cards)) {
           setCards(cardsData)

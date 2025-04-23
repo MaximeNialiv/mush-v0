@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { Heart, MessageCircle, Repeat, Share } from "lucide-react"
-import { supabase } from "@/utils/supabase/client"
+import { useSupabase } from "@/utils/supabase/client"
 
 export function Tweet({ tweet }) {
+  const supabase = useSupabase()
   const [likes, setLikes] = useState(tweet.likes)
   const [retweets, setRetweets] = useState(tweet.retweets)
   const [hasLiked, setHasLiked] = useState(false)
