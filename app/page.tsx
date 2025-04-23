@@ -50,20 +50,31 @@ export default function Home() {
           setIsAuthModalOpen(true)
         }
       } catch (error) {
-        console.error("Erreur lors de la vérification de l'authentification:", error)
+        console.error("Erreur lors de la vérification périodique:", error)
       }
     }
     
-    // Vérifier périodiquement l'authentification mais moins fréquemment
-    const authCheckInterval = setInterval(periodicCheckAuth, 300000) // 5 minutes
+    // Vérifier périodiquement l'authentification (toutes les 5 minutes)
+    const authCheckInterval = setInterval(periodicCheckAuth, 5 * 60 * 1000)
     
-    // Écouteur d'événement pour ouvrir la modale d'authentification
     const handleOpenAuthModal = () => {
       setIsAuthModalOpen(true)
     }
     
-    // Suppression complète du gestionnaire d'événement visibilitychange
-    // pour éviter tout rechargement au refocus
+    // Gestionnaire global pour empêcher le rechargement au refocus
+    const handleVisibilityChange = (event: Event) => {
+      // Empêcher tout comportement par défaut qui pourrait causer un rechargement
+      event.preventDefault()
+      return false
+    }
+    
+    // Ajouter les gestionnaires d'événements pour empêcher le rechargement
+    window.addEventListener('visibilitychange', handleVisibilityChange, true)
+    window.addEventListener('focus', handleVisibilityChange, true)
+    document.addEventListener('visibilitychange', handleVisibilityChange, true)
+    document.addEventListener('focus', handleVisibilityChange, true)
+    
+    // Gestionnaire pour le modal d'authentification
     window.addEventListener('open-auth-modal', handleOpenAuthModal)
 
     // Abonnement aux changements d'authentification
@@ -77,7 +88,11 @@ export default function Home() {
 
     return () => {
       clearInterval(authCheckInterval)
-      // Suppression de la référence au gestionnaire d'événement visibilitychange
+      // Nettoyage de tous les gestionnaires d'événements
+      window.removeEventListener('visibilitychange', handleVisibilityChange, true)
+      window.removeEventListener('focus', handleVisibilityChange, true)
+      document.removeEventListener('visibilitychange', handleVisibilityChange, true)
+      document.removeEventListener('focus', handleVisibilityChange, true)
       window.removeEventListener('open-auth-modal', handleOpenAuthModal)
       subscription.unsubscribe()
     }

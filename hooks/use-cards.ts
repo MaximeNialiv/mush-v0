@@ -267,8 +267,29 @@ export function useCards() {
     }
   }, [cardsLoaded])
 
-  // Suppression complète du gestionnaire de changement de visibilité
-  // Aucun rechargement ne sera effectué lors du changement de focus
+  // Protection supplémentaire contre le rechargement au refocus
+  useEffect(() => {
+    // Fonction qui empêche tout rechargement au changement de visibilité
+    const preventReloadOnFocus = (e: Event) => {
+      e.stopPropagation()
+      e.preventDefault()
+      return false
+    }
+    
+    // Ajouter les gestionnaires d'événements pour empêcher le rechargement
+    window.addEventListener('visibilitychange', preventReloadOnFocus, true)
+    window.addEventListener('focus', preventReloadOnFocus, true)
+    document.addEventListener('visibilitychange', preventReloadOnFocus, true)
+    document.addEventListener('focus', preventReloadOnFocus, true)
+    
+    return () => {
+      // Nettoyage des gestionnaires d'événements
+      window.removeEventListener('visibilitychange', preventReloadOnFocus, true)
+      window.removeEventListener('focus', preventReloadOnFocus, true)
+      document.removeEventListener('visibilitychange', preventReloadOnFocus, true)
+      document.removeEventListener('focus', preventReloadOnFocus, true)
+    }
+  }, [])
 
   return {
     cards,
