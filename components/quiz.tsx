@@ -244,7 +244,6 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             {
               user_id: user.id,
               content_id: content.sequential_id,
-              card_id: cardId,
               state: "completed",
               sender_id: "system",
               points: points,
