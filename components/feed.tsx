@@ -5,9 +5,23 @@ import { Tweet } from "@/components/tweet"
 import { ComposeBox } from "@/components/compose-box"
 import { useSupabase } from "@/utils/supabase/client"
 
+interface Tweet {
+  id: string;
+  content: string;
+  timestamp: string;
+  likes: number;
+  retweets: number;
+  replies: number;
+  user: {
+    name: string;
+    handle: string;
+    avatar: string;
+  };
+}
+
 export function Feed() {
   const supabase = useSupabase()
-  const [tweets, setTweets] = useState([])
+  const [tweets, setTweets] = useState<Tweet[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -34,7 +48,7 @@ export function Feed() {
     }
   }, [])
 
-  async function fetchTweetById(id) {
+  async function fetchTweetById(id: string) {
     const { data, error } = await supabase
       .from("tweets")
       .select(`
@@ -94,7 +108,7 @@ export function Feed() {
             .in("id", userIds)
 
           if (!profilesError && profilesData) {
-            profiles = profilesData.reduce((acc, profile) => {
+            profiles = profilesData.reduce<Record<string, any>>((acc, profile) => {
               acc[profile.id] = profile
               return acc
             }, {})
@@ -130,7 +144,7 @@ export function Feed() {
     }
   }
 
-  function formatTweet(tweet) {
+  function formatTweet(tweet: any): Tweet {
     return {
       id: tweet.id,
       content: tweet.content,
@@ -146,10 +160,10 @@ export function Feed() {
     }
   }
 
-  function formatTimestamp(timestamp) {
+  function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp)
     const now = new Date()
-    const diffMs = now - date
+    const diffMs = now.getTime() - date.getTime()
     const diffMins = Math.floor(diffMs / 60000)
     const diffHours = Math.floor(diffMins / 60)
     const diffDays = Math.floor(diffHours / 24)
@@ -160,7 +174,7 @@ export function Feed() {
     return `Il y a ${diffDays}j`
   }
 
-  const addTweet = async (content) => {
+  const addTweet = async (content: string) => {
     try {
       // Pour simplifier, on utilise un profil aléatoire parmi les existants
       const { data: profiles, error: profilesError } = await supabase.from("profiles").select("id").limit(3)

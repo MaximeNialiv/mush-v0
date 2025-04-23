@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { Content } from "@/types"
-import { MoreVertical, HelpCircle } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { HelpCircle } from "lucide-react"
 import { OpenGraphPreview } from "./open-graph-preview"
 import { Quiz } from "./quiz"
 import { atom, useAtom } from "jotai"
@@ -93,22 +92,10 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
   return (
     <div className="w-full relative">
       {/* En-tête du contenu */}
-      <div className="p-4 flex items-center justify-between">
+      <div className="p-4">
         <div>
           <h4 className="font-bold text-gray-800">{content.description}</h4>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="p-1.5 rounded-full hover:bg-gray-100">
-              <MoreVertical className="w-4 h-4 text-gray-700" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 border-2 border-gray-200">
-            <DropdownMenuItem>Partager</DropdownMenuItem>
-            <DropdownMenuItem>Sauvegarder</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Signaler</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* Contenu principal */}

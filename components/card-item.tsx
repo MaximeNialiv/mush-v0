@@ -1,8 +1,7 @@
 "use client"
 
 import type { CardWithContent } from "@/types"
-import { MoreVertical, Share2, Bookmark, Flag, FileText } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { FileText } from "lucide-react"
 import { ContentItem } from "./content-item"
 import { atom, useAtom } from "jotai"
 import { atomFamily } from "jotai/utils"
@@ -39,27 +38,6 @@ export function CardItem({ card }: CardItemProps) {
               <p className="text-sm text-gray-600">{card.description}</p>
             </div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded-full hover:bg-gray-100">
-                <MoreVertical className="w-5 h-5 text-gray-700" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 border-2 border-gray-200">
-              <DropdownMenuItem className="flex items-center">
-                <Share2 className="w-4 h-4 mr-2" />
-                <span>Partager</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center">
-                <Bookmark className="w-4 h-4 mr-2" />
-                <span>Sauvegarder</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center text-red-600">
-                <Flag className="w-4 h-4 mr-2" />
-                <span>Signaler</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         {/* Contenu de la carte */}

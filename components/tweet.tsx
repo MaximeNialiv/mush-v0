@@ -4,7 +4,23 @@ import { useState } from "react"
 import { Heart, MessageCircle, Repeat, Share } from "lucide-react"
 import { useSupabase } from "@/utils/supabase/client"
 
-export function Tweet({ tweet }) {
+interface TweetProps {
+  tweet: {
+    id: string;
+    content: string;
+    timestamp: string;
+    likes: number;
+    retweets: number;
+    replies: number;
+    user: {
+      name: string;
+      handle: string;
+      avatar: string;
+    };
+  };
+}
+
+export function Tweet({ tweet }: TweetProps) {
   const supabase = useSupabase()
   const [likes, setLikes] = useState(tweet.likes)
   const [retweets, setRetweets] = useState(tweet.retweets)
@@ -13,10 +29,10 @@ export function Tweet({ tweet }) {
 
   async function handleLike() {
     if (hasLiked) {
-      setLikes((prev) => prev - 1)
+      setLikes((prev: number) => prev - 1)
       setHasLiked(false)
     } else {
-      setLikes((prev) => prev + 1)
+      setLikes((prev: number) => prev + 1)
       setHasLiked(true)
     }
 
@@ -37,10 +53,10 @@ export function Tweet({ tweet }) {
 
   async function handleRetweet() {
     if (hasRetweeted) {
-      setRetweets((prev) => prev - 1)
+      setRetweets((prev: number) => prev - 1)
       setHasRetweeted(false)
     } else {
-      setRetweets((prev) => prev + 1)
+      setRetweets((prev: number) => prev + 1)
       setHasRetweeted(true)
     }
 

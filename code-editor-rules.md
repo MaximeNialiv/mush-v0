@@ -129,9 +129,3 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Vérifier l'état d'authentification avant d'effectuer des requêtes qui nécessitent un utilisateur connecté
    - Gérer les erreurs 401 (Non autorisé) de manière appropriée
 
-### Migration vers Firebase
-
-La migration vers Firebase est en cours. Lors de la création de nouveaux composants:
-- Préférer l'utilisation des hooks Firebase plutôt que Supabase
-- Consulter FIREBASE_MIGRATION.md pour les détails de la migration
-

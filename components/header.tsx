@@ -2,18 +2,12 @@
 
 import { useAtom } from "jotai"
 import { mushroomCountAtom, viewModeAtom } from "@/store/atoms"
-import { Search, Grid, List, Bell, FolderTree } from "lucide-react"
+import { Search, Grid, List, Bell } from "lucide-react"
 import { UserProfileMenu } from "@/components/user-profile-menu"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 
 export function Header() {
   const [mushroomCount] = useAtom(mushroomCountAtom)
   const [viewMode, setViewMode] = useAtom(viewModeAtom)
-  const pathname = usePathname()
-  
-  // Vérifier si nous sommes dans la section dossiers
-  const isInFolders = pathname.startsWith('/folders')
 
   return (
     <header className="sticky top-0 z-10 bg-white shadow-md border-b-2 border-gray-200">
@@ -42,16 +36,6 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            {/* Navigation principale */}
-            <div className="hidden md:flex items-center space-x-2 mr-2">
-              <Link href="/" className={`px-3 py-1.5 rounded-lg ${!isInFolders ? 'bg-mush-green/10 text-mush-green font-medium' : 'text-gray-600 hover:bg-gray-100'}`}>
-                Fil
-              </Link>
-              <Link href="/folders" className={`px-3 py-1.5 rounded-lg flex items-center ${isInFolders ? 'bg-mush-green/10 text-mush-green font-medium' : 'text-gray-600 hover:bg-gray-100'}`}>
-                <FolderTree className="h-4 w-4 mr-1" />
-                Dossiers
-              </Link>
-            </div>
             
             {/* Boutons de vue */}
             <div className="hidden md:flex bg-gray-100 rounded-lg p-1 shadow-inner">
