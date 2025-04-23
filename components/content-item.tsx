@@ -31,13 +31,21 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
   const [cards, setCards] = useAtom(cardsAtom)
   const [hasCompletedQuiz, setHasCompletedQuiz] = useState(false)
   
-  // Déterminer l'icône à afficher en fonction du type de contenu
-  const getContentIcon = () => {
-    if (content.type === "quiz") return <Trophy className="w-5 h-5" />
-    if (content.media_url?.includes("podcast") || content.media_url?.includes(".mp3")) return <Music className="w-5 h-5" />
-    if (content.media_url?.includes("video") || content.media_url?.includes("youtube") || content.media_url?.includes(".mp4")) return <Video className="w-5 h-5" />
-    if (content.media_url?.includes("article") || content.description?.includes("article")) return <Newspaper className="w-5 h-5" />
-    return <FileText className="w-5 h-5" />
+  // Déterminer l'icône et le label à afficher en fonction du type de contenu
+  const getContentTypeInfo = () => {
+    if (content.type === "quiz") {
+      return { icon: <Trophy className="w-4 h-4 mr-1" />, label: "Quiz", color: "bg-yellow-100 border-yellow-300 text-yellow-700" }
+    }
+    if (content.media_url?.includes("podcast") || content.media_url?.includes(".mp3")) {
+      return { icon: <Music className="w-4 h-4 mr-1" />, label: "Podcast", color: "bg-purple-100 border-purple-300 text-purple-700" }
+    }
+    if (content.media_url?.includes("video") || content.media_url?.includes("youtube") || content.media_url?.includes(".mp4")) {
+      return { icon: <Video className="w-4 h-4 mr-1" />, label: "Vidéo", color: "bg-red-100 border-red-300 text-red-700" }
+    }
+    if (content.media_url?.includes("article") || content.description?.includes("article")) {
+      return { icon: <Newspaper className="w-4 h-4 mr-1" />, label: "Article", color: "bg-blue-100 border-blue-300 text-blue-700" }
+    }
+    return { icon: <FileText className="w-4 h-4 mr-1" />, label: "Document", color: "bg-gray-100 border-gray-300 text-gray-700" }
   }
   
   // Vérifier si l'utilisateur a déjà complété ce quiz
@@ -109,11 +117,17 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
       {/* En-tête du contenu avec ID et points */}
       <div className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center">
-            {/* Icône de type de contenu */}
-            <div className="w-6 h-6 rounded-full bg-mush-green flex items-center justify-center mr-2 text-white">
-              {getContentIcon()}
-            </div>
+          <div className="flex items-center space-x-2">
+            {/* Type de contenu sous forme de pilule */}
+            {(() => {
+              const { icon, label, color } = getContentTypeInfo();
+              return (
+                <div className={`px-3 py-1 rounded-full border flex items-center text-sm font-medium ${color}`}>
+                  {icon}
+                  {label}
+                </div>
+              );
+            })()}
             
             {/* ID du contenu */}
             {content.sequential_id && (
@@ -134,9 +148,9 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
           )}
         </div>
         
-        {/* Afficher la question - toujours visible */}
+        {/* Afficher l'intitulé du contenu courant uniquement */}
         <div className="mt-2">
-          <h4 className="font-bold text-gray-800">{content.question ? content.question : content.description}</h4>
+          <h4 className="font-bold text-gray-800">{content.question || content.description}</h4>
         </div>
       </div>
 

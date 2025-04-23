@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import type { Content } from "@/types"
 import { Check, X, AlertCircle } from "lucide-react"
 import { useSupabase } from "@/context/supabase-provider"
+import { useAtom } from "jotai"
+import { mushroomCountAtom } from "@/store/atoms"
 
 interface QuizProps {
   content: Content
@@ -14,6 +16,7 @@ interface QuizProps {
 
 export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   const supabase = useSupabase()
+  const [mushroomCount, setMushroomCount] = useAtom(mushroomCountAtom)
   
   // Utiliser un tableau pour suivre les réponses sélectionnées (true/false pour chaque option)
   const [userAnswers, setUserAnswers] = useState<boolean[]>([false, false, false, false])
@@ -23,6 +26,43 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   const [pointsEarned, setPointsEarned] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
   const [relationId, setRelationId] = useState<string | null>(null)
+
+  // Fonction pour mettre à jour le total des points de l'utilisateur
+  const updateUserTotalPoints = async (userId: string) => {
+    try {
+      // Récupérer toutes les relations de l'utilisateur
+      const { data: relations, error: relationsError } = await supabase
+        .from("relation_user_content")
+        .select("points")
+        .eq("user_id", userId)
+      
+      if (relationsError) {
+        console.error("Erreur lors de la récupération des relations:", relationsError)
+        return
+      }
+      
+      // Calculer le total des points
+      const totalPoints = relations.reduce((sum, relation) => sum + (relation.points || 0), 0)
+      
+      // Mettre à jour le profil utilisateur
+      const { error: updateError } = await supabase
+        .from("user_profile")
+        .update({ total_points: totalPoints })
+        .eq("auth_id", userId)
+      
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour du total des points:", updateError)
+        return
+      }
+      
+      // Mettre à jour l'atom global pour l'affichage immédiat
+      setMushroomCount(totalPoints)
+      
+      console.log("Total des points utilisateur mis à jour:", totalPoints)
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du total des points:", error)
+    }
+  }
 
   // Récupérer l'ID de l'utilisateur actuel
   useEffect(() => {
@@ -162,43 +202,61 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
     setError(null)
 
     try {
+      // Vérifier si l'utilisateur est connecté
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setError("Vous devez être connecté pour soumettre un quiz.")
+        setIsSubmitting(false)
+        return
+      }
+
       // Calculer les points gagnés
       const points = calculatePoints()
       setPointsEarned(points)
 
-      // Créer un objet avec les résultats pour l'API
-      // (cette variable n'est plus utilisée mais on la garde pour référence)
+      // Supprimer toute relation existante pour éviter les doublons
+      await supabase
+        .from("relation_user_content")
+        .delete()
+        .match({
+          user_id: user.id,
+          content_id: content.sequential_id
+        })
 
-      // Préparer les données pour la table relation_user_content
-      const relationData = {
-        user_id: userId || "anonymous", // Utiliser "anonymous" si l'utilisateur n'est pas connecté
-        content_id: content.sequential_id,
-        state: "completed",
-        points: points,
-        result_1: userAnswers[0],
-        result_2: userAnswers[1],
-        result_3: userAnswers[2],
-        result_4: userAnswers[3],
-        last_view: new Date().toISOString()
+      // Enregistrer la relation utilisateur-contenu
+      const { data, error: relationError } = await supabase
+        .from("relation_user_content")
+        .insert([
+          {
+            user_id: user.id,
+            content_id: content.sequential_id,
+            card_id: cardId,
+            state: "completed",
+            sender_id: "system",
+            points: points,
+            result_1: userAnswers[0],
+            result_2: userAnswers[1],
+            result_3: userAnswers[2],
+            result_4: userAnswers[3],
+            last_view: new Date().toISOString()
+          }
+        ])
+        .select()
+        .single()
+
+      if (relationError) {
+        console.error("Erreur lors de l'enregistrement de la relation:", relationError)
+        setError("Erreur lors de l'enregistrement de vos réponses. Veuillez réessayer.")
+        return
+      }
+
+      // Sauvegarder l'ID de la relation pour pouvoir la supprimer plus tard
+      if (data) {
+        setRelationId(data.sequential_id)
       }
       
-      console.log("Envoi des données:", relationData)
-
-      // Envoyer les résultats à l'API
-      const response = await fetch("/api/submit-quiz", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          relationData,
-          relationId
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la soumission du quiz")
-      }
+      // Mettre à jour le total des points de l'utilisateur
+      await updateUserTotalPoints(user.id)
 
       // Mettre à jour l'état
       setSubmitted(true)
@@ -219,14 +277,27 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   const handleReset = async () => {
     try {
       // Supprimer la relation existante pour permettre un nouveau test
-      if (userId && relationId) {
-        await supabase
+      if (userId && content.sequential_id) {
+        // Supprimer toutes les relations existantes pour ce contenu et cet utilisateur
+        // pour éviter les doublons
+        const { error } = await supabase
           .from("relation_user_content")
           .delete()
-          .eq("sequential_id", relationId)
+          .match({
+            user_id: userId,
+            content_id: content.sequential_id
+          })
         
-        console.log("Relation supprimée avec succès")
+        if (error) {
+          console.error("Erreur lors de la suppression de la relation:", error)
+          throw error
+        }
+        
+        console.log("Relation(s) supprimée(s) avec succès")
         setRelationId(null)
+        
+        // Mettre à jour le total des points de l'utilisateur
+        await updateUserTotalPoints(userId)
       }
       
       // Réinitialiser l'état local
