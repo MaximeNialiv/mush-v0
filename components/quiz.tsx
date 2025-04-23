@@ -214,33 +214,66 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       const points = calculatePoints()
       setPointsEarned(points)
 
-      // Supprimer toute relation existante pour éviter les doublons
-      await supabase
+      // Vérifier si une relation existe déjà pour ce contenu et cet utilisateur
+      const { data: existingRelation, error: checkError } = await supabase
         .from("relation_user_content")
-        .delete()
+        .select("sequential_id")
         .match({
           user_id: user.id,
           content_id: content.sequential_id
         })
-
-      // Enregistrer la relation utilisateur-contenu
-      const { data, error: relationError } = await supabase
-        .from("relation_user_content")
-        .insert([
-          {
-            user_id: user.id,
-            content_id: content.sequential_id,
-            card_id: cardId,
-            state: "completed",
-            sender_id: "system",
+        .maybeSingle()
+      
+      if (checkError) {
+        console.error("Erreur lors de la vérification de la relation existante:", checkError)
+        setError("Erreur lors de la vérification de vos réponses précédentes.")
+        return
+      }
+      
+      let relationError = null
+      
+      // Si une relation existe, la mettre à jour
+      if (existingRelation) {
+        console.log("Mise à jour de la relation existante")
+        const { error } = await supabase
+          .from("relation_user_content")
+          .update({
             points: points,
             result_1: userAnswers[0],
             result_2: userAnswers[1],
             result_3: userAnswers[2],
             result_4: userAnswers[3],
             last_view: new Date().toISOString()
-          }
-        ])
+          })
+          .match({
+            user_id: user.id,
+            content_id: content.sequential_id
+          })
+        
+        relationError = error
+      } else {
+        // Sinon, créer une nouvelle relation
+        console.log("Création d'une nouvelle relation")
+        const { error } = await supabase
+          .from("relation_user_content")
+          .insert([
+            {
+              user_id: user.id,
+              content_id: content.sequential_id,
+              card_id: cardId,
+              state: "completed",
+              sender_id: "system",
+              points: points,
+              result_1: userAnswers[0],
+              result_2: userAnswers[1],
+              result_3: userAnswers[2],
+              result_4: userAnswers[3],
+              last_view: new Date().toISOString()
+            }
+          ])
+        
+        relationError = error
+      }
 
       if (relationError) {
         console.error("Erreur lors de l'enregistrement de la relation:", relationError)
@@ -270,21 +303,15 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
   }
 
   // Réinitialiser le quiz sans supprimer la relation existante
-  const handleReset = async () => {
-    try {
-      // Réinitialiser l'état local uniquement
-      setUserAnswers(Array(4).fill(false))
-      setSubmitted(false)
-      setPointsEarned(0)
-      
-      // Informer le parent que les points ont été réinitialisés
-      if (onComplete) {
-        onComplete(-pointsEarned) // Soustraire les points précédemment gagnés
-      }
-    } catch (error) {
-      console.error("Erreur lors de la réinitialisation du quiz:", error)
-      setError("Erreur lors de la réinitialisation. Veuillez réessayer.")
-    }
+  const handleReset = () => {
+    // Réinitialiser l'état local uniquement
+    setUserAnswers(Array(4).fill(false))
+    setSubmitted(false)
+    setPointsEarned(0)
+    setError(null)
+    
+    // Pas besoin d'informer le parent car nous ne modifions pas les points
+    // Les points seront mis à jour uniquement lors de la soumission d'une nouvelle réponse
   }
 
   // Si le contenu n'est pas un quiz, ne rien afficher
