@@ -16,20 +16,32 @@ export function CreateFolderButton() {
   const [currentFolderId] = useAtom(currentFolderIdAtom)
 
   const handleCreateFolder = async () => {
-    if (!folderName.trim()) {
+    // Validation du nom du dossier
+    const trimmedName = folderName.trim()
+    if (!trimmedName) {
       setError("Le nom du dossier ne peut pas être vide")
+      return
+    }
+    
+    // Vérifier si le nom est trop long
+    if (trimmedName.length > 50) {
+      setError("Le nom du dossier ne peut pas dépasser 50 caractères")
       return
     }
 
     try {
       setError(null)
       
+      // Récupérer l'utilisateur actuel
+      const { data: { user } } = await supabase.auth.getUser()
+      const ownerId = user?.id || "system"
+      
       // Créer le nouveau dossier
       const newFolder = {
-        title: folderName.trim(),
+        title: trimmedName,
         description: `Dossier créé le ${new Date().toLocaleDateString('fr-FR')}`,
         type: "folder",
-        owner: "user", // Idéalement, récupérer l'ID de l'utilisateur actuel
+        owner: ownerId,
         content_ids: [],
         child_ids: [],
         parent_id: currentFolderId,
@@ -37,10 +49,16 @@ export function CreateFolderButton() {
         updated_at: new Date().toISOString()
       }
       
+      // Ajouter un indicateur de chargement
+      const loadingTimeout = setTimeout(() => setLoading(true), 300)
+      
       const { data, error } = await supabase
         .from("cards")
         .insert(newFolder)
         .select()
+        
+      // Annuler l'indicateur de chargement si la réponse est rapide
+      clearTimeout(loadingTimeout)
       
       if (error) throw error
       
@@ -57,11 +75,15 @@ export function CreateFolderButton() {
     }
   }
 
+  // État de chargement
+  const [isLoading, setLoading] = useState(false)
+
   if (!isCreating) {
     return (
       <button
         onClick={() => setIsCreating(true)}
         className="flex items-center gap-2 bg-mush-green/10 text-mush-green px-4 py-2 rounded-lg hover:bg-mush-green/20 transition-colors"
+        aria-label="Créer un nouveau dossier"
       >
         <Plus className="h-4 w-4" />
         <span>Nouveau dossier</span>
@@ -112,14 +134,28 @@ export function CreateFolderButton() {
               setError(null)
             }}
             className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded"
+            disabled={isLoading}
+            type="button"
           >
             Annuler
           </button>
           <button
             onClick={handleCreateFolder}
-            className="px-3 py-1.5 bg-mush-green text-white rounded hover:bg-mush-green/90"
+            className={`px-3 py-1.5 bg-mush-green text-white rounded hover:bg-mush-green/90 flex items-center gap-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
+            type="submit"
           >
-            Créer
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Création...
+              </>
+            ) : (
+              'Créer'
+            )}
           </button>
         </div>
       </div>

@@ -23,11 +23,16 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
 
   // Charger tous les dossiers disponibles
   useEffect(() => {
+    // Fonction pour récupérer les dossiers
     const fetchFolders = async () => {
       try {
+        // Ne charger les dossiers que si la boîte de dialogue est ouverte
+        if (!isOpen) return
+        
         setLoading(true)
         setError(null)
         
+        // Utiliser une requête optimisée qui sélectionne tous les champs nécessaires pour le type CardWithContent
         const { data, error } = await supabase
           .from("cards")
           .select("*")
@@ -36,10 +41,19 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
         
         if (error) throw error
         
-        // Filtrer le dossier actuel pour éviter de déplacer un dossier dans lui-même
-        const filteredFolders = data.filter((folder: CardWithContent) => 
-          folder.sequential_id !== card.sequential_id
-        )
+        // Filtrer le dossier actuel et ses enfants pour éviter les cycles
+        const filteredFolders = data.filter((folder: CardWithContent) => {
+          // Éviter de déplacer un dossier dans lui-même
+          if (folder.sequential_id === card.sequential_id) return false
+          
+          // Éviter de déplacer un dossier dans un de ses enfants (pour éviter les cycles)
+          // Cette vérification est simplifiée et pourrait être améliorée pour des hiérarchies plus profondes
+          if (card.type === "folder" && card.child_ids && card.child_ids.includes(folder.sequential_id)) {
+            return false
+          }
+          
+          return true
+        })
         
         setFolders(filteredFolders)
       } catch (err) {
@@ -50,13 +64,22 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
       }
     }
     
-    if (isOpen) {
+    // Utiliser un délai pour éviter les appels API trop fréquents
+    const timer = setTimeout(() => {
       fetchFolders()
-    }
-  }, [isOpen, card.sequential_id, supabase])
+    }, 100)
+    
+    return () => clearTimeout(timer)
+  }, [isOpen, card.sequential_id, card.type, card.child_ids, supabase])
 
   // Déplacer la carte vers le dossier sélectionné
   const handleMoveCard = async () => {
+    // Vérifier si le dossier sélectionné est différent du dossier actuel
+    if (selectedFolderId === card.parent_id) {
+      onClose()
+      return
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -64,13 +87,17 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
       // Mettre à jour le parent_id de la carte
       const { error } = await supabase
         .from("cards")
-        .update({ parent_id: selectedFolderId })
+        .update({ 
+          parent_id: selectedFolderId,
+          updated_at: new Date().toISOString() // Mettre à jour la date de modification
+        })
         .eq("sequential_id", card.sequential_id)
       
       if (error) throw error
       
       // Recharger les cartes du dossier actuel
-      loadFolderCards(card.parent_id || null)
+      const oldParentId = card.parent_id || null
+      loadFolderCards(oldParentId)
       
       // Fermer la boîte de dialogue
       onClose()

@@ -43,6 +43,25 @@ export function useFolderNavigation() {
   // Charger les cartes d'un dossier spécifique
   const loadFolderCards = useCallback(async (folderId: string | null) => {
     try {
+      // Vérifier si nous avons déjà les cartes de ce dossier en cache
+      const folderCardsInCache = cards.filter(card => card.parent_id === folderId)
+      const hasCachedCards = folderCardsInCache.length > 0
+      
+      // Si nous avons déjà des cartes en cache pour ce dossier et que ce n'est pas un rechargement forcé,
+      // mettre simplement à jour l'ID du dossier actuel et le fil d'Ariane
+      if (hasCachedCards && currentFolderId !== folderId) {
+        setCurrentFolderId(folderId)
+        updateBreadcrumb(folderId)
+        
+        // Mettre à jour l'historique de navigation
+        if (folderId && !navigationHistory.includes(folderId)) {
+          setNavigationHistory(prev => [...prev, folderId])
+        }
+        
+        return
+      }
+      
+      // Sinon, charger les cartes depuis Supabase
       setLoading(true)
       setError(null)
       
@@ -86,6 +105,12 @@ export function useFolderNavigation() {
     }
     
     try {
+      // Vérifier si le fil d'Ariane actuel est déjà correct
+      if (breadcrumbPath.length > 0 && breadcrumbPath[breadcrumbPath.length - 1].sequential_id === folderId) {
+        // Le fil d'Ariane est déjà à jour, pas besoin de le recalculer
+        return
+      }
+      
       const path: CardWithContent[] = []
       let currentId: string | null = folderId
       
@@ -199,7 +224,12 @@ export function useFolderNavigation() {
     
     // Si l'ID du dossier dans l'URL est différent de l'état actuel
     if (folderId !== currentFolderId) {
-      loadFolderCards(folderId)
+      // Utiliser un délai pour éviter les rechargements trop fréquents lors de la navigation rapide
+      const timer = setTimeout(() => {
+        loadFolderCards(folderId)
+      }, 50)
+      
+      return () => clearTimeout(timer)
     }
   }, [pathname, currentFolderId, loadFolderCards])
 

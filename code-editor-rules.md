@@ -129,3 +129,30 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Vérifier l'état d'authentification avant d'effectuer des requêtes qui nécessitent un utilisateur connecté
    - Gérer les erreurs 401 (Non autorisé) de manière appropriée
 
+## Fonctionnalités de Gestion des Dossiers
+
+### Création de Dossiers
+
+- Interface utilisateur intuitive avec bouton "Nouveau dossier"
+- Création de dossiers dans le dossier actuellement ouvert
+- Formulaire simple pour nommer et décrire les dossiers
+
+### Déplacement de Cartes et Dossiers
+
+- Menu contextuel pour chaque carte et dossier
+- Boîte de dialogue modale pour sélectionner le dossier de destination
+- Mise à jour automatique de l'affichage après déplacement
+
+### Suppression de Dossiers
+
+- Option de suppression dans le menu contextuel
+- Confirmation avant suppression pour éviter les erreurs
+- Gestion des erreurs et feedback utilisateur
+
+## Modifications Futures Envisagées
+
+- Glisser-déposer pour réorganiser les cartes
+- Recherche avancée dans la hiérarchie des cartes
+- Gestion collaborative des cartes
+- Filtrage et tri avancés
+
