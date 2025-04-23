@@ -84,15 +84,19 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
 
   // Gérer la complétion du quiz
   const handleQuizComplete = (points: number) => {
-    // Si points est négatif, c'est une réinitialisation
-    const isReset = points < 0
+    // Trois cas possibles :
+    // 1. points > 0 : Nouveau quiz complété ou mise à jour avec plus de points
+    // 2. points = 0 : Réinitialisation de l'affichage pour réessai
+    // 3. points < 0 : Suppression de points (non utilisé actuellement)
     
     // Mettre à jour les points locaux
-    setMushPoints(isReset ? 0 : points)
-    setHasCompletedQuiz(!isReset)
+    setMushPoints(points <= 0 ? 0 : points)
+    setHasCompletedQuiz(points > 0) // Considérer comme complété uniquement si points > 0
     
-    // Mettre à jour le compteur global de champignons
-    setMushroomCount((prev) => prev + points)
+    // Mettre à jour le compteur global de champignons uniquement si nécessaire
+    if (points !== 0) { // Ne pas modifier le compteur global pour une simple réinitialisation d'affichage
+      setMushroomCount((prev) => prev + points)
+    }
     
     // Mettre à jour les points gagnés dans la carte
     setCards(prevCards => {

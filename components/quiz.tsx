@@ -214,26 +214,13 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
       const points = calculatePoints()
       setPointsEarned(points)
 
-      // Vérifier si une relation existe déjà pour ce contenu et cet utilisateur
-      const { data: existingRelation, error: checkError } = await supabase
-        .from("relation_user_content")
-        .select("sequential_id")
-        .match({
-          user_id: user.id,
-          content_id: content.sequential_id
-        })
-        .maybeSingle()
+      // Utiliser la relation existante déjà connue via relationId plutôt que de faire une nouvelle requête
+      // Cela évite une requête redondante puisque nous avons déjà vérifié l'existence de la relation au chargement
       
-      if (checkError) {
-        console.error("Erreur lors de la vérification de la relation existante:", checkError)
-        setError("Erreur lors de la vérification de vos réponses précédentes.")
-        return
-      }
+      // Si une relation existe (relationId est défini), la mettre à jour
+      let relationError = null;
       
-      let relationError = null
-      
-      // Si une relation existe, la mettre à jour
-      if (existingRelation) {
+      if (relationId) {
         console.log("Mise à jour de la relation existante")
         const { error } = await supabase
           .from("relation_user_content")
@@ -245,16 +232,13 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
             result_4: userAnswers[3],
             last_view: new Date().toISOString()
           })
-          .match({
-            user_id: user.id,
-            content_id: content.sequential_id
-          })
+          .eq("sequential_id", relationId)
         
         relationError = error
       } else {
         // Sinon, créer une nouvelle relation
         console.log("Création d'une nouvelle relation")
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("relation_user_content")
           .insert([
             {
@@ -271,8 +255,15 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
               last_view: new Date().toISOString()
             }
           ])
+          .select("sequential_id")
+          .single()
         
         relationError = error
+        
+        // Sauvegarder l'ID de la relation pour les futures mises à jour
+        if (data && !error) {
+          setRelationId(data.sequential_id)
+        }
       }
 
       if (relationError) {
@@ -310,8 +301,11 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
     setPointsEarned(0)
     setError(null)
     
-    // Pas besoin d'informer le parent car nous ne modifions pas les points
-    // Les points seront mis à jour uniquement lors de la soumission d'une nouvelle réponse
+    // Informer le parent pour mettre à jour l'affichage des points
+    // Cela permet de réinitialiser visuellement les points sans modifier la base de données
+    if (onComplete) {
+      onComplete(0) // Indiquer 0 point pour réinitialiser l'affichage
+    }
   }
 
   // Si le contenu n'est pas un quiz, ne rien afficher
