@@ -26,6 +26,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
   const quizVisibleAtom = quizVisibleAtomFamily(content.sequential_id)
   const [showQuiz, setShowQuiz] = useAtom(quizVisibleAtom)
   const [mushPoints, setMushPoints] = useState(0)
+  const [totalPoints, setTotalPoints] = useState(0)
   const [, setMushroomCount] = useAtom(mushroomCountAtom)
   const [cards, setCards] = useAtom(cardsAtom)
   const [hasCompletedQuiz, setHasCompletedQuiz] = useState(false)
@@ -48,6 +49,11 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
             setMushPoints(data.points)
             setHasCompletedQuiz(true)
           }
+        }
+        
+        // Définir le nombre total de points disponibles pour ce quiz
+        if (content.points) {
+          setTotalPoints(content.points)
         }
       } catch (error) {
         console.error("Erreur lors de la vérification du quiz:", error)
@@ -91,10 +97,27 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
 
   return (
     <div className="w-full relative">
-      {/* En-tête du contenu */}
+      {/* En-tête du contenu avec ID et points */}
       <div className="p-4">
+        {content.question && (
+          <div className="flex items-center justify-between mb-2">
+            <div className="bg-gray-100 px-3 py-1 rounded-full text-gray-700 text-sm font-medium">
+              #{content.sequential_id}
+            </div>
+            {totalPoints > 0 && (
+              <div className="bg-mush-green/10 px-3 py-1 rounded-full border border-mush-green/30">
+                <span className="text-mush-green text-sm font-medium flex items-center">
+                  <span className="mr-1">🍄</span>
+                  {mushPoints}/{totalPoints}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Afficher la question */}
         <div>
-          {/* Afficher la question seulement si le quiz n'est pas ouvert */}
+          {/* Afficher la question seulement si le quiz n'est pas ouvert ou si ce n'est pas un quiz */}
           {(!content.question || !showQuiz) && (
             <h4 className="font-bold text-gray-800">{content.question ? content.question : content.description}</h4>
           )}
@@ -106,7 +129,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
         {/* Afficher le média si disponible */}
         {content.media_url && <OpenGraphPreview url={content.media_url} showLinkInImage={true} />}
 
-        {/* Afficher le quiz si disponible */}
+        {/* Afficher le bouton du quiz si disponible et non ouvert */}
         {content.question && !showQuiz && (
           <button
             className={`mt-3 w-full ${hasCompletedQuiz ? 'bg-mush-green/70' : 'bg-mush-green'} hover:bg-mush-green/90 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center hover:shadow-md transform transition-transform hover:translate-y-[-2px]`}

@@ -54,17 +54,7 @@ export function CardItem({ card }: CardItemProps) {
           </div>
         )}
 
-        {/* Affichage des points totaux gagnés en bas de la carte s'il y a plusieurs contenus */}
-        {card.contents && card.contents.length > 1 && earnedPoints && (
-          <div className="mt-4 border-t border-dashed border-gray-300 pt-4 flex justify-end">
-            <div className="bg-mush-green/10 px-4 py-2 rounded-full border border-mush-green/30">
-              <span className="font-medium text-mush-green flex items-center">
-                <span className="mr-1">🍄</span>
-                Total : {earnedPoints} point{earnedPoints > 1 ? 's' : ''}
-              </span>
-            </div>
-          </div>
-        )}
+        {/* Suppression de l'affichage des points totaux gagnés en bas de la carte */}
 
         {/* Pied de page de la carte */}
         <div className="border-t-2 border-gray-200"></div>
@@ -76,15 +66,7 @@ export function CardItem({ card }: CardItemProps) {
                 {card.ownerName || card.owner}
               </a>
             </div>
-            {/* Afficher les points uniquement si la carte a des points disponibles */}
-            {totalPoints && (
-              <div className="flex items-center bg-white px-3 py-1.5 rounded-full border-2 border-gray-200">
-                <span className="text-mush-red mr-1">🍄</span>
-                <span className="font-bold">
-                  {earnedPoints || 0}/{totalPoints}
-                </span>
-              </div>
-            )}
+            {/* Suppression de l'affichage des points dans le footer de la carte */}
           </div>
         </div>
       </div>
