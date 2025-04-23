@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useFolderNavigation } from "@/hooks/use-folder-navigation"
 import { FolderCard } from "@/components/folder-card"
 import { CardItem } from "@/components/card-item"
+import { CreateFolderButton } from "@/components/create-folder-button"
 import { Loader2, ChevronRight, Home } from "lucide-react"
 import { useAtom } from "jotai"
 import { rootFolderIdAtom } from "@/store/atoms"
@@ -71,8 +72,11 @@ export function FolderView() {
   
   return (
     <div className="space-y-4">
-      {/* Fil d'Ariane */}
-      <Breadcrumb path={breadcrumbPath} onNavigate={navigateToFolder} />
+      {/* Fil d'Ariane et actions */}
+      <div className="flex justify-between items-center">
+        <Breadcrumb path={breadcrumbPath} onNavigate={navigateToFolder} />
+        <CreateFolderButton />
+      </div>
       
       {/* Vue en colonnes */}
       <div className="flex flex-col md:flex-row gap-4 overflow-x-auto pb-4">
