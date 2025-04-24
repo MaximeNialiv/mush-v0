@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Image, MapPin, Smile, Calendar } from "lucide-react"
 
-export function ComposeBox({ onTweet }) {
+export function ComposeBox({ onTweet }: { onTweet: (tweet: string) => void }) {
   const [content, setContent] = useState("")
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (content.trim()) {
       onTweet(content)
