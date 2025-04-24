@@ -147,7 +147,7 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
           {loading ? (
             <div className="px-4 py-2 text-sm text-gray-500">Chargement...</div>
           ) : (
-            <>
+            <div className="w-full">
               <button
                 onClick={() => handleMoveToFolder(null)}
                 className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center ${
@@ -157,24 +157,24 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
                 <Folder className="h-4 w-4 mr-2" />
                 Racine
               </button>
-                  
-                  {folders.map(folder => (
-                    <button
-                      key={folder.sequential_id}
-                      onClick={() => handleMoveToFolder(folder.sequential_id)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center ${
-                        card.parent_id === folder.sequential_id ? 'font-bold text-mush-green' : 'text-gray-700'
-                      }`}
-                    >
-                      <Folder className="h-4 w-4 mr-2" />
-                      {folder.title}
-                    </button>
-                  ))}
-                  
-                  {folders.length === 0 && (
-                  <div className="px-4 py-2 text-sm text-gray-500">Aucun dossier disponible</div>
-                )}
-              </>
+              
+              {folders.map(folder => (
+                <button
+                  key={folder.sequential_id}
+                  onClick={() => handleMoveToFolder(folder.sequential_id)}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center ${
+                    card.parent_id === folder.sequential_id ? 'font-bold text-mush-green' : 'text-gray-700'
+                  }`}
+                >
+                  <Folder className="h-4 w-4 mr-2" />
+                  {folder.title}
+                </button>
+              ))}
+              
+              {folders.length === 0 && (
+                <div className="px-4 py-2 text-sm text-gray-500">Aucun dossier disponible</div>
+              )}
+            </div>
             )}
           </div>,
           document.body
