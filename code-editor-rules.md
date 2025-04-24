@@ -143,9 +143,11 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
 
 ### Déplacement de Cartes et Dossiers
 
-- Menu contextuel pour chaque carte et dossier
+- Menu contextuel pour chaque carte et dossier (trois points verticaux)
 - Boîte de dialogue modale pour sélectionner le dossier de destination
 - Mise à jour automatique de l'affichage après déplacement
+- Procédure stockée SQL pour garantir la cohérence des données
+- Prévention des cycles dans l'arborescence (pas de déplacement d'un dossier dans lui-même ou ses descendants)
 
 ### Suppression de Dossiers
 
@@ -170,6 +172,19 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
 3. **Optimisation des Dépendances**:
    - Réorganisation des déclarations de fonctions pour éviter les références circulaires
    - Gestion optimisée des dépendances dans les useCallback
+
+### Procédures Stockées SQL
+
+1. **Fonction move_card_to_folder**:
+   - Procédure transactionnelle pour déplacer une carte entre dossiers
+   - Mise à jour atomique du parent_id de la carte
+   - Mise à jour atomique des child_ids des dossiers source et destination
+   - Gestion des erreurs avec rollback automatique
+
+2. **Transactions SQL**:
+   - Fonctions begin_transaction, commit_transaction, rollback_transaction
+   - Garantie de l'intégrité des données même en cas d'erreur
+   - Prévention des incohérences entre parent_id et child_ids
 
 ### Optimisation du Composant MoveCardDialog
 
@@ -198,6 +213,32 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
 3. **Réduction des Rendus**:
    - Optimisation des dépendances dans les hooks
    - Création de gestionnaires d'événements mémorisés pour le fil d'Ariane
+
+4. **Design en Colonnes Style Finder Mac**:
+   - Interface à trois colonnes pour une navigation intuitive
+   - Colonne principale: liste des dossiers/cartes du dossier courant
+   - Colonne secondaire: contenu du dossier sélectionné
+   - Colonne d'aperçu: prévisualisation de la carte sélectionnée
+   - Navigation fluide entre les colonnes avec sélection et aperçu
+
+## Maintenance de la Cohérence des Données
+
+### Intégrité Référentielle
+
+1. **Double Référence parent_id et child_ids**:
+   - Chaque carte a un seul parent_id (référence vers le haut)
+   - Chaque dossier maintient une liste child_ids (références vers le bas)
+   - Les deux références doivent être synchronisées lors des modifications
+
+2. **Prévention des Cycles**:
+   - Vérification récursive avant déplacement pour éviter les cycles
+   - Fonction wouldCreateCycle pour valider les déplacements
+   - Blocage des déplacements qui créeraient des cycles
+
+3. **Migrations et Réparations**:
+   - Script de migration SQL pour appliquer les procédures stockées
+   - Fonction exec_sql pour exécuter du SQL dynamique
+   - Possibilité de réparer les incohérences dans les données existantes
 
 ## Modifications Futures Envisagées
 

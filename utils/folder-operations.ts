@@ -137,11 +137,13 @@ export async function fetchFolderPath(
         break
       }
 
+      const folderData = data as CardWithContent
+      
       // Ajouter le dossier au début du chemin
-      path.unshift(data as CardWithContent)
+      path.unshift(folderData)
 
-      // Passer au parent
-      currentId = (data as CardWithContent).parent_id
+      // Passer au parent (s'assurer qu'il n'est pas undefined)
+      currentId = folderData.parent_id || null
     }
 
     return path
