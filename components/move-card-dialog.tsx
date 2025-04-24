@@ -21,7 +21,7 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
   const supabase = useSupabase()
   const { loadFolderCards } = useFolderNavigation()
 
-  // Charger tous les dossiers disponibles
+  // Charger tous les dossiers disponibles avec mise en cache
   useEffect(() => {
     // Fonction pour récupérer les dossiers
     const fetchFolders = async () => {
@@ -29,32 +29,46 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
         // Ne charger les dossiers que si la boîte de dialogue est ouverte
         if (!isOpen) return
         
+        // Vérifier si nous avons des dossiers en cache et s'ils sont récents (moins de 5 minutes)
+        const cachedFolders = sessionStorage.getItem('all_folders_cache')
+        const now = Date.now()
+        const fiveMinutesAgo = now - 5 * 60 * 1000
+        
+        if (cachedFolders) {
+          try {
+            const parsedCache = JSON.parse(cachedFolders)
+            if (parsedCache.timestamp && parsedCache.timestamp > fiveMinutesAgo) {
+              // Filtrer les dossiers cachés pour éviter les cycles
+              const filteredFolders = filterFolders(parsedCache.folders)
+              setFolders(filteredFolders)
+              return
+            }
+          } catch (e) {
+            console.warn("Erreur lors du parsing du cache des dossiers", e)
+            // Continuer avec la récupération depuis Supabase
+          }
+        }
+        
         setLoading(true)
         setError(null)
         
-        // Utiliser une requête optimisée qui sélectionne tous les champs nécessaires pour le type CardWithContent
+        // Utiliser une requête optimisée qui sélectionne uniquement les champs nécessaires
         const { data, error } = await supabase
           .from("cards")
-          .select("*")
+          .select("sequential_id, title, type, child_ids")
           .eq("type", "folder")
           .order("title", { ascending: true })
         
         if (error) throw error
         
-        // Filtrer le dossier actuel et ses enfants pour éviter les cycles
-        const filteredFolders = data.filter((folder: CardWithContent) => {
-          // Éviter de déplacer un dossier dans lui-même
-          if (folder.sequential_id === card.sequential_id) return false
-          
-          // Éviter de déplacer un dossier dans un de ses enfants (pour éviter les cycles)
-          // Cette vérification est simplifiée et pourrait être améliorée pour des hiérarchies plus profondes
-          if (card.type === "folder" && card.child_ids && card.child_ids.includes(folder.sequential_id)) {
-            return false
-          }
-          
-          return true
-        })
+        // Mettre en cache les dossiers récupérés
+        sessionStorage.setItem('all_folders_cache', JSON.stringify({
+          folders: data,
+          timestamp: now
+        }))
         
+        // Filtrer les dossiers pour éviter les cycles
+        const filteredFolders = filterFolders(data)
         setFolders(filteredFolders)
       } catch (err) {
         console.error("Erreur lors du chargement des dossiers:", err)
@@ -62,6 +76,45 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
       } finally {
         setLoading(false)
       }
+    }
+    
+    // Fonction pour filtrer les dossiers et éviter les cycles
+    const filterFolders = (folders: CardWithContent[]) => {
+      return folders.filter((folder: CardWithContent) => {
+        // Éviter de déplacer un dossier dans lui-même
+        if (folder.sequential_id === card.sequential_id) return false
+        
+        // Éviter de déplacer un dossier dans un de ses enfants (pour éviter les cycles)
+        if (card.type === "folder") {
+          // Vérifier si le dossier est un enfant direct
+          if (card.child_ids && card.child_ids.includes(folder.sequential_id)) {
+            return false
+          }
+          
+          // Vérification plus approfondie pour les hiérarchies plus profondes
+          // Cette fonction pourrait être améliorée avec une approche récursive complète
+          const isChildOrDescendant = (parentId: string, potentialChildId: string): boolean => {
+            const parent = folders.find(f => f.sequential_id === parentId)
+            if (!parent || !parent.child_ids) return false
+            
+            // Vérifier si c'est un enfant direct
+            if (parent.child_ids.includes(potentialChildId)) return true
+            
+            // Vérifier récursivement pour les enfants qui sont des dossiers
+            for (const childId of parent.child_ids) {
+              const child = folders.find(f => f.sequential_id === childId && f.type === 'folder')
+              if (child && isChildOrDescendant(childId, potentialChildId)) return true
+            }
+            
+            return false
+          }
+          
+          // Vérifier si le dossier est un descendant
+          if (isChildOrDescendant(card.sequential_id, folder.sequential_id)) return false
+        }
+        
+        return true
+      })
     }
     
     // Utiliser un délai pour éviter les appels API trop fréquents
@@ -72,7 +125,7 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
     return () => clearTimeout(timer)
   }, [isOpen, card.sequential_id, card.type, card.child_ids, supabase])
 
-  // Déplacer la carte vers le dossier sélectionné
+  // Déplacer la carte vers le dossier sélectionné avec optimisations
   const handleMoveCard = async () => {
     // Vérifier si le dossier sélectionné est différent du dossier actuel
     if (selectedFolderId === card.parent_id) {
@@ -95,16 +148,24 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
       
       if (error) throw error
       
-      // Recharger les cartes du dossier actuel
+      // Mettre à jour le cache local pour éviter des requêtes supplémentaires
+      // Invalider les caches des dossiers concernés
       const oldParentId = card.parent_id || null
+      sessionStorage.removeItem(`folder_${oldParentId}_last_load`)
+      sessionStorage.removeItem(`folder_${selectedFolderId}_last_load`)
+      
+      // Recharger les cartes du dossier actuel
       loadFolderCards(oldParentId)
       
-      // Fermer la boîte de dialogue
-      onClose()
+      // Mettre à jour l'UI de manière optimiste
+      // Cette approche permet d'améliorer la réactivité de l'interface
+      setTimeout(() => {
+        // Fermer la boîte de dialogue immédiatement pour une meilleure expérience utilisateur
+        onClose()
+      }, 100)
     } catch (err) {
       console.error("Erreur lors du déplacement de la carte:", err)
       setError("Impossible de déplacer la carte")
-    } finally {
       setLoading(false)
     }
   }

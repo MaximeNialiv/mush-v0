@@ -1,13 +1,21 @@
 "use client"
 
 import { useAtom } from "jotai"
-import { mushroomCountAtom, viewModeAtom } from "@/store/atoms"
-import { Search, Grid, List, Bell } from "lucide-react"
+import { mushroomCountAtom, viewModeAtom, currentFolderIdAtom } from "@/store/atoms"
+import { Search, Grid, List, Bell, FolderTree } from "lucide-react"
+import Link from "next/link"
 import { UserProfileMenu } from "@/components/user-profile-menu"
+import { usePathname } from "next/navigation"
+import { FolderBreadcrumb } from "@/components/folder-breadcrumb"
 
 export function Header() {
   const [mushroomCount] = useAtom(mushroomCountAtom)
   const [viewMode, setViewMode] = useAtom(viewModeAtom)
+  const [currentFolderId] = useAtom(currentFolderIdAtom)
+  const pathname = usePathname()
+  
+  // Vérifier si nous sommes sur une page d'arborescence
+  const isInFolderView = pathname?.startsWith("/folders")
 
   return (
     <header className="sticky top-0 z-10 bg-white shadow-md border-b-2 border-gray-200">
@@ -16,12 +24,18 @@ export function Header() {
           {/* Logo et titre */}
           <div className="flex flex-col">
             <div className="flex items-center">
-              <div className="w-10 h-10 rounded-full bg-mush-green flex items-center justify-center mr-2 shadow-md">
-                <span className="text-white font-bold text-lg">M</span>
-              </div>
-              <h1 className="text-xl font-bold">Mush•Quizz</h1>
+              <Link href="/" className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-mush-green flex items-center justify-center mr-2 shadow-md">
+                  <span className="text-white font-bold text-lg">M</span>
+                </div>
+                <h1 className="text-xl font-bold">Mush•Quizz</h1>
+              </Link>
             </div>
-            <span className="text-sm text-gray-600">Ateliers &gt; Mush</span>
+            {isInFolderView ? (
+              <FolderBreadcrumb currentFolderId={currentFolderId} />
+            ) : (
+              <span className="text-sm text-gray-600">Ateliers &gt; Mush</span>
+            )}
           </div>
 
           {/* Barre de recherche */}
@@ -36,6 +50,12 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
+            
+            {/* Bouton d'arborescence */}
+            <Link href="/folders" className="flex items-center px-3 py-1.5 bg-mush-green/10 hover:bg-mush-green/20 text-mush-green rounded-lg transition-colors">
+              <FolderTree className="h-5 w-5 mr-1.5" />
+              <span className="hidden sm:inline font-medium">Arborescence</span>
+            </Link>
             
             {/* Boutons de vue */}
             <div className="hidden md:flex bg-gray-100 rounded-lg p-1 shadow-inner">

@@ -39,62 +39,9 @@ export function useFolderNavigation() {
   
   const pathname = usePathname()
   const router = useRouter()
-
-  // Charger les cartes d'un dossier spécifique
-  const loadFolderCards = useCallback(async (folderId: string | null) => {
-    try {
-      // Vérifier si nous avons déjà les cartes de ce dossier en cache
-      const folderCardsInCache = cards.filter(card => card.parent_id === folderId)
-      const hasCachedCards = folderCardsInCache.length > 0
-      
-      // Si nous avons déjà des cartes en cache pour ce dossier et que ce n'est pas un rechargement forcé,
-      // mettre simplement à jour l'ID du dossier actuel et le fil d'Ariane
-      if (hasCachedCards && currentFolderId !== folderId) {
-        setCurrentFolderId(folderId)
-        updateBreadcrumb(folderId)
-        
-        // Mettre à jour l'historique de navigation
-        if (folderId && !navigationHistory.includes(folderId)) {
-          setNavigationHistory(prev => [...prev, folderId])
-        }
-        
-        return
-      }
-      
-      // Sinon, charger les cartes depuis Supabase
-      setLoading(true)
-      setError(null)
-      
-      // Récupérer les cartes du dossier
-      const folderCards = await fetchCards(supabase, folderId)
-      
-      // Mettre à jour l'état global avec les nouvelles cartes
-      // Note: Nous ne remplaçons pas toutes les cartes, juste celles du dossier actuel
-      setCards(prevCards => {
-        // Filtrer les cartes qui ne sont pas dans ce dossier
-        const otherCards = prevCards.filter(card => card.parent_id !== folderId)
-        // Ajouter les nouvelles cartes
-        return [...otherCards, ...folderCards]
-      })
-      
-      // Mettre à jour l'ID du dossier actuel
-      setCurrentFolderId(folderId)
-      
-      // Mettre à jour l'historique de navigation
-      if (folderId && !navigationHistory.includes(folderId)) {
-        setNavigationHistory(prev => [...prev, folderId])
-      }
-      
-      // Mettre à jour le fil d'Ariane
-      updateBreadcrumb(folderId)
-      
-    } catch (err) {
-      console.error("Erreur lors du chargement des cartes du dossier:", err)
-      setError("Impossible de charger les cartes du dossier")
-    } finally {
-      setLoading(false)
-    }
-  }, [supabase, setCards, setCurrentFolderId, setError, setLoading, navigationHistory, setNavigationHistory])
+  
+  // Déclaration préalable pour éviter les problèmes de référence circulaire
+  let updateBreadcrumbFn: (folderId: string | null) => Promise<void>
 
   // Mettre à jour le fil d'Ariane
   const updateBreadcrumb = useCallback(async (folderId: string | null) => {
@@ -111,13 +58,32 @@ export function useFolderNavigation() {
         return
       }
       
+      // Vérifier si nous avons un fil d'Ariane en cache pour ce dossier
+      const cachedBreadcrumb = sessionStorage.getItem(`breadcrumb_${folderId}`)
+      if (cachedBreadcrumb) {
+        try {
+          const parsedBreadcrumb = JSON.parse(cachedBreadcrumb)
+          // Vérifier si le cache est encore valide (moins de 10 minutes)
+          if (parsedBreadcrumb.timestamp && Date.now() - parsedBreadcrumb.timestamp < 10 * 60 * 1000) {
+            setBreadcrumbPath(parsedBreadcrumb.path)
+            return
+          }
+        } catch (e) {
+          // Ignorer les erreurs de parsing, on recalculera le fil d'Ariane
+          console.warn("Erreur lors du parsing du fil d'Ariane en cache", e)
+        }
+      }
+      
       const path: CardWithContent[] = []
       let currentId: string | null = folderId
       
+      // Créer un Map des cartes pour une recherche plus efficace
+      const cardsMap = new Map(cards.map(card => [card.sequential_id, card]))
+      
       // Remonter l'arborescence jusqu'à la racine
       while (currentId) {
-        // Chercher d'abord dans les cartes déjà chargées
-        let currentFolder = cards.find(card => card.sequential_id === currentId)
+        // Chercher d'abord dans les cartes déjà chargées avec le Map pour plus d'efficacité
+        let currentFolder = cardsMap.get(currentId)
         
         // Si la carte n'est pas déjà chargée, la récupérer depuis Supabase
         if (!currentFolder) {
@@ -142,11 +108,99 @@ export function useFolderNavigation() {
         currentId = currentFolder.parent_id || null
       }
       
+      // Mettre à jour le fil d'Ariane
       setBreadcrumbPath(path)
+      
+      // Mettre en cache le fil d'Ariane
+      sessionStorage.setItem(`breadcrumb_${folderId}`, JSON.stringify({
+        path,
+        timestamp: Date.now()
+      }))
     } catch (err) {
       console.error("Erreur lors de la mise à jour du fil d'Ariane:", err)
     }
-  }, [supabase, cards, setBreadcrumbPath])
+  }, [supabase, cards, setBreadcrumbPath, breadcrumbPath])
+  
+  // Assigner la fonction à la variable déclarée précédemment
+  updateBreadcrumbFn = updateBreadcrumb
+  
+  // Charger les cartes d'un dossier spécifique
+  const loadFolderCards = useCallback(async (folderId: string | null) => {
+    try {
+      // Vérifier si nous avons déjà les cartes de ce dossier en cache
+      const folderCardsInCache = cards.filter(card => card.parent_id === folderId)
+      const hasCachedCards = folderCardsInCache.length > 0
+      
+      // Si nous avons déjà des cartes en cache pour ce dossier et que ce n'est pas un rechargement forcé,
+      // mettre simplement à jour l'ID du dossier actuel et le fil d'Ariane
+      if (hasCachedCards && currentFolderId !== folderId) {
+        setCurrentFolderId(folderId)
+        updateBreadcrumbFn(folderId)
+        
+        // Mettre à jour l'historique de navigation
+        if (folderId && !navigationHistory.includes(folderId)) {
+          setNavigationHistory(prev => [...prev, folderId])
+        }
+        
+        return
+      }
+      
+      // Vérifier si le dossier a été chargé récemment (dans les 5 dernières minutes)
+      const lastLoadTime = sessionStorage.getItem(`folder_${folderId}_last_load`)
+      const now = Date.now()
+      const fiveMinutesAgo = now - 5 * 60 * 1000
+      
+      if (lastLoadTime && parseInt(lastLoadTime) > fiveMinutesAgo && hasCachedCards) {
+        // Les données sont récentes, pas besoin de recharger
+        setCurrentFolderId(folderId)
+        updateBreadcrumbFn(folderId)
+        return
+      }
+      
+      // Sinon, charger les cartes depuis Supabase
+      setLoading(true)
+      setError(null)
+      
+      // Récupérer les cartes du dossier
+      const folderCards = await fetchCards(supabase, folderId)
+      
+      // Enregistrer l'heure de chargement dans sessionStorage
+      sessionStorage.setItem(`folder_${folderId}_last_load`, now.toString())
+      
+      // Mettre à jour l'état global avec les nouvelles cartes de manière optimisée
+      setCards(prevCards => {
+        // Utiliser un Map pour une recherche plus efficace
+        const cardMap = new Map(prevCards.map(card => [card.sequential_id, card]))
+        
+        // Mettre à jour ou ajouter les nouvelles cartes
+        folderCards.forEach((card: CardWithContent) => {
+          cardMap.set(card.sequential_id, card)
+        })
+        
+        // Convertir le Map en tableau
+        return Array.from(cardMap.values())
+      })
+      
+      // Mettre à jour l'ID du dossier actuel
+      setCurrentFolderId(folderId)
+      
+      // Mettre à jour l'historique de navigation
+      if (folderId && !navigationHistory.includes(folderId)) {
+        setNavigationHistory(prev => [...prev, folderId])
+      }
+      
+      // Mettre à jour le fil d'Ariane
+      updateBreadcrumbFn(folderId)
+      
+    } catch (err) {
+      console.error("Erreur lors du chargement des cartes du dossier:", err)
+      setError("Impossible de charger les cartes du dossier")
+    } finally {
+      setLoading(false)
+    }
+  }, [cards, supabase, setCards, setCurrentFolderId, setError, setLoading, navigationHistory, setNavigationHistory, currentFolderId])
+
+
 
   // Naviguer vers un dossier
   const navigateToFolder = useCallback((folderId: string | null) => {
@@ -218,16 +272,16 @@ export function useFolderNavigation() {
     }
   }, [supabase, rootFolderId, setRootFolderId])
 
-  // Synchroniser l'URL avec l'état de navigation
+  // Synchroniser l'URL avec l'état de navigation avec debounce
   useEffect(() => {
     const folderId = extractFolderIdFromPath(pathname)
     
     // Si l'ID du dossier dans l'URL est différent de l'état actuel
     if (folderId !== currentFolderId) {
-      // Utiliser un délai pour éviter les rechargements trop fréquents lors de la navigation rapide
+      // Utiliser un délai plus long pour éviter les rechargements trop fréquents lors de la navigation rapide
       const timer = setTimeout(() => {
         loadFolderCards(folderId)
-      }, 50)
+      }, 150) // Augmenté à 150ms pour réduire les rechargements inutiles
       
       return () => clearTimeout(timer)
     }

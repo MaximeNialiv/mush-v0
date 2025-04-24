@@ -7,6 +7,7 @@ import { DataStatus } from "@/components/data-status"
 import { JotaiProvider } from "./jotai-provider"
 import AuthModal from "@/components/auth-modal"
 import { useSupabase } from "@/context/supabase-provider"
+import { FolderPreview } from "@/components/folder-preview"
 
 export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
@@ -113,6 +114,16 @@ export default function Home() {
                 {/* Fond décoratif en origami */}
                 <div className="absolute -top-4 -left-4 w-32 h-32 bg-mush-green/20 rounded-lg transform rotate-12 -z-10"></div>
                 <div className="absolute top-12 -right-8 w-40 h-40 bg-mush-yellow/20 rounded-lg transform -rotate-6 -z-10"></div>
+                
+                {/* Prévisualisation des dossiers récents/importants */}
+                <div className="mb-8">
+                  <h2 className="text-xl font-bold mb-4 text-mush-green">Dossiers récents</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FolderPreview folderId="folder_root" title="Écologie" limit={3} />
+                    <FolderPreview folderId="folder_ateliers" title="Ateliers" limit={3} />
+                  </div>
+                </div>
+                
                 <CardList />
               </div>
               <div className="mt-4 mb-16">

@@ -86,21 +86,25 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
 1. **Gestion d'État**:
    - Utiliser les atomes Jotai pour l'état global
    - Synchroniser l'état avec les URL pour le partage
+   - Utiliser des hooks personnalisés pour encapsuler la logique d'état
 
 2. **Chargement des Données**:
    - Implémenter le chargement à la demande
    - Mettre en cache les données déjà chargées
    - Éviter les requêtes redondantes
+   - Utiliser sessionStorage pour le cache temporaire
 
 3. **Interface Utilisateur**:
    - Concevoir pour différentes tailles d'écran
    - Fournir des retours visuels pour les actions utilisateur
    - Maintenir une cohérence visuelle avec le reste de l'application
+   - Utiliser des transitions fluides pour améliorer l'UX
 
 4. **Performance**:
    - Minimiser les transferts de données
-   - Optimiser le rendu des composants
+   - Optimiser le rendu des composants avec useMemo et memo
    - Utiliser la virtualisation pour les grandes listes
+   - Implémenter des stratégies de debounce pour les événements fréquents
 
 ## Gestion de Supabase
 
@@ -149,10 +153,58 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
 - Confirmation avant suppression pour éviter les erreurs
 - Gestion des erreurs et feedback utilisateur
 
+## Optimisations de Performance Implémentées
+
+### Optimisation du Hook use-folder-navigation
+
+1. **Mise en Cache Avancée**:
+   - Utilisation de sessionStorage pour stocker les données de navigation
+   - Mise en cache du fil d'Ariane avec horodatage pour éviter les recalculs inutiles
+   - Vérification de la fraicheur des données (TTL de 5 minutes)
+
+2. **Réduction des Requêtes**:
+   - Utilisation de Map pour des recherches plus efficaces
+   - Optimisation des mises à jour d'état avec des structures de données efficaces
+   - Debounce des événements de navigation (150ms)
+
+3. **Optimisation des Dépendances**:
+   - Réorganisation des déclarations de fonctions pour éviter les références circulaires
+   - Gestion optimisée des dépendances dans les useCallback
+
+### Optimisation du Composant MoveCardDialog
+
+1. **Mise en Cache des Dossiers**:
+   - Stockage des dossiers disponibles dans sessionStorage
+   - Vérification de la fraicheur des données avant de faire une nouvelle requête
+
+2. **Optimisation des Requêtes**:
+   - Sélection précise des champs nécessaires (sequential_id, title, type, child_ids)
+   - Filtrage côté client pour éviter les cycles dans l'arborescence
+
+3. **Expérience Utilisateur Améliorée**:
+   - Mise à jour optimiste de l'interface
+   - Invalidation intelligente du cache lors des modifications
+
+### Optimisation du Composant FolderView
+
+1. **Mémorisation des Composants**:
+   - Utilisation de memo pour éviter les rendus inutiles des composants CardItem et FolderCard
+   - Mémorisation du composant Breadcrumb
+
+2. **Optimisation des Calculs**:
+   - Utilisation de useMemo pour les opérations de filtrage
+   - Mémorisation des gestionnaires d'événements avec useCallback
+
+3. **Réduction des Rendus**:
+   - Optimisation des dépendances dans les hooks
+   - Création de gestionnaires d'événements mémorisés pour le fil d'Ariane
+
 ## Modifications Futures Envisagées
 
 - Glisser-déposer pour réorganiser les cartes
 - Recherche avancée dans la hiérarchie des cartes
 - Gestion collaborative des cartes
 - Filtrage et tri avancés
+- Virtualisation des listes pour les dossiers contenant de nombreuses cartes
+- Implémentation d'un système de préchargement intelligent
 

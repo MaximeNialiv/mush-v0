@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useMemo, memo, useCallback } from "react"
 import { useFolderNavigation } from "@/hooks/use-folder-navigation"
 import { FolderCard } from "@/components/folder-card"
 import { CardItem } from "@/components/card-item"
@@ -9,6 +9,12 @@ import { Loader2, ChevronRight, Home } from "lucide-react"
 import { useAtom } from "jotai"
 import { rootFolderIdAtom } from "@/store/atoms"
 import { CardWithContent } from "@/types"
+
+// Mémoriser le composant CardItem pour éviter les rendus inutiles
+const MemoizedCardItem = memo(CardItem)
+
+// Mémoriser le composant FolderCard pour éviter les rendus inutiles
+const MemoizedFolderCard = memo(FolderCard)
 
 export function FolderView() {
   const { 
@@ -29,6 +35,11 @@ export function FolderView() {
       setRootFolderId(rootFolderId)
     }
   }, [rootFolderId, currentFolderId, setRootFolderId])
+  
+  // Mémoriser la fonction de navigation pour éviter les recréations inutiles
+  const handleNavigate = useCallback((folderId: string | null) => {
+    navigateToFolder(folderId)
+  }, [navigateToFolder])
   
   if (loading && cards.length === 0) {
     return (
@@ -52,10 +63,10 @@ export function FolderView() {
     )
   }
   
-  // Filtrer les cartes du dossier actuel
-  const currentFolderCards = cards.filter(card => 
-    card.parent_id === currentFolderId
-  )
+  // Filtrer les cartes du dossier actuel avec useMemo pour éviter les recalculs inutiles
+  const currentFolderCards = useMemo(() => {
+    return cards.filter(card => card.parent_id === currentFolderId)
+  }, [cards, currentFolderId])
   
   if (currentFolderCards.length === 0 && !loading) {
     return (
@@ -74,7 +85,7 @@ export function FolderView() {
     <div className="space-y-4">
       {/* Fil d'Ariane et actions */}
       <div className="flex justify-between items-center">
-        <Breadcrumb path={breadcrumbPath} onNavigate={navigateToFolder} />
+        <Breadcrumb path={breadcrumbPath} onNavigate={handleNavigate} />
         <CreateFolderButton />
       </div>
       
@@ -92,12 +103,12 @@ export function FolderView() {
             {currentFolderCards.map(card => (
               <div key={card.sequential_id} className="break-inside-avoid mb-4">
                 {card.isFolder ? (
-                  <FolderCard 
+                  <MemoizedFolderCard 
                     folder={card} 
-                    onNavigate={() => navigateToFolder(card.sequential_id)} 
+                    onNavigate={() => handleNavigate(card.sequential_id)} 
                   />
                 ) : (
-                  <CardItem card={card} />
+                  <MemoizedCardItem card={card} />
                 )}
               </div>
             ))}
@@ -111,10 +122,10 @@ export function FolderView() {
               // Ne pas afficher le dossier actuel (déjà affiché dans la colonne principale)
               if (index === breadcrumbPath.length - 1) return null
               
-              // Récupérer les enfants de ce dossier
-              const folderChildren = cards.filter(card => 
-                card.parent_id === folder.sequential_id
-              )
+              // Récupérer les enfants de ce dossier avec mémorisation pour éviter les recalculs inutiles
+              const folderChildren = useMemo(() => {
+                return cards.filter(card => card.parent_id === folder.sequential_id)
+              }, [cards, folder.sequential_id])
               
               return (
                 <div 
@@ -130,7 +141,7 @@ export function FolderView() {
                       <div 
                         key={child.sequential_id} 
                         className="p-2 bg-white rounded border border-gray-200 hover:bg-gray-50 cursor-pointer"
-                        onClick={() => navigateToFolder(child.sequential_id)}
+                        onClick={() => handleNavigate(child.sequential_id)}
                       >
                         <div className="flex items-center">
                           {child.isFolder ? (
@@ -157,19 +168,29 @@ export function FolderView() {
   )
 }
 
-// Composant pour le fil d'Ariane
-function Breadcrumb({ 
+// Composant pour le fil d'Ariane (mémorisé pour éviter les rendus inutiles)
+const Breadcrumb = memo(({ 
   path, 
   onNavigate 
 }: { 
   path: CardWithContent[], 
   onNavigate: (folderId: string | null) => void 
-}) {
+}) => {
+  // Optimiser le rendu du fil d'Ariane avec useCallback
+  const handleRootClick = useCallback(() => {
+    onNavigate(null)
+  }, [onNavigate])
+  
+  // Générer un gestionnaire d'événement mémorisé pour chaque élément du fil d'Ariane
+  const handleFolderClick = useCallback((folderId: string) => {
+    return () => onNavigate(folderId)
+  }, [onNavigate])
+  
   return (
     <div className="flex items-center text-sm overflow-x-auto py-2 no-scrollbar">
       <button 
         className="flex items-center text-mush-green hover:underline"
-        onClick={() => onNavigate(null)}
+        onClick={handleRootClick}
       >
         <Home className="w-4 h-4 mr-1" />
         <span>Racine</span>
@@ -182,7 +203,7 @@ function Breadcrumb({
             className={`hover:underline ${
               index === path.length - 1 ? 'font-semibold text-mush-green' : 'text-gray-700'
             }`}
-            onClick={() => onNavigate(folder.sequential_id)}
+            onClick={handleFolderClick(folder.sequential_id)}
           >
             {folder.title}
           </button>
@@ -190,4 +211,4 @@ function Breadcrumb({
       ))}
     </div>
   )
-}
+})
