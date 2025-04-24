@@ -101,6 +101,11 @@ export function FolderView() {
   
   // Filtrer les cartes du dossier actuel avec useMemo pour éviter les recalculs inutiles
   const currentFolderCards = useMemo(() => {
+    // Si nous sommes à la racine, afficher les cartes avec parent_id null ou "ROOT"
+    if (currentFolderId === null) {
+      return cards.filter(card => card.parent_id === null || card.parent_id === "ROOT")
+    }
+    // Sinon, afficher uniquement les cartes du dossier sélectionné
     return cards.filter(card => card.parent_id === currentFolderId)
   }, [cards, currentFolderId])
   
