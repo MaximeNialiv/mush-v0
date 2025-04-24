@@ -1,20 +1,56 @@
 "use client"
 
-import { useEffect, useMemo, memo, useCallback } from "react"
+import { useEffect, useMemo, memo, useCallback, useState } from "react"
 import { useFolderNavigation } from "@/hooks/use-folder-navigation"
 import { FolderCard } from "@/components/folder-card"
 import { CardItem } from "@/components/card-item"
 import { CreateFolderButton } from "@/components/create-folder-button"
-import { Loader2, ChevronRight, Home } from "lucide-react"
+import { Loader2, ChevronRight, Home, Folder, ArrowLeft, ArrowRight } from "lucide-react"
 import { useAtom } from "jotai"
 import { rootFolderIdAtom } from "@/store/atoms"
 import { CardWithContent } from "@/types"
+import Link from "next/link"
 
 // Mémoriser le composant CardItem pour éviter les rendus inutiles
 const MemoizedCardItem = memo(CardItem)
 
 // Mémoriser le composant FolderCard pour éviter les rendus inutiles
 const MemoizedFolderCard = memo(FolderCard)
+
+// Composant pour représenter un élément dans la vue en colonnes
+const ColumnItem = memo(({ 
+  item, 
+  isSelected, 
+  onClick 
+}: { 
+  item: CardWithContent, 
+  isSelected?: boolean, 
+  onClick: () => void 
+}) => {
+  return (
+    <div 
+      className={`p-3 rounded-lg cursor-pointer transition-colors mb-2 flex items-center ${isSelected ? 'bg-mush-green/20' : 'hover:bg-gray-100'}`}
+      onClick={onClick}
+    >
+      <div className={`w-8 h-8 rounded-full ${item.type === 'folder' ? 'bg-mush-green/20' : 'bg-gray-200'} flex items-center justify-center mr-3`}>
+        {item.type === 'folder' ? (
+          <Folder className="h-4 w-4 text-mush-green" />
+        ) : (
+          <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium truncate">{item.title}</p>
+        {item.description && (
+          <p className="text-xs text-gray-500 truncate">{item.description}</p>
+        )}
+      </div>
+      {item.type === 'folder' && (
+        <ChevronRight className="h-4 w-4 text-gray-400 ml-2" />
+      )}
+    </div>
+  )
+})
 
 export function FolderView() {
   const { 
@@ -28,6 +64,8 @@ export function FolderView() {
   } = useFolderNavigation()
   
   const [, setRootFolderId] = useAtom(rootFolderIdAtom)
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
+  const [showPreview, setShowPreview] = useState(true)
   
   // S'assurer que le rootFolderId est défini dans l'atome global
   useEffect(() => {
@@ -39,7 +77,13 @@ export function FolderView() {
   // Mémoriser la fonction de navigation pour éviter les recréations inutiles
   const handleNavigate = useCallback((folderId: string | null) => {
     navigateToFolder(folderId)
+    setSelectedItemId(null) // Réinitialiser la sélection lors de la navigation
   }, [navigateToFolder])
+  
+  // Fonction pour sélectionner un élément
+  const handleSelectItem = useCallback((itemId: string) => {
+    setSelectedItemId(itemId === selectedItemId ? null : itemId)
+  }, [selectedItemId])
   
   if (loading && cards.length === 0) {
     return (
@@ -68,11 +112,23 @@ export function FolderView() {
     return cards.filter(card => card.parent_id === currentFolderId)
   }, [cards, currentFolderId])
   
+  // Récupérer l'élément sélectionné
+  const selectedItem = useMemo(() => {
+    if (!selectedItemId) return null
+    return cards.find(card => card.sequential_id === selectedItemId) || null
+  }, [cards, selectedItemId])
+  
+  // Récupérer les enfants de l'élément sélectionné s'il s'agit d'un dossier
+  const selectedItemChildren = useMemo(() => {
+    if (!selectedItem || selectedItem.type !== 'folder') return []
+    return cards.filter(card => card.parent_id === selectedItem.sequential_id)
+  }, [cards, selectedItem])
+  
   if (currentFolderCards.length === 0 && !loading) {
     return (
       <div>
         {/* Fil d'Ariane */}
-        <Breadcrumb path={breadcrumbPath} onNavigate={navigateToFolder} />
+        <Breadcrumb path={breadcrumbPath} onNavigate={handleNavigate} />
         
         <div className="bg-white rounded-3xl p-6 text-center shadow-md mt-4">
           <p className="text-lg">Ce dossier est vide.</p>
@@ -86,83 +142,119 @@ export function FolderView() {
       {/* Fil d'Ariane et actions */}
       <div className="flex justify-between items-center">
         <Breadcrumb path={breadcrumbPath} onNavigate={handleNavigate} />
-        <CreateFolderButton />
+        <div className="flex items-center space-x-2">
+          <button 
+            onClick={() => setShowPreview(!showPreview)}
+            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium flex items-center"
+          >
+            {showPreview ? (
+              <>
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Masquer l'aperçu
+              </>
+            ) : (
+              <>
+                Afficher l'aperçu
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </>
+            )}
+          </button>
+          <CreateFolderButton />
+        </div>
       </div>
       
-      {/* Vue en colonnes */}
-      <div className="flex flex-col md:flex-row gap-4 overflow-x-auto pb-4">
-        {/* Colonne principale (dossier actuel) */}
-        <div className="flex-1 min-w-[300px] max-w-full md:max-w-[400px]">
-          <h2 className="text-lg font-bold mb-4 text-mush-green">
-            {currentFolderId 
-              ? breadcrumbPath[breadcrumbPath.length - 1]?.title || "Dossier" 
-              : "Racine"}
-          </h2>
+      {/* Vue en colonnes style Mac */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="flex h-[calc(100vh-220px)] min-h-[400px]">
+          {/* Colonne principale (dossier actuel) */}
+          <div className="w-1/3 min-w-[250px] border-r border-gray-200 p-4 overflow-y-auto">
+            <h2 className="text-lg font-bold mb-4 text-mush-green flex items-center">
+              <Folder className="h-5 w-5 mr-2" />
+              {currentFolderId 
+                ? breadcrumbPath[breadcrumbPath.length - 1]?.title || "Dossier" 
+                : "Racine"}
+            </h2>
+            
+            <div className="space-y-1">
+              {currentFolderCards.map(card => (
+                <ColumnItem 
+                  key={card.sequential_id} 
+                  item={card} 
+                  isSelected={selectedItemId === card.sequential_id}
+                  onClick={() => {
+                    if (card.type === 'folder') {
+                      handleNavigate(card.sequential_id)
+                    } else {
+                      handleSelectItem(card.sequential_id)
+                    }
+                  }}
+                />
+              ))}
+              
+              {currentFolderCards.length === 0 && (
+                <div className="p-4 text-center text-gray-500">
+                  <p>Ce dossier est vide.</p>
+                </div>
+              )}
+            </div>
+          </div>
           
-          <div className="space-y-4">
-            {currentFolderCards.map(card => (
-              <div key={card.sequential_id} className="break-inside-avoid mb-4">
-                {card.isFolder ? (
-                  <MemoizedFolderCard 
-                    folder={card} 
-                    onNavigate={() => handleNavigate(card.sequential_id)} 
+          {/* Colonne secondaire (contenu du dossier sélectionné) */}
+          {selectedItem && selectedItem.type === 'folder' && (
+            <div className="w-1/3 min-w-[250px] border-r border-gray-200 p-4 overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-mush-green flex items-center">
+                  <Folder className="h-5 w-5 mr-2" />
+                  {selectedItem.title}
+                </h2>
+                <Link 
+                  href={`/folders/${selectedItem.sequential_id}`}
+                  className="text-sm text-mush-green hover:underline flex items-center"
+                >
+                  Ouvrir
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Link>
+              </div>
+              
+              <div className="space-y-1">
+                {selectedItemChildren.map(child => (
+                  <ColumnItem 
+                    key={child.sequential_id} 
+                    item={child} 
+                    onClick={() => {
+                      if (child.type === 'folder') {
+                        handleNavigate(child.sequential_id)
+                      } else {
+                        // Logique pour sélectionner une carte
+                      }
+                    }}
                   />
-                ) : (
-                  <MemoizedCardItem card={card} />
+                ))}
+                
+                {selectedItemChildren.length === 0 && (
+                  <div className="p-4 text-center text-gray-500">
+                    <p>Ce dossier est vide.</p>
+                  </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-        
-        {/* Colonnes des sous-dossiers (uniquement sur desktop) */}
-        {breadcrumbPath.length > 0 && (
-          <div className="hidden md:flex flex-row gap-4 overflow-x-auto">
-            {breadcrumbPath.map((folder, index) => {
-              // Ne pas afficher le dossier actuel (déjà affiché dans la colonne principale)
-              if (index === breadcrumbPath.length - 1) return null
-              
-              // Récupérer les enfants de ce dossier avec mémorisation pour éviter les recalculs inutiles
-              const folderChildren = useMemo(() => {
-                return cards.filter(card => card.parent_id === folder.sequential_id)
-              }, [cards, folder.sequential_id])
-              
-              return (
-                <div 
-                  key={folder.sequential_id} 
-                  className="min-w-[250px] max-w-[300px] border-l border-gray-200 pl-4"
-                >
-                  <h3 className="text-md font-semibold mb-3 text-gray-700 truncate">
-                    {folder.title}
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    {folderChildren.map(child => (
-                      <div 
-                        key={child.sequential_id} 
-                        className="p-2 bg-white rounded border border-gray-200 hover:bg-gray-50 cursor-pointer"
-                        onClick={() => handleNavigate(child.sequential_id)}
-                      >
-                        <div className="flex items-center">
-                          {child.isFolder ? (
-                            <div className="w-6 h-6 rounded-full bg-mush-green/20 flex items-center justify-center mr-2">
-                              <ChevronRight className="w-3 h-3 text-mush-green" />
-                            </div>
-                          ) : (
-                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center mr-2">
-                              <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-                            </div>
-                          )}
-                          <span className="text-sm font-medium truncate">{child.title}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            </div>
+          )}
+          
+          {/* Aperçu de la carte sélectionnée */}
+          {showPreview && (
+            <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+              {selectedItem && selectedItem.type !== 'folder' ? (
+                <div className="max-w-md mx-auto">
+                  <MemoizedCardItem card={selectedItem} />
                 </div>
-              )
-            })}
-          </div>
-        )}
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-500">
+                  <p>Sélectionnez une carte pour afficher son contenu</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -187,7 +279,7 @@ const Breadcrumb = memo(({
   }, [onNavigate])
   
   return (
-    <div className="flex items-center text-sm overflow-x-auto py-2 no-scrollbar">
+    <div className="flex items-center text-sm overflow-x-auto py-2 no-scrollbar bg-white px-3 rounded-lg shadow-sm">
       <button 
         className="flex items-center text-mush-green hover:underline"
         onClick={handleRootClick}

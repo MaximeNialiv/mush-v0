@@ -5,6 +5,8 @@ import { FileText, Music, Video, Newspaper, Trophy } from "lucide-react"
 import { ContentItem } from "./content-item"
 import { atom, useAtom } from "jotai"
 import { atomFamily } from "jotai/utils"
+import { CardMenu } from "./card-menu"
+import { toast } from "react-hot-toast"
 
 // Créer une famille d'atomes pour l'état d'expansion de chaque carte
 const expandedAtomFamily = atomFamily(
@@ -56,6 +58,19 @@ export function CardItem({ card }: CardItemProps) {
               <p className="text-sm text-gray-600">{card.description}</p>
             </div>
           </div>
+          
+          {/* Menu contextuel */}
+          <CardMenu 
+            card={card} 
+            onCardMoved={() => {
+              // Rafraîchir la page ou mettre à jour l'état local
+              toast.success("Carte déplacée avec succès")
+              // Rafraîchir la page après un court délai
+              setTimeout(() => {
+                window.location.reload()
+              }, 1000)
+            }} 
+          />
         </div>
 
         {/* Contenu de la carte */}
