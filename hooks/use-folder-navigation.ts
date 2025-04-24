@@ -127,14 +127,23 @@ export function useFolderNavigation() {
   // Fonction interne pour récupérer les cartes d'un dossier
   const fetchCardsFromFolder = async (folderId: string | null) => {
     if (folderId === null) {
-      // Si nous sommes à la racine, récupérer toutes les cartes sans parent_id
-      const { data, error } = await supabase
+      // Si nous sommes à la racine, récupérer toutes les cartes sans parent_id ou avec parent_id "ROOT"
+      const { data: nullParentCards, error: nullError } = await supabase
         .from("cards")
         .select("*")
         .is("parent_id", null)
       
-      if (error) throw error
-      return data as CardWithContent[]
+      if (nullError) throw nullError
+      
+      const { data: rootParentCards, error: rootError } = await supabase
+        .from("cards")
+        .select("*")
+        .eq("parent_id", "ROOT")
+      
+      if (rootError) throw rootError
+      
+      // Combiner les deux ensembles de résultats
+      return [...(nullParentCards || []), ...(rootParentCards || [])] as CardWithContent[]
     } else {
       // Sinon, utiliser la fonction fetchCards existante
       return await fetchCards(supabase, folderId)
