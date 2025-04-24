@@ -5,7 +5,6 @@ import { CardWithContent } from '@/types'
 
 /**
  * Déplace une carte vers un nouveau dossier parent en mettant à jour à la fois parent_id et child_ids
- * Utilise la fonction SQL move_card_to_folder pour maintenir la cohérence des données
  */
 export async function moveCardToFolder(
   supabase: SupabaseClient,
@@ -14,37 +13,128 @@ export async function moveCardToFolder(
   oldParentId: string | null
 ): Promise<{ success: boolean; error?: any }> {
   try {
-    // Utiliser la fonction SQL pour déplacer la carte
-    const { data, error } = await supabase.rpc('move_card_to_folder', {
-      card_id: cardId,
-      new_parent_id: newParentId,
-      old_parent_id: oldParentId
-    })
+    // Vérifier si la fonction SQL existe
+    const { data: functionExists, error: checkError } = await supabase
+      .from('pg_proc')
+      .select('proname')
+      .eq('proname', 'move_card_to_folder')
+      .maybeSingle()
 
-    if (error) {
-      console.error('Erreur lors du déplacement de la carte:', error)
-      return { success: false, error }
+    // Si la fonction SQL existe, l'utiliser
+    if (functionExists && !checkError) {
+      const { error } = await supabase.rpc('move_card_to_folder', {
+        card_id: cardId,
+        new_parent_id: newParentId,
+        old_parent_id: oldParentId
+      })
+
+      if (error) {
+        console.error('Erreur lors de l\'appel de la fonction SQL:', error)
+        // Continuer avec l'implémentation manuelle en cas d'erreur
+      } else {
+        // Fonction SQL exécutée avec succès
+        // Invalider les caches
+        invalidateCaches(oldParentId, newParentId)
+        return { success: true }
+      }
     }
 
-    // Invalider les caches pour forcer le rechargement des données
-    if (typeof window !== 'undefined') {
-      // Supprimer les caches des dossiers concernés
-      if (oldParentId) {
-        sessionStorage.removeItem(`folder_${oldParentId}_last_load`)
-        sessionStorage.removeItem(`breadcrumb_${oldParentId}`)
-      }
-      if (newParentId) {
-        sessionStorage.removeItem(`folder_${newParentId}_last_load`)
-        sessionStorage.removeItem(`breadcrumb_${newParentId}`)
-      }
-      // Supprimer le cache des dossiers disponibles
-      sessionStorage.removeItem('all_folders_cache')
+    // Implémentation manuelle (fallback)
+    console.log('Utilisation de l\'implémentation manuelle pour déplacer la carte')
+
+    // 1. Mettre à jour le parent_id de la carte
+    const { error: updateCardError } = await supabase
+      .from('cards')
+      .update({ 
+        parent_id: newParentId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('sequential_id', cardId)
+
+    if (updateCardError) throw updateCardError
+
+    // 2. Si l'ancien parent existe, retirer cardId de ses child_ids
+    if (oldParentId) {
+      // D'abord, récupérer l'ancien parent
+      const { data: oldParent, error: oldParentError } = await supabase
+        .from('cards')
+        .select('child_ids')
+        .eq('sequential_id', oldParentId)
+        .single()
+
+      if (oldParentError) throw oldParentError
+
+      // Filtrer le cardId des child_ids
+      let oldChildIds = oldParent.child_ids || []
+      oldChildIds = oldChildIds.filter((id: string) => id !== cardId)
+
+      // Mettre à jour l'ancien parent
+      const { error: updateOldParentError } = await supabase
+        .from('cards')
+        .update({ 
+          child_ids: oldChildIds,
+          updated_at: new Date().toISOString()
+        })
+        .eq('sequential_id', oldParentId)
+
+      if (updateOldParentError) throw updateOldParentError
     }
+
+    // 3. Si le nouveau parent existe, ajouter cardId à ses child_ids
+    if (newParentId) {
+      // D'abord, récupérer le nouveau parent
+      const { data: newParent, error: newParentError } = await supabase
+        .from('cards')
+        .select('child_ids')
+        .eq('sequential_id', newParentId)
+        .single()
+
+      if (newParentError) throw newParentError
+
+      // Ajouter le cardId aux child_ids s'il n'y est pas déjà
+      let newChildIds = newParent.child_ids || []
+      if (!newChildIds.includes(cardId)) {
+        newChildIds.push(cardId)
+      }
+
+      // Mettre à jour le nouveau parent
+      const { error: updateNewParentError } = await supabase
+        .from('cards')
+        .update({ 
+          child_ids: newChildIds,
+          updated_at: new Date().toISOString()
+        })
+        .eq('sequential_id', newParentId)
+
+      if (updateNewParentError) throw updateNewParentError
+    }
+
+    // Invalider les caches
+    invalidateCaches(oldParentId, newParentId)
 
     return { success: true }
   } catch (error) {
     console.error('Erreur lors du déplacement de la carte:', error)
     return { success: false, error }
+  }
+}
+
+/**
+ * Invalide les caches après un déplacement de carte
+ */
+function invalidateCaches(oldParentId: string | null, newParentId: string | null): void {
+  if (typeof window !== 'undefined') {
+    // Supprimer les caches des dossiers concernés
+    if (oldParentId) {
+      sessionStorage.removeItem(`folder_${oldParentId}_last_load`)
+      sessionStorage.removeItem(`breadcrumb_${oldParentId}`)
+    }
+    if (newParentId) {
+      sessionStorage.removeItem(`folder_${newParentId}_last_load`)
+      sessionStorage.removeItem(`breadcrumb_${newParentId}`)
+    }
+    // Supprimer le cache des dossiers disponibles
+    sessionStorage.removeItem('all_folders_cache')
   }
 }
 
