@@ -14,6 +14,8 @@ import {
 } from "@/store/atoms"
 import { useSupabase, fetchCards } from "@/utils/supabase/client"
 import { CardWithContent } from "@/types"
+import * as Sentry from "@sentry/nextjs"
+import { ErrorLogging } from "@/utils/error-logging"
 
 // Fonction pour extraire l'ID du dossier à partir de l'URL
 const extractFolderIdFromPath = (path: string): string | null => {
@@ -118,6 +120,11 @@ export function useFolderNavigation() {
       }))
     } catch (err) {
       console.error("Erreur lors de la mise à jour du fil d'Ariane:", err)
+      ErrorLogging.captureError(err, { 
+        location: "updateBreadcrumb", 
+        folderId: folderId,
+        message: "Erreur lors de la mise à jour du fil d'Ariane" 
+      })
     }
   }, [supabase, cards, setBreadcrumbPath, breadcrumbPath])
   
@@ -126,27 +133,45 @@ export function useFolderNavigation() {
   
   // Fonction interne pour récupérer les cartes d'un dossier
   const fetchCardsFromFolder = async (folderId: string | null) => {
-    if (folderId === null) {
-      // Si nous sommes à la racine, récupérer toutes les cartes sans parent_id ou avec parent_id "ROOT"
-      const { data: nullParentCards, error: nullError } = await supabase
-        .from("cards")
-        .select("*")
-        .is("parent_id", null)
-      
-      if (nullError) throw nullError
-      
-      const { data: rootParentCards, error: rootError } = await supabase
-        .from("cards")
-        .select("*")
-        .eq("parent_id", "ROOT")
-      
-      if (rootError) throw rootError
-      
-      // Combiner les deux ensembles de résultats
-      return [...(nullParentCards || []), ...(rootParentCards || [])] as CardWithContent[]
-    } else {
-      // Sinon, utiliser la fonction fetchCards existante
-      return await fetchCards(supabase, folderId)
+    try {
+      if (folderId === null) {
+        // Si nous sommes à la racine, récupérer toutes les cartes sans parent_id ou avec parent_id "ROOT"
+        const { data: nullParentCards, error: nullError } = await supabase
+          .from("cards")
+          .select("*")
+          .is("parent_id", null)
+        
+        if (nullError) {
+          // Capturer l'erreur avec Sentry
+          ErrorLogging.captureError(nullError, { location: "fetchCardsFromFolder", query: "parent_id is null" })
+          throw nullError
+        }
+        
+        const { data: rootParentCards, error: rootError } = await supabase
+          .from("cards")
+          .select("*")
+          .eq("parent_id", "ROOT")
+        
+        if (rootError) {
+          // Capturer l'erreur avec Sentry
+          ErrorLogging.captureError(rootError, { location: "fetchCardsFromFolder", query: "parent_id = ROOT" })
+          throw rootError
+        }
+        
+        // Combiner les deux ensembles de résultats
+        return [...(nullParentCards || []), ...(rootParentCards || [])] as CardWithContent[]
+      } else {
+        // Sinon, utiliser la fonction fetchCards existante
+        return await fetchCards(supabase, folderId)
+      }
+    } catch (error) {
+      // Capturer toute autre erreur non gérée
+      ErrorLogging.captureError(error, { 
+        location: "fetchCardsFromFolder", 
+        folderId: folderId,
+        message: "Erreur lors de la récupération des cartes" 
+      })
+      throw error;
     }
   }
   
@@ -220,6 +245,11 @@ export function useFolderNavigation() {
       
     } catch (err) {
       console.error("Erreur lors du chargement des cartes du dossier:", err)
+      ErrorLogging.captureError(err, { 
+        location: "loadFolderCards", 
+        folderId: folderId,
+        message: "Erreur lors du chargement des cartes du dossier" 
+      })
       setError("Impossible de charger les cartes du dossier")
     } finally {
       setLoading(false)
@@ -230,9 +260,43 @@ export function useFolderNavigation() {
 
   // Naviguer vers un dossier
   const navigateToFolder = useCallback((folderId: string | null) => {
-    const path = buildFolderPath(folderId)
-    router.push(path)
-  }, [router])
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Mettre à jour l'URL et l'état
+      if (folderId) {
+        router.push(`/${folderId}`)
+        
+        // Enregistrer la navigation pour le suivi
+        ErrorLogging.logMessage(
+          `Navigation vers le dossier: ${folderId}`,
+          "info",
+          { action: "navigation", folderId }
+        )
+      } else {
+        router.push('/')
+        
+        // Enregistrer la navigation pour le suivi
+        ErrorLogging.logMessage(
+          "Navigation vers la racine",
+          "info",
+          { action: "navigation", folderId: "ROOT" }
+        )
+      }
+      
+      // Mettre à jour l'état local
+      setCurrentFolderId(folderId)
+    } catch (error) {
+      // Capturer les erreurs de navigation
+      ErrorLogging.captureError(error, { 
+        location: "navigateToFolder", 
+        folderId: folderId,
+        message: "Erreur lors de la navigation" 
+      })
+      setError("Erreur lors de la navigation. Veuillez réessayer.")
+    }
+  }, [router, setCurrentFolderId])
 
   // Naviguer vers le dossier parent
   const navigateToParent = useCallback(() => {

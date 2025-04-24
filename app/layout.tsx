@@ -2,6 +2,14 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Toaster } from 'sonner'
 import SupabaseProvider from '@/context/supabase-provider'
+import dynamic from 'next/dynamic'
+import * as Sentry from '@sentry/nextjs'
+
+// Import dynamique de l'ErrorBoundary pour éviter les problèmes de SSR
+const ErrorBoundary = dynamic(
+  () => import('@/components/error-boundary'),
+  { ssr: false }
+)
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -45,8 +53,10 @@ export default function RootLayout({
       </head>
       <body>
         <SupabaseProvider>
-          {children}
-          <Toaster position="bottom-right" />
+          <ErrorBoundary>
+            {children}
+            <Toaster position="bottom-right" />
+          </ErrorBoundary>
         </SupabaseProvider>
       </body>
     </html>
