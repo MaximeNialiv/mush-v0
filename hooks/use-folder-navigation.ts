@@ -124,6 +124,23 @@ export function useFolderNavigation() {
   // Assigner la fonction à la variable déclarée précédemment
   updateBreadcrumbFn = updateBreadcrumb
   
+  // Fonction interne pour récupérer les cartes d'un dossier
+  const fetchCardsFromFolder = async (folderId: string | null) => {
+    if (folderId === null) {
+      // Si nous sommes à la racine, récupérer toutes les cartes sans parent_id
+      const { data, error } = await supabase
+        .from("cards")
+        .select("*")
+        .is("parent_id", null)
+      
+      if (error) throw error
+      return data as CardWithContent[]
+    } else {
+      // Sinon, utiliser la fonction fetchCards existante
+      return await fetchCards(supabase, folderId)
+    }
+  }
+  
   // Charger les cartes d'un dossier spécifique
   const loadFolderCards = useCallback(async (folderId: string | null) => {
     try {
@@ -161,8 +178,8 @@ export function useFolderNavigation() {
       setLoading(true)
       setError(null)
       
-      // Récupérer les cartes du dossier
-      const folderCards = await fetchCards(supabase, folderId)
+      // Récupérer les cartes du dossier avec la nouvelle fonction
+      const folderCards = await fetchCardsFromFolder(folderId)
       
       // Enregistrer l'heure de chargement dans sessionStorage
       sessionStorage.setItem(`folder_${folderId}_last_load`, now.toString())
