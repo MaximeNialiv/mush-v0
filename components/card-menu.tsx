@@ -6,6 +6,7 @@ import { useSupabase } from "@/utils/supabase/client"
 import { CardWithContent } from "@/types"
 import { fetchAvailableFolders, moveCardToFolder } from "@/utils/folder-operations"
 import { toast } from "react-hot-toast"
+import { createPortal } from "react-dom"
 
 interface CardMenuProps {
   card: CardWithContent
@@ -17,8 +18,21 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
   const [isFolderMenuOpen, setIsFolderMenuOpen] = useState(false)
   const [folders, setFolders] = useState<CardWithContent[]>([])
   const [loading, setLoading] = useState(false)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
   const menuRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const supabase = useSupabase()
+
+  // Calculer la position du menu lors de l'ouverture
+  useEffect(() => {
+    if (isFolderMenuOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setMenuPosition({
+        top: rect.top,
+        left: rect.right + 5 // 5px de marge
+      })
+    }
+  }, [isFolderMenuOpen])
 
   // Fermer le menu si on clique en dehors
   useEffect(() => {
@@ -86,6 +100,7 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
   return (
     <div className="relative" ref={menuRef}>
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="p-1 rounded-full hover:bg-gray-200 transition-colors"
         aria-label="Options"
@@ -117,23 +132,31 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
             <Trash className="h-4 w-4 mr-2" />
             Supprimer
           </button>
-          
-          {/* Sous-menu des dossiers */}
-          {isFolderMenuOpen && (
-            <div className="absolute left-full top-0 w-48 bg-white rounded-md shadow-lg z-50 py-1 border border-gray-200 max-h-60 overflow-y-auto">
-              {loading ? (
-                <div className="px-4 py-2 text-sm text-gray-500">Chargement...</div>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleMoveToFolder(null)}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center ${
-                      card.parent_id === null ? 'font-bold text-mush-green' : 'text-gray-700'
-                    }`}
-                  >
-                    <Folder className="h-4 w-4 mr-2" />
-                    Racine
-                  </button>
+        </div>
+      )}
+
+      {/* Sous-menu des dossiers en portail pour sortir du contexte de la carte */}
+      {isFolderMenuOpen && typeof window !== 'undefined' && createPortal(
+        <div 
+          className="fixed w-48 bg-white rounded-md shadow-lg z-[1000] py-1 border border-gray-200 max-h-[50vh] overflow-y-auto"
+          style={{ 
+            top: `${menuPosition.top}px`, 
+            left: `${menuPosition.left}px`,
+          }}
+        >
+          {loading ? (
+            <div className="px-4 py-2 text-sm text-gray-500">Chargement...</div>
+          ) : (
+            <>
+              <button
+                onClick={() => handleMoveToFolder(null)}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center ${
+                  card.parent_id === null ? 'font-bold text-mush-green' : 'text-gray-700'
+                }`}
+              >
+                <Folder className="h-4 w-4 mr-2" />
+                Racine
+              </button>
                   
                   {folders.map(folder => (
                     <button
@@ -149,14 +172,14 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
                   ))}
                   
                   {folders.length === 0 && (
-                    <div className="px-4 py-2 text-sm text-gray-500">Aucun dossier disponible</div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                  <div className="px-4 py-2 text-sm text-gray-500">Aucun dossier disponible</div>
+                )}
+              </>
+            )}
+          </div>,
+          document.body
+        )
+      }
     </div>
   )
 }
