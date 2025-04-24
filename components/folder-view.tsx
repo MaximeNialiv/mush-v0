@@ -64,8 +64,6 @@ export function FolderView() {
   } = useFolderNavigation()
   
   const [, setRootFolderId] = useAtom(rootFolderIdAtom)
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
-  const [showPreview, setShowPreview] = useState(true)
   
   // S'assurer que le rootFolderId est défini dans l'atome global
   useEffect(() => {
@@ -77,13 +75,7 @@ export function FolderView() {
   // Mémoriser la fonction de navigation pour éviter les recréations inutiles
   const handleNavigate = useCallback((folderId: string | null) => {
     navigateToFolder(folderId)
-    setSelectedItemId(null) // Réinitialiser la sélection lors de la navigation
   }, [navigateToFolder])
-  
-  // Fonction pour sélectionner un élément
-  const handleSelectItem = useCallback((itemId: string) => {
-    setSelectedItemId(itemId === selectedItemId ? null : itemId)
-  }, [selectedItemId])
   
   if (loading && cards.length === 0) {
     return (
@@ -112,18 +104,6 @@ export function FolderView() {
     return cards.filter(card => card.parent_id === currentFolderId)
   }, [cards, currentFolderId])
   
-  // Récupérer l'élément sélectionné
-  const selectedItem = useMemo(() => {
-    if (!selectedItemId) return null
-    return cards.find(card => card.sequential_id === selectedItemId) || null
-  }, [cards, selectedItemId])
-  
-  // Récupérer les enfants de l'élément sélectionné s'il s'agit d'un dossier
-  const selectedItemChildren = useMemo(() => {
-    if (!selectedItem || selectedItem.type !== 'folder') return []
-    return cards.filter(card => card.parent_id === selectedItem.sequential_id)
-  }, [cards, selectedItem])
-  
   if (currentFolderCards.length === 0 && !loading) {
     return (
       <div>
@@ -143,118 +123,15 @@ export function FolderView() {
       <div className="flex justify-between items-center">
         <Breadcrumb path={breadcrumbPath} onNavigate={handleNavigate} />
         <div className="flex items-center space-x-2">
-          <button 
-            onClick={() => setShowPreview(!showPreview)}
-            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium flex items-center"
-          >
-            {showPreview ? (
-              <>
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Masquer l'aperçu
-              </>
-            ) : (
-              <>
-                Afficher l'aperçu
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </>
-            )}
-          </button>
           <CreateFolderButton />
         </div>
       </div>
       
-      {/* Vue en colonnes style Mac */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="flex h-[calc(100vh-220px)] min-h-[400px]">
-          {/* Colonne principale (dossier actuel) */}
-          <div className="w-1/3 min-w-[250px] border-r border-gray-200 p-4 overflow-y-auto">
-            <h2 className="text-lg font-bold mb-4 text-mush-green flex items-center">
-              <Folder className="h-5 w-5 mr-2" />
-              {currentFolderId 
-                ? breadcrumbPath[breadcrumbPath.length - 1]?.title || "Dossier" 
-                : "Racine"}
-            </h2>
-            
-            <div className="space-y-1">
-              {currentFolderCards.map(card => (
-                <ColumnItem 
-                  key={card.sequential_id} 
-                  item={card} 
-                  isSelected={selectedItemId === card.sequential_id}
-                  onClick={() => {
-                    if (card.type === 'folder') {
-                      handleNavigate(card.sequential_id)
-                    } else {
-                      handleSelectItem(card.sequential_id)
-                    }
-                  }}
-                />
-              ))}
-              
-              {currentFolderCards.length === 0 && (
-                <div className="p-4 text-center text-gray-500">
-                  <p>Ce dossier est vide.</p>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Colonne secondaire (contenu du dossier sélectionné) */}
-          {selectedItem && selectedItem.type === 'folder' && (
-            <div className="w-1/3 min-w-[250px] border-r border-gray-200 p-4 overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-mush-green flex items-center">
-                  <Folder className="h-5 w-5 mr-2" />
-                  {selectedItem.title}
-                </h2>
-                <Link 
-                  href={`/folders/${selectedItem.sequential_id}`}
-                  className="text-sm text-mush-green hover:underline flex items-center"
-                >
-                  Ouvrir
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
-              </div>
-              
-              <div className="space-y-1">
-                {selectedItemChildren.map(child => (
-                  <ColumnItem 
-                    key={child.sequential_id} 
-                    item={child} 
-                    onClick={() => {
-                      if (child.type === 'folder') {
-                        handleNavigate(child.sequential_id)
-                      } else {
-                        // Logique pour sélectionner une carte
-                      }
-                    }}
-                  />
-                ))}
-                
-                {selectedItemChildren.length === 0 && (
-                  <div className="p-4 text-center text-gray-500">
-                    <p>Ce dossier est vide.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          
-          {/* Aperçu de la carte sélectionnée */}
-          {showPreview && (
-            <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-              {selectedItem && selectedItem.type !== 'folder' ? (
-                <div className="max-w-md mx-auto">
-                  <MemoizedCardItem card={selectedItem} />
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-500">
-                  <p>Sélectionnez une carte pour afficher son contenu</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+      {/* Affichage simple des cartes du dossier actuel */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {currentFolderCards.map(card => (
+          <MemoizedCardItem key={card.sequential_id} card={card} />
+        ))}
       </div>
     </div>
   )

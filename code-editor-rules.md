@@ -72,14 +72,32 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
 
 ### Structure de Navigation
 
-- **Vue en Colonnes**:
-   - Affichage multi-colonnes pour la navigation hiérarchique
-   - Colonne principale pour le dossier actuel
-   - Colonnes secondaires pour l'historique de navigation
+- **Vue Simplifiée des Cartes**:
+   - Affichage en grille des cartes du dossier actuel
+   - Interface simple et directe pour la navigation
+   - Optimisée pour la lisibilité et l'accès rapide aux contenus
 
 - **Fil d'Ariane (Breadcrumb)**:
    - Affiche le chemin complet jusqu'au dossier actuel
    - Permet une navigation rapide vers les niveaux supérieurs
+   - N'affiche pas "ROOT" dans le chemin
+
+- **Bouton "Ouvrir le dossier"**:
+   - Affiché sur toutes les cartes ayant des enfants (child_ids)
+   - Remplace le comportement de clic sur la carte
+   - Design cohérent avec les boutons de quiz
+
+### Gestion de la Racine (ROOT)
+
+- **Affichage à la Racine**:
+   - Affiche toutes les cartes dont `parent_id` est `NULL` ou `"ROOT"`
+   - Compatibilité avec les anciennes et nouvelles cartes
+   - Pas besoin de migration de données
+
+- **URLs Simplifiées**:
+   - Format d'URL: `/{folderId}` au lieu de `/folders/{folderId}`
+   - URL racine (`/`) affiche toutes les cartes de premier niveau
+   - Navigation directe et propre
 
 ## Bonnes Pratiques de Développement
 
