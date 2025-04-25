@@ -190,6 +190,7 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Erreur `Cannot find module 'X'`: Installer le package manquant avec `npm install X`
    - Erreur `Property 'X' does not exist on type 'Y'`: Ajouter la propriété au type ou vérifier son existence avant utilisation
    - Erreur `Attempted import error`: Vérifier que l'import correspond à ce qui est exporté par le package
+   - Pour les composants UI basés sur Radix UI, s'assurer que tous les packages `@radix-ui/react-*` nécessaires sont installés
 
 3. **Gestion des Versions**:
    - Utiliser des versions spécifiques dans `package.json` pour éviter les incompatibilités
@@ -200,6 +201,25 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Vérifier que toutes les variables d'environnement nécessaires sont configurées dans Vercel
    - Surveiller les logs de build pour détecter les erreurs rapidement
    - Utiliser les prévisualisations de déploiement pour tester avant de fusionner dans la branche principale
+
+## Composants UI
+
+### Utilisation des Composants Radix UI
+
+1. **Dépendances Requises**:
+   - Tous les composants UI basés sur Radix UI nécessitent l'installation de leur package correspondant
+   - Exemples : `@radix-ui/react-accordion`, `@radix-ui/react-dialog`, etc.
+   - Toujours vérifier que le package est listé dans `package.json` avant d'utiliser un composant
+
+2. **Structure des Composants**:
+   - Les composants UI sont situés dans le dossier `components/ui/`
+   - Chaque composant est généralement dans son propre fichier (ex: `accordion.tsx`, `dialog.tsx`)
+   - Ces composants utilisent le pattern de composition pour créer des interfaces complexes
+
+3. **Bonnes Pratiques**:
+   - Utiliser les composants existants plutôt que d'en créer de nouveaux
+   - Maintenir la cohérence du design en utilisant les mêmes composants à travers l'application
+   - Tester les composants UI localement avant de déployer
 
 ## Gestion de Supabase
 
