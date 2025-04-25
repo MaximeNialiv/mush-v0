@@ -174,6 +174,32 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
 4. **Vérification Avant Déploiement**:
    - Exécuter `next build` localement pour détecter les erreurs TypeScript
    - Corriger toutes les erreurs de typage avant de pousser vers la branche de déploiement
+   - Vérifier que toutes les propriétés utilisées dans les composants sont correctement typées
+   - Ajouter des vérifications de nullité/undefined avant d'utiliser des propriétés potentiellement absentes
+
+## Gestion des Dépendances et Déploiement
+
+### Bonnes Pratiques pour les Dépendances
+
+1. **Cohérence des Packages**:
+   - S'assurer que toutes les dépendances utilisées dans le code sont listées dans `package.json`
+   - Vérifier que les imports correspondent à des packages installés
+   - Éviter d'utiliser des fonctionnalités de packages qui ne sont pas encore disponibles dans la version installée
+
+2. **Résolution des Erreurs de Build**:
+   - Erreur `Cannot find module 'X'`: Installer le package manquant avec `npm install X`
+   - Erreur `Property 'X' does not exist on type 'Y'`: Ajouter la propriété au type ou vérifier son existence avant utilisation
+   - Erreur `Attempted import error`: Vérifier que l'import correspond à ce qui est exporté par le package
+
+3. **Gestion des Versions**:
+   - Utiliser des versions spécifiques dans `package.json` pour éviter les incompatibilités
+   - Tester les mises à jour de packages localement avant de les déployer
+   - Documenter les dépendances critiques et leurs fonctionnalités
+
+4. **Configuration Vercel**:
+   - Vérifier que toutes les variables d'environnement nécessaires sont configurées dans Vercel
+   - Surveiller les logs de build pour détecter les erreurs rapidement
+   - Utiliser les prévisualisations de déploiement pour tester avant de fusionner dans la branche principale
 
 ## Gestion de Supabase
 
