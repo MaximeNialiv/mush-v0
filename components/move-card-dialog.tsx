@@ -82,12 +82,12 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
     const filterFolders = (folders: Partial<CardWithContent>[]) => {
       return folders.filter((folder: Partial<CardWithContent>) => {
         // Éviter de déplacer un dossier dans lui-même
-        if (folder.sequential_id === card.sequential_id) return false
+        if (folder.sequential_id && folder.sequential_id === card.sequential_id) return false
         
         // Éviter de déplacer un dossier dans un de ses enfants (pour éviter les cycles)
         if (card.type === "folder") {
           // Vérifier si le dossier est un enfant direct
-          if (card.child_ids && card.child_ids.includes(folder.sequential_id)) {
+          if (card.child_ids && folder.sequential_id && card.child_ids.includes(folder.sequential_id)) {
             return false
           }
           
@@ -110,7 +110,7 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
           }
           
           // Vérifier si le dossier est un descendant
-          if (isChildOrDescendant(card.sequential_id, folder.sequential_id)) return false
+          if (folder.sequential_id && isChildOrDescendant(card.sequential_id, folder.sequential_id)) return false
         }
         
         return true
@@ -215,15 +215,15 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
               </div>
               
               {/* Liste des dossiers */}
-              {folders.map(folder => (
+              {folders.map((folder, index) => (
                 <div 
-                  key={folder.sequential_id}
-                  className={`flex items-center p-3 cursor-pointer hover:bg-gray-50 ${selectedFolderId === folder.sequential_id ? 'bg-mush-green/10' : ''}`}
-                  onClick={() => setSelectedFolderId(folder.sequential_id)}
+                  key={folder.sequential_id || `folder-${index}`}
+                  className={`flex items-center p-3 cursor-pointer hover:bg-gray-50 ${folder.sequential_id && selectedFolderId === folder.sequential_id ? 'bg-mush-green/10' : ''}`}
+                  onClick={() => folder.sequential_id && setSelectedFolderId(folder.sequential_id)}
                 >
                   <Folder className="h-5 w-5 text-gray-500 mr-3" />
                   <span>{folder.title}</span>
-                  {selectedFolderId === folder.sequential_id && (
+                  {folder.sequential_id && selectedFolderId === folder.sequential_id && (
                     <ChevronRight className="h-4 w-4 text-mush-green ml-auto" />
                   )}
                 </div>
