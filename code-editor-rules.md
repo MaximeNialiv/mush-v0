@@ -124,6 +124,57 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Utiliser la virtualisation pour les grandes listes
    - Implémenter des stratégies de debounce pour les événements fréquents
 
+## Monitoring des Erreurs avec Sentry
+
+### Configuration
+
+1. **Installation et Configuration**:
+   - Package installé: `@sentry/nextjs`
+   - Fichiers de configuration: `sentry.client.config.js`, `sentry.server.config.ts`, `sentry.edge.config.ts`
+   - Variable d'environnement requise: `NEXT_PUBLIC_SENTRY_DSN` dans `.env.local`
+
+2. **Composants et Utilitaires**:
+   - `ErrorBoundary`: Composant React pour capturer les erreurs non gérées
+   - `utils/error-logging.ts`: Utilitaire pour envoyer des erreurs et messages à Sentry
+   - Intégration dans les hooks critiques comme `use-folder-navigation.ts`
+
+3. **Bonnes Pratiques**:
+   - Capturer les erreurs dans les blocs try/catch avec `ErrorLogging.captureError`
+   - Ajouter du contexte aux erreurs (emplacement, identifiants, etc.)
+   - Envelopper les composants principaux avec `ErrorBoundary`
+   - Éviter d'exposer les erreurs techniques aux utilisateurs
+
+### Déploiement et Source Maps
+
+1. **Configuration Vercel**:
+   - Source maps automatiquement générés et envoyés à Sentry
+   - Intégration avec le processus de build Vercel
+
+2. **Recommandations**:
+   - Considérer le déplacement de la configuration client vers `instrumentation-client.ts` pour la compatibilité future avec Turbopack
+   - Vérifier régulièrement le tableau de bord Sentry pour les erreurs
+
+## TypeScript et Bonnes Pratiques de Typage
+
+### Prévention des Erreurs de Build
+
+1. **Typage Explicite des Props**:
+   - Toujours définir des interfaces pour les props des composants
+   - Exemple: `interface ComposeBoxProps { onTweet: (tweet: string) => void }`
+
+2. **Gestion des Types Partiels**:
+   - Utiliser `Partial<Type>` pour les objets incomplets
+   - Ajouter des type assertions (`as Type`) uniquement lorsque nécessaire
+   - Exemple: `const filteredFolders = filterFolders(data) as CardWithContent[]`
+
+3. **Événements React**:
+   - Typer explicitement les événements: `React.FormEvent<HTMLFormElement>`
+   - Importer React même avec les imports nommés: `import React, { useState } from "react"`
+
+4. **Vérification Avant Déploiement**:
+   - Exécuter `next build` localement pour détecter les erreurs TypeScript
+   - Corriger toutes les erreurs de typage avant de pousser vers la branche de déploiement
+
 ## Gestion de Supabase
 
 ### Initialisation du Client
