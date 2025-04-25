@@ -39,7 +39,7 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
             const parsedCache = JSON.parse(cachedFolders)
             if (parsedCache.timestamp && parsedCache.timestamp > fiveMinutesAgo) {
               // Filtrer les dossiers cachés pour éviter les cycles
-              const filteredFolders = filterFolders(parsedCache.folders)
+              const filteredFolders = filterFolders(parsedCache.folders) as CardWithContent[]
               setFolders(filteredFolders)
               return
             }
@@ -68,7 +68,7 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
         }))
         
         // Filtrer les dossiers pour éviter les cycles
-        const filteredFolders = filterFolders(data)
+        const filteredFolders = filterFolders(data) as CardWithContent[]
         setFolders(filteredFolders)
       } catch (err) {
         console.error("Erreur lors du chargement des dossiers:", err)
@@ -79,8 +79,8 @@ export function MoveCardDialog({ card, isOpen, onClose }: MoveCardDialogProps) {
     }
     
     // Fonction pour filtrer les dossiers et éviter les cycles
-    const filterFolders = (folders: CardWithContent[]) => {
-      return folders.filter((folder: CardWithContent) => {
+    const filterFolders = (folders: Partial<CardWithContent>[]) => {
+      return folders.filter((folder: Partial<CardWithContent>) => {
         // Éviter de déplacer un dossier dans lui-même
         if (folder.sequential_id === card.sequential_id) return false
         
