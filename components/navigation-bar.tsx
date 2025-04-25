@@ -7,7 +7,15 @@ import { usePathname } from "next/navigation"
 export function NavigationBar() {
   const pathname = usePathname()
 
-  const navItems = [
+  // Définition du type pour les éléments de navigation
+  type NavItem = {
+    icon: React.ReactElement;
+    href: string;
+    label: string;
+    badge?: number; // Propriété optionnelle pour les badges de notification
+  }
+
+  const navItems: NavItem[] = [
     { icon: <Home className="w-6 h-6" />, href: "/", label: "Accueil" },
     { icon: <Tree className="w-6 h-6" />, href: "/mush", label: "Mush" },
     { icon: <Video className="w-6 h-6" />, href: "/videos", label: "Vidéos" },
