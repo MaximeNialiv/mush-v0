@@ -192,13 +192,45 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Erreur `Attempted import error`: Vérifier que l'import correspond à ce qui est exporté par le package
    - Pour les composants UI basés sur Radix UI, s'assurer que tous les packages `@radix-ui/react-*` nécessaires sont installés
 
-3. **Gestion des Versions**:
+3. **Gestion des Composants UI**:
+   - **Radix UI**: L'application utilise plusieurs composants Radix UI, chacun nécessitant son propre package:
+     - `@radix-ui/react-accordion` pour `accordion.tsx`
+     - `@radix-ui/react-alert-dialog` pour `alert-dialog.tsx`
+     - `@radix-ui/react-aspect-ratio` pour `aspect-ratio.tsx`
+     - `@radix-ui/react-avatar` pour `avatar.tsx`
+     - `@radix-ui/react-checkbox` pour `checkbox.tsx`
+     - `@radix-ui/react-context-menu` pour `context-menu.tsx`
+     - `@radix-ui/react-dialog` pour `dialog.tsx`
+     - `@radix-ui/react-dropdown-menu` pour `dropdown-menu.tsx`
+     - `@radix-ui/react-hover-card` pour `hover-card.tsx`
+     - `@radix-ui/react-label` pour `label.tsx`
+     - `@radix-ui/react-menubar` pour `menubar.tsx`
+     - `@radix-ui/react-navigation-menu` pour `navigation-menu.tsx`
+     - `@radix-ui/react-popover` pour `popover.tsx`
+     - `@radix-ui/react-progress` pour `progress.tsx`
+     - `@radix-ui/react-radio-group` pour `radio-group.tsx`
+     - `@radix-ui/react-scroll-area` pour `scroll-area.tsx`
+     - `@radix-ui/react-slot` pour plusieurs composants
+     - `@radix-ui/react-tabs` pour `tabs.tsx`
+   - **Autres bibliothèques UI**:
+     - `react-day-picker` pour `calendar.tsx`
+     - `cmdk` pour `command.tsx`
+
+4. **Procédure de Résolution des Erreurs de Dépendances**:
+   - Surveiller les logs de build Vercel pour identifier les packages manquants
+   - Examiner le composant qui génère l'erreur pour comprendre son fonctionnement
+   - Installer le package manquant avec `npm install [package-name]`
+   - Committer et pousser les modifications de `package.json` et `package-lock.json`
+   - Vérifier que le build Vercel réussit ou identifier la prochaine erreur
+
+5. **Gestion des Versions**:
    - Utiliser des versions spécifiques dans `package.json` pour éviter les incompatibilités
    - Tester les mises à jour de packages localement avant de les déployer
    - Documenter les dépendances critiques et leurs fonctionnalités
 
-4. **Configuration Vercel**:
+6. **Configuration Vercel**:
    - Vérifier que toutes les variables d'environnement nécessaires sont configurées dans Vercel
+   - Surveiller les logs de build pour détecter rapidement les problèmes
    - Surveiller les logs de build pour détecter les erreurs rapidement
    - Utiliser les prévisualisations de déploiement pour tester avant de fusionner dans la branche principale
 
