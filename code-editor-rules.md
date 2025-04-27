@@ -199,6 +199,7 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
      - `@radix-ui/react-aspect-ratio` pour `aspect-ratio.tsx`
      - `@radix-ui/react-avatar` pour `avatar.tsx`
      - `@radix-ui/react-checkbox` pour `checkbox.tsx`
+     - `@radix-ui/react-collapsible` pour `collapsible.tsx`
      - `@radix-ui/react-context-menu` pour `context-menu.tsx`
      - `@radix-ui/react-dialog` pour `dialog.tsx`
      - `@radix-ui/react-dropdown-menu` pour `dropdown-menu.tsx`
@@ -208,6 +209,40 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
      - `@radix-ui/react-navigation-menu` pour `navigation-menu.tsx`
      - `@radix-ui/react-popover` pour `popover.tsx`
      - `@radix-ui/react-progress` pour `progress.tsx`
+     - `@radix-ui/react-scroll-area` pour `scroll-area.tsx`
+   
+   - **Autres bibliothèques UI**:
+     - `react-day-picker` (v9.6.7) pour `calendar.tsx` - Nécessite une configuration spéciale pour les icônes (voir ci-dessous)
+     - `embla-carousel-react` pour `carousel.tsx` - Bibliothèque de carrousel pour les interfaces de défilement
+     - `recharts` pour `chart.tsx` - Bibliothèque de visualisation de données pour les graphiques
+     - `next-themes` pour la gestion des thèmes clair/sombre
+
+4. **Problèmes connus et solutions**:
+   - **Problème avec `react-day-picker` v9.6.7**: Le composant Calendar peut rencontrer une erreur de typage avec les propriétés `IconLeft` et `IconRight`. Solution:
+     ```tsx
+     // Importer DayPickerProps
+     import { DayPicker, DayPickerProps } from "react-day-picker"
+     
+     // Utiliser une assertion de type pour contourner les vérifications strictes
+     components={{
+       IconLeft: ({
+         className,
+         ...props
+       }: {
+         className?: string
+         props?: React.SVGProps<SVGSVGElement>
+       }) => <ChevronLeft className="h-4 w-4" {...props} />,
+       IconRight: ({
+         className,
+         ...props
+       }: {
+         className?: string
+         props?: React.SVGProps<SVGSVGElement>
+       }) => <ChevronRight className="h-4 w-4" {...props} />
+     } as unknown as Partial<DayPickerProps["components"]>}
+     ```
+   
+   - **Vérification avant déploiement**: Exécuter `next build` localement pour détecter les erreurs de dépendances manquantes ou de typage avant de pousser vers la branche de déploiement
      - `@radix-ui/react-radio-group` pour `radio-group.tsx`
      - `@radix-ui/react-scroll-area` pour `scroll-area.tsx`
      - `@radix-ui/react-slot` pour plusieurs composants
