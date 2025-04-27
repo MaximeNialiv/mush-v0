@@ -209,7 +209,17 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
      - `@radix-ui/react-navigation-menu` pour `navigation-menu.tsx`
      - `@radix-ui/react-popover` pour `popover.tsx`
      - `@radix-ui/react-progress` pour `progress.tsx`
+     - `@radix-ui/react-radio-group` pour `radio-group.tsx`
      - `@radix-ui/react-scroll-area` pour `scroll-area.tsx`
+     - `@radix-ui/react-select` pour `select.tsx`
+     - `@radix-ui/react-separator` pour `separator.tsx`
+     - `@radix-ui/react-slider` pour `slider.tsx`
+     - `@radix-ui/react-slot` pour `slot.tsx`
+     - `@radix-ui/react-switch` pour `switch.tsx`
+     - `@radix-ui/react-tabs` pour `tabs.tsx`
+     - `@radix-ui/react-toast` pour `toast.tsx`
+     - `@radix-ui/react-toggle-group` pour `toggle-group.tsx`
+     - `@radix-ui/react-tooltip` pour `tooltip.tsx`
    
    - **Autres bibliothèques UI**:
      - `react-day-picker` (v9.6.7) pour `calendar.tsx` - Nécessite une configuration spéciale pour les icônes (voir ci-dessous)
