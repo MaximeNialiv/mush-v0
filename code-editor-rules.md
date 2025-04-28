@@ -83,21 +83,22 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - N'affiche pas "ROOT" dans le chemin
 
 - **Bouton "Ouvrir le dossier"**:
-   - Affiché sur toutes les cartes ayant des enfants (child_ids)
-   - Remplace le comportement de clic sur la carte
-   - Design cohérent avec les boutons de quiz
+   - Affiché uniquement sur les cartes ayant des enfants (child_ids)
+   - Utilise le routeur Next.js pour naviguer vers `/{cardId}`
+   - Design cohérent avec l'identité visuelle de l'application (couleur verte Mush)
+   - Inclut une icône de dossier et un effet de survol pour améliorer l'UX
 
 ### Gestion de la Racine (ROOT)
 
 - **Affichage à la Racine**:
-   - Affiche toutes les cartes dont `parent_id` est `NULL` ou `"ROOT"`
-   - Compatibilité avec les anciennes et nouvelles cartes
-   - Pas besoin de migration de données
+   - Affiche uniquement les cartes dont `parent_id` est `NULL`
+   - Filtrage implémenté dans la fonction `fetchCards` de `utils/supabase/client.ts`
+   - Comportement cohérent entre les données statiques et Supabase
 
 - **URLs Simplifiées**:
    - Format d'URL: `/{folderId}` au lieu de `/folders/{folderId}`
-   - URL racine (`/`) affiche toutes les cartes de premier niveau
-   - Navigation directe et propre
+   - URL racine (`/`) affiche uniquement les cartes avec `parent_id` NULL
+   - Navigation directe via le bouton "Ouvrir le dossier" sur les cartes avec `child_ids`
 
 ## Bonnes Pratiques de Développement
 
