@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { CardList } from "@/components/card-list"
-import { FolderView } from "@/components/folder-view"
 import { DataStatus } from "@/components/data-status"
 import { JotaiProvider } from "./jotai-provider"
 import AuthModal from "@/components/auth-modal"
 import { useSupabase } from "@/context/supabase-provider"
-import { FolderPreview } from "@/components/folder-preview"
 
 export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
@@ -115,12 +113,7 @@ export default function Home() {
                 {/* Fond décoratif en origami */}
                 <div className="absolute -top-4 -left-4 w-32 h-32 bg-mush-green/20 rounded-lg transform rotate-12 -z-10"></div>
                 <div className="absolute top-12 -right-8 w-40 h-40 bg-mush-yellow/20 rounded-lg transform -rotate-6 -z-10"></div>
-                
-                {/* Affichage de l'arborescence à la racine */}
-                <div className="mb-8">
-                  <h2 className="text-xl font-bold mb-4 text-mush-green">Arborescence</h2>
-                  <FolderView />
-                </div>
+                <CardList />
               </div>
               <div className="mt-4 mb-16">
                 <DataStatus />
