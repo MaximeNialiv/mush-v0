@@ -224,76 +224,8 @@ const mockContents: Content[] = [
 // Mettre à jour la fonction fetchCards pour calculer les points totaux et gagnés
 export async function fetchCards(supabase: any, folderId?: string | null) {
   try {
-    // Vérifier si les tables existent
-    const { error } = await supabase.from("cards").select("count")
-
-    // Si les tables n'existent pas, utiliser les données statiques
-    if (error && error.message.includes("does not exist")) {
-      console.log("Utilisation des données statiques car les tables n'existent pas encore")
-
-      // Créer une carte racine si elle n'existe pas dans les données statiques
-      const rootFolder = mockCards.find(card => card.type === 'folder' && !card.parent_id)
-      
-      // Si aucune carte racine n'existe, en créer une
-      if (!rootFolder) {
-        const rootCard: Card = {
-          sequential_id: "root_folder",
-          title: "Racine",
-          description: "Dossier racine",
-          type: "folder",
-          owner: "system",
-          content_ids: [],
-          child_ids: mockCards.filter(card => !card.parent_id).map(card => card.sequential_id),
-          parent_id: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-        
-        // Ajouter la racine aux données statiques
-        mockCards.push(rootCard)
-        
-        // Mettre à jour les cartes de premier niveau pour qu'elles aient la racine comme parent
-        mockCards.forEach(card => {
-          if (!card.parent_id && card.sequential_id !== "root_folder") {
-            card.parent_id = "root_folder"
-          }
-        })
-      }
-
-      // Si un folderId est spécifié, ne retourner que les cartes enfants de ce dossier
-      let filteredCards = mockCards
-      if (folderId) {
-        filteredCards = mockCards.filter(card => card.parent_id === folderId)
-      } else {
-        // Si aucun folderId n'est spécifié, n'afficher que les cartes avec parent_id NULL
-        filteredCards = mockCards.filter(card => card.parent_id === null)
-      }
-
-      // Associer les contenus à chaque carte et calculer les totaux de points
-      const cardsWithContent = filteredCards.map((card) => {
-        const contents = (card.content_ids || [])
-          .map((id) => mockContents.find((content) => content.sequential_id === id))
-          .filter(Boolean) as Content[]
-
-        // Calculer le total des points disponibles
-        const totalPoints = contents.reduce((sum, content) => sum + (content.points || 0), 0)
-
-        // Déterminer si c'est un dossier
-        const isFolder = card.type === 'folder'
-
-        return {
-          ...card,
-          contents,
-          totalPoints,
-          earnedPoints: 0, // Par défaut 0 pour les données statiques
-          ownerName: "Fabien Mush", // Nom par défaut pour les données statiques
-          isFolder,
-          isExpanded: false,
-        }
-      })
-
-      return cardsWithContent
-    }
+    // Forcer l'utilisation des données Supabase, ne plus utiliser les données statiques
+    console.log("Utilisation des données Supabase")
 
     // Si les tables existent, récupérer les données depuis Supabase
     const { data: sessionData } = await supabase.auth.getSession()
