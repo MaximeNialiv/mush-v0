@@ -6,8 +6,12 @@ import { viewModeAtom } from "@/store/atoms"
 import { CardItem } from "@/components/card-item"
 import { Loader2 } from "lucide-react"
 
-export function CardList() {
-  const { cards, loading, error } = useCards()
+interface CardListProps {
+  folderId?: string
+}
+
+export function CardList({ folderId }: CardListProps = {}) {
+  const { cards, loading, error } = useCards(folderId)
   const [viewMode] = useAtom(viewModeAtom)
 
   if (loading) {

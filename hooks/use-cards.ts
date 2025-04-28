@@ -6,12 +6,15 @@ import { useEffect, useRef } from "react"
 import { cardsAtom, loadingAtom, errorAtom, mushroomCountAtom } from "@/store/atoms"
 import { useSupabase, fetchCards } from "@/utils/supabase/client"
 
-export function useCards() {
+export function useCards(folderId?: string) {
   const supabase = useSupabase()
   const [cards, setCards] = useAtom(cardsAtom)
   const [loading, setLoading] = useAtom(loadingAtom)
   const [error, setError] = useAtom(errorAtom)
   const [mushroomCount, setMushroomCount] = useAtom(mushroomCountAtom)
+  
+  // Référence pour stocker le folderId précédent
+  const prevFolderId = useRef<string | undefined>(folderId)
 
   // Charger les cartes et calculer les points
   const loadCards = async () => {
@@ -19,8 +22,8 @@ export function useCards() {
       setLoading(true)
       setError(null)
       
-      // Récupérer les cartes
-      const cardsData = await fetchCards(supabase)
+      // Récupérer les cartes avec le folderId si spécifié
+      const cardsData = await fetchCards(supabase, folderId)
       
       // Récupérer les réponses de l'utilisateur pour calculer les points
       const { data: { user } } = await supabase.auth.getUser()
@@ -213,8 +216,9 @@ export function useCards() {
       }
     }
     
-    // Exécuter la vérification uniquement au premier rendu
-    if (!cardsLoaded) {
+    // Exécuter la vérification au premier rendu ou lorsque folderId change
+    if (!cardsLoaded || prevFolderId.current !== folderId) {
+      prevFolderId.current = folderId
       checkAuthAndLoadCards()
     }
 
@@ -266,6 +270,8 @@ export function useCards() {
       channel.unsubscribe()
     }
   }, [cardsLoaded])
+
+  // Ce useEffect a été supprimé car il est dupliqué
 
   // Protection supplémentaire contre le rechargement au refocus
   useEffect(() => {
