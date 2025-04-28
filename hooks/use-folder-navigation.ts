@@ -19,14 +19,27 @@ import { ErrorLogging } from "@/utils/error-logging"
 
 // Fonction pour extraire l'ID du dossier à partir de l'URL
 const extractFolderIdFromPath = (path: string): string | null => {
-  // Format attendu: /folders/{folderId}
-  const match = path.match(/\/folders\/([^\/]+)/)
+  // Format attendu: /folders/{folderId} ou /{folderId}
+  let match = path.match(/\/folders\/([^\/]+)/)
+  
+  // Si le format /folders/{folderId} n'est pas trouvé, essayer le format /{folderId}
+  if (!match) {
+    // Vérifier si le chemin correspond au format /{folderId}
+    // On exclut les chemins spéciaux comme /api, /auth, /cgu, etc.
+    const specialPaths = ["/api", "/auth", "/cgu", "/folders", "/sentry-example-page", "/update-password"]
+    const isSpecialPath = specialPaths.some(specialPath => path.startsWith(specialPath))
+    
+    if (!isSpecialPath && path !== "/") {
+      match = path.match(/\/([^\/]+)$/)
+    }
+  }
+  
   return match ? match[1] : null
 }
 
 // Fonction pour construire le chemin URL à partir d'un ID de dossier
 const buildFolderPath = (folderId: string | null): string => {
-  return folderId ? `/folders/${folderId}` : "/"
+  return folderId ? `/${folderId}` : "/"
 }
 
 export function useFolderNavigation() {
