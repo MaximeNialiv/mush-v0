@@ -37,7 +37,7 @@ const mockCards: Card[] = [
     type: "doc",
     owner: "system",
     content_ids: ["content_1"],
-    child_ids: [],
+    child_ids: ["card_6", "card_7"],  // Cette carte a des enfants
     parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -49,7 +49,7 @@ const mockCards: Card[] = [
     type: "doc",
     owner: "system",
     content_ids: ["content_2"],
-    child_ids: [],
+    child_ids: ["card_8", "card_9"],  // Cette carte a des enfants
     parent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -87,6 +87,56 @@ const mockCards: Card[] = [
     content_ids: ["content_1", "content_quiz_1", "content_quiz_2"],
     child_ids: [],
     parent_id: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  // Cartes enfants de card_1
+  {
+    sequential_id: "card_6",
+    title: "Sous-thème: Décroissance",
+    description: "Concepts de décroissance",
+    type: "doc",
+    owner: "system",
+    content_ids: ["content_3"],
+    child_ids: [],
+    parent_id: "card_1",  // Cette carte est enfant de card_1
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    sequential_id: "card_7",
+    title: "Sous-thème: Alternatives économiques",
+    description: "Modèles économiques alternatifs",
+    type: "doc",
+    owner: "system",
+    content_ids: ["content_2"],
+    child_ids: [],
+    parent_id: "card_1",  // Cette carte est enfant de card_1
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  // Cartes enfants de card_2
+  {
+    sequential_id: "card_8",
+    title: "Sous-thème: Collapsologie",
+    description: "Principes de collapsologie",
+    type: "doc",
+    owner: "system",
+    content_ids: ["content_1"],
+    child_ids: [],
+    parent_id: "card_2",  // Cette carte est enfant de card_2
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    sequential_id: "card_9",
+    title: "Sous-thème: Résilience",
+    description: "Stratégies de résilience",
+    type: "quiz",
+    owner: "system",
+    content_ids: ["content_quiz_2"],
+    child_ids: [],
+    parent_id: "card_2",  // Cette carte est enfant de card_2
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
