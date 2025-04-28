@@ -1,10 +1,11 @@
 "use client"
 
 import type { CardWithContent } from "@/types"
-import { FileText, Music, Video, Newspaper, Trophy } from "lucide-react"
+import { FileText, Music, Video, Newspaper, Trophy, Folder } from "lucide-react"
 import { ContentItem } from "./content-item"
 import { atom, useAtom } from "jotai"
 import { atomFamily } from "jotai/utils"
+import { useRouter } from "next/navigation"
 
 // Créer une famille d'atomes pour l'état d'expansion de chaque carte
 const expandedAtomFamily = atomFamily(
@@ -20,6 +21,7 @@ export function CardItem({ card }: CardItemProps) {
   // Utilisation de l'atom pour l'état d'expansion (actuellement toujours true)
   const expandedAtom = expandedAtomFamily(card.sequential_id)
   const [isExpanded, setIsExpanded] = useAtom(expandedAtom)
+  const router = useRouter()
   
   // Fonction pour générer les initiales du créateur
   const getInitials = (name: string) => {
@@ -67,7 +69,18 @@ export function CardItem({ card }: CardItemProps) {
           </div>
         )}
 
-        {/* Suppression complète du footer */}
+        {/* Bouton "Ouvrir le dossier" si la carte a des child_ids */}
+        {card.child_ids && card.child_ids.length > 0 && (
+          <div className="p-4">
+            <button
+              onClick={() => router.push(`/${card.sequential_id}`)}
+              className="w-full bg-mush-green hover:bg-mush-green/90 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center hover:shadow-md transform transition-transform hover:translate-y-[-2px]"
+            >
+              <Folder className="w-5 h-5 mr-2 text-white" />
+              📁 Ouvrir le dossier
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

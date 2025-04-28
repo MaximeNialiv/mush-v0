@@ -214,6 +214,9 @@ export async function fetchCards(supabase: any, folderId?: string | null) {
       let filteredCards = mockCards
       if (folderId) {
         filteredCards = mockCards.filter(card => card.parent_id === folderId)
+      } else {
+        // Si aucun folderId n'est spécifié, n'afficher que les cartes avec parent_id NULL
+        filteredCards = mockCards.filter(card => card.parent_id === null)
       }
 
       // Associer les contenus à chaque carte et calculer les totaux de points
@@ -252,6 +255,9 @@ export async function fetchCards(supabase: any, folderId?: string | null) {
     // Si un ID de dossier est spécifié, filtrer par parent_id
     if (folderId) {
       cardsQuery = cardsQuery.eq("parent_id", folderId)
+    } else {
+      // Si aucun folderId n'est spécifié, n'afficher que les cartes avec parent_id NULL
+      cardsQuery = cardsQuery.is("parent_id", null)
     }
     
     // Ordonner les résultats
