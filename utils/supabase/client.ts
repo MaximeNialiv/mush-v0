@@ -238,10 +238,76 @@ export async function fetchCards(supabase: any, folderId?: string | null) {
     if (folderId) {
       cardsQuery = cardsQuery.eq("parent_id", folderId)
     } else {
-      // Si aucun folderId n'est spécifié, n'afficher que les cartes avec parent_id NULL
-      cardsQuery = cardsQuery.is("parent_id", null)
+      // Si nous sommes à la racine, récupérer les cartes avec parent_id NULL et "ROOT"
+      // D'abord récupérer les cartes avec parent_id NULL
+      const { data: nullParentCards, error: nullError } = await supabase
+        .from("cards")
+        .select("*")
+        .is("parent_id", null)
+        .order("created_at", { ascending: false })
+      
+      if (nullError) throw nullError
+      
+      // Ensuite récupérer les cartes avec parent_id "ROOT"
+      const { data: rootParentCards, error: rootError } = await supabase
+        .from("cards")
+        .select("*")
+        .eq("parent_id", "ROOT")
+        .order("created_at", { ascending: false })
+      
+      if (rootError) throw rootError
+      
+      // Combiner les deux ensembles de résultats
+      const combinedCards = [...(nullParentCards || []), ...(rootParentCards || [])]
+      
+      // Si aucune carte n'est trouvée, retourner un tableau vide
+      if (combinedCards.length === 0) return []
+      
+      // Continuer avec le traitement des cartes combinées
+      const contentIds = combinedCards.flatMap((card: Card) => card.content_ids || [])
+      
+      const { data: contents, error: contentsError } = await supabase
+        .from("content")
+        .select("*")
+        .in("sequential_id", contentIds)
+      
+      if (contentsError) throw contentsError
+      
+      // Associer les contenus à chaque carte
+      const cardsWithContent = combinedCards.map((card: Card) => {
+        const cardContents = (card.content_ids || [])
+          .map(id => contents?.find(content => content.sequential_id === id))
+          .filter(Boolean) as Content[]
+        
+        // Calculer les points totaux disponibles
+        const totalPoints = cardContents.reduce((sum, content: Content) => sum + (content.points || 0), 0)
+        
+        // Déterminer les points gagnés par l'utilisateur pour cette carte
+        let earnedPoints = 0
+        if (userId && userRelations.length > 0) {
+          earnedPoints = cardContents.reduce((sum, content: Content) => {
+            const relation = userRelations.find(rel => rel.content_id === content.sequential_id)
+            return sum + (relation?.points || 0)
+          }, 0)
+        }
+        
+        // Déterminer si c'est un dossier
+        const isFolder = card.type === 'folder'
+        
+        return {
+          ...card,
+          contents: cardContents,
+          totalPoints,
+          earnedPoints,
+          isFolder,
+          isExpanded: false,
+        }
+      })
+      
+      return cardsWithContent
     }
     
+    // Cette partie n'est exécutée que si folderId est défini
     // Ordonner les résultats
     cardsQuery = cardsQuery.order("created_at", { ascending: false })
     

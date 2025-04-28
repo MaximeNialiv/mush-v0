@@ -2,7 +2,7 @@
 
 ## Structure de l'Application
 
-Mush est une application de cartes d'apprentissage avec une structure arborescente, permettant d'organiser les cartes en dossiers et sous-dossiers.
+Mush est une application de cartes d'apprentissage avec une structure arborescente, permettant d'organiser les cartes en dossiers et sous-dossiers. L'application utilise une navigation unifiée basée sur le composant `CardList` pour afficher les cartes à tous les niveaux de l'arborescence.
 
 ### Technologies Principales
 
@@ -99,6 +99,32 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Format d'URL: `/{folderId}` au lieu de `/folders/{folderId}`
    - URL racine (`/`) affiche uniquement les cartes avec `parent_id` NULL
    - Navigation directe via le bouton "Ouvrir le dossier" sur les cartes avec `child_ids`
+
+## Navigation et Affichage des Cartes
+
+### Structure de Navigation
+
+- **Navigation Unifiée**: L'application utilise un système de navigation unifié basé sur le composant `CardList` pour afficher les cartes à tous les niveaux de l'arborescence.
+
+- **Affichage à la Racine**: À la racine (`/`), l'application affiche:
+  - Les cartes avec `parent_id: null`
+  - Les cartes avec `parent_id: "ROOT"`
+  - Cette double condition permet de maintenir la compatibilité avec les données existantes.
+
+- **Navigation dans les Dossiers**: 
+  - Chaque carte avec des enfants (`child_ids` non vide) affiche un bouton "Ouvrir le dossier"
+  - Ce bouton redirige vers `/{cardId}` où `cardId` est l'identifiant de la carte
+  - La page dynamique `[folderId]/page.tsx` utilise le composant `CardList` avec le paramètre `folderId`
+  - Le composant `Breadcrumb` permet de naviguer facilement dans l'arborescence
+
+- **Filtrage des Cartes**: 
+  - La fonction `fetchCards` dans `utils/supabase/client.ts` filtre les cartes selon le `folderId`
+  - Si `folderId` est fourni, elle récupère les cartes avec `parent_id = folderId`
+  - Si `folderId` n'est pas fourni (racine), elle récupère les cartes avec `parent_id = null` ou `parent_id = "ROOT"`
+
+- **Rechargement des Cartes**:
+  - Le hook `useCards` accepte un paramètre `folderId` et recharge les cartes lorsque ce paramètre change
+  - Il utilise une référence `prevFolderId` pour détecter les changements de dossier
 
 ## Bonnes Pratiques de Développement
 
