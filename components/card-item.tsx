@@ -74,9 +74,9 @@ export function CardItem({ card }: CardItemProps) {
         {/* Bouton "Ouvrir le dossier" si la carte a des child_ids */}
         {card.child_ids && card.child_ids.length > 0 && (
           <div className="p-4">
-            <Link 
+            <a 
               href={`/${card.sequential_id}`}
-              onClick={() => {
+              onClick={(e) => {
                 // Instrumentation Sentry pour le suivi de la navigation
                 Sentry.addBreadcrumb({
                   category: 'navigation',
@@ -88,13 +88,13 @@ export function CardItem({ card }: CardItemProps) {
                     url: `/${card.sequential_id}`
                   }
                 });
-                console.log(`Navigation vers /${card.sequential_id} via Link`);
+                console.log(`Navigation vers /${card.sequential_id} via lien HTML standard`);
               }}
               className="w-full bg-mush-green hover:bg-mush-green/90 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center hover:shadow-md transform transition-transform hover:translate-y-[-2px] no-underline"
             >
               <Folder className="w-5 h-5 mr-2 text-white" />
               📁 Ouvrir le dossier
-            </Link>
+            </a>
             
             {/* Bouton de secours avec window.location.href en cas de problème avec Link */}
             <button

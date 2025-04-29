@@ -276,7 +276,7 @@ export async function fetchCards(supabase: any, folderId?: string | null) {
       // Associer les contenus à chaque carte
       const cardsWithContent = combinedCards.map((card: Card) => {
         const cardContents = (card.content_ids || [])
-          .map(id => contents?.find(content => content.sequential_id === id))
+          .map(id => contents?.find((content: Content) => content.sequential_id === id))
           .filter(Boolean) as Content[]
         
         // Calculer les points totaux disponibles

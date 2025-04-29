@@ -100,7 +100,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
 
   return (
     <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4 overflow-x-auto pb-2">
-      <Link
+      <a
         href="/"
         onClick={() => {
           // Instrumentation Sentry pour le suivi de la navigation
@@ -112,19 +112,19 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
               destination: 'root'
             }
           });
-          console.log('Navigation vers la racine via Link');
+          console.log('Navigation vers la racine via lien HTML standard');
         }}
         className="flex items-center hover:text-mush-green transition-colors no-underline text-gray-600"
       >
         <Home className="h-4 w-4 mr-1" />
         <span>Accueil</span>
-      </Link>
+      </a>
       
       {breadcrumbPath.map((item, index) => (
         <div key={item.id} className="flex items-center">
           <ChevronRight className="h-4 w-4 mx-1 text-gray-400" />
           {index < breadcrumbPath.length - 1 ? (
-            <Link
+            <a
               href={`/${item.id}`}
               onClick={() => {
                 // Instrumentation Sentry pour le suivi de la navigation
@@ -138,12 +138,12 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
                     url: `/${item.id}`
                   }
                 });
-                console.log(`Navigation vers /${item.id} via Link du fil d'Ariane`);
+                console.log(`Navigation vers /${item.id} via lien HTML standard du fil d'Ariane`);
               }}
               className="hover:text-mush-green transition-colors no-underline text-gray-600"
             >
               {item.title}
-            </Link>
+            </a>
           ) : (
             <span className="font-semibold text-mush-green">
               {item.title}

@@ -31,12 +31,12 @@ export default function NotFoundPage() {
         </p>
         
         <div className="flex flex-col space-y-3">
-          <Link 
+          <a 
             href="/"
-            className="bg-mush-green hover:bg-mush-green/90 text-white py-2 px-4 rounded-md flex items-center justify-center"
+            className="bg-mush-green hover:bg-mush-green/90 text-white py-2 px-4 rounded-md flex items-center justify-center no-underline"
           >
             Retour à l'accueil
-          </Link>
+          </a>
           
           <Button 
             onClick={() => {
