@@ -41,11 +41,11 @@ export function CardList({ folderId }: CardListProps = {}) {
 
   return (
     <div className={viewMode === "grid" 
-      ? "columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4" 
-      : "space-y-4"
+      ? "columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6" 
+      : "space-y-6"
     }>
       {cards.map((card) => (
-        <div key={card.sequential_id} className="break-inside-avoid mb-4">
+        <div key={card.sequential_id} className="break-inside-avoid mb-6">
           <CardItem card={card} />
         </div>
       ))}

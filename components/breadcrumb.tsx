@@ -106,7 +106,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
           // Instrumentation Sentry pour le suivi de la navigation
           Sentry.addBreadcrumb({
             category: 'navigation',
-            message: 'Clic sur Accueil dans le fil d\'Ariane',
+            message: 'Clic sur l\'icône Home dans le fil d\'Ariane',
             level: 'info',
             data: {
               destination: 'root'
@@ -116,8 +116,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
         }}
         className="flex items-center hover:text-mush-green transition-colors no-underline text-gray-600"
       >
-        <Home className="h-4 w-4 mr-1" />
-        <span>Accueil</span>
+        <Home className="h-4 w-4" />
       </a>
       
       {breadcrumbPath.map((item, index) => (

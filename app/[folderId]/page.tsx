@@ -3,7 +3,6 @@
 import { CardList } from "@/components/card-list"
 import { Header } from "@/components/header"
 import { useParams, useRouter } from "next/navigation"
-import { Breadcrumb } from "@/components/breadcrumb"
 import { useEffect, useState } from "react"
 import { useSupabase } from "@/utils/supabase/client"
 import * as Sentry from "@sentry/nextjs"
@@ -156,9 +155,7 @@ export default function FolderPage() {
       <div className="container mx-auto px-4 py-8">
         <Header />
         <main className="mt-8">
-          <div className="mb-4">
-            <Breadcrumb currentFolderId={folderId} />
-          </div>
+
           <CardList folderId={folderId} />
         </main>
       </div>

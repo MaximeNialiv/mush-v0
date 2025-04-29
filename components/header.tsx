@@ -2,20 +2,21 @@
 
 import { useAtom } from "jotai"
 import { mushroomCountAtom, viewModeAtom, currentFolderIdAtom } from "@/store/atoms"
-import { Search, Grid, List, Bell, FolderTree } from "lucide-react"
+import { Search, Grid, List, Bell } from "lucide-react"
 import Link from "next/link"
 import { UserProfileMenu } from "@/components/user-profile-menu"
-import { usePathname } from "next/navigation"
-import { FolderBreadcrumb } from "@/components/folder-breadcrumb"
+import { usePathname, useParams } from "next/navigation"
+import { Breadcrumb } from "@/components/breadcrumb"
 
 export function Header() {
   const [mushroomCount] = useAtom(mushroomCountAtom)
   const [viewMode, setViewMode] = useAtom(viewModeAtom)
   const [currentFolderId] = useAtom(currentFolderIdAtom)
   const pathname = usePathname()
+  const params = useParams()
   
-  // Vérifier si nous sommes sur une page d'arborescence
-  const isInFolderView = pathname?.startsWith("/folders")
+  // Récupérer l'ID du dossier actuel depuis les paramètres d'URL
+  const folderId = params?.folderId as string
 
   return (
     <header className="sticky top-0 z-10 bg-white shadow-md border-b-2 border-gray-200">
@@ -31,10 +32,10 @@ export function Header() {
                 <h1 className="text-xl font-bold">Mush•Quizz</h1>
               </Link>
             </div>
-            {isInFolderView ? (
-              <FolderBreadcrumb currentFolderId={currentFolderId} />
+            {folderId ? (
+              <Breadcrumb currentFolderId={folderId} />
             ) : (
-              <span className="text-sm text-gray-600">Ateliers &gt; Mush</span>
+              <span className="text-sm text-gray-600"></span>
             )}
           </div>
 
@@ -51,11 +52,7 @@ export function Header() {
           {/* Actions */}
           <div className="flex items-center space-x-4">
             
-            {/* Bouton d'arborescence */}
-            <Link href="/folders" className="flex items-center px-3 py-1.5 bg-mush-green/10 hover:bg-mush-green/20 text-mush-green rounded-lg transition-colors">
-              <FolderTree className="h-5 w-5 mr-1.5" />
-              <span className="hidden sm:inline font-medium">Arborescence</span>
-            </Link>
+
             
             {/* Boutons de vue */}
             <div className="hidden md:flex bg-gray-100 rounded-lg p-1 shadow-inner">

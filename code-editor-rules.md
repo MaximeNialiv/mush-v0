@@ -102,19 +102,23 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
 
 ## Navigation et Affichage des Cartes
 
-### Structure de Navigation
+### Navigation Unifiée
 
-- **Navigation Unifiée**: L'application utilise un système de navigation unifié basé sur le composant `CardList` pour afficher les cartes à tous les niveaux de l'arborescence.
+1. **Structure de l'Arborescence**:
+   - Format d'URL: `/{folderId}`
+   - Utilisation du composant `CardList` pour afficher les cartes à tous les niveaux
+   - Fil d'Ariane via le composant `Breadcrumb` intégré dans l'en-tête
 
-- **Affichage à la Racine**: À la racine (`/`), l'application affiche:
-  - Les cartes avec `parent_id: null`
-  - Les cartes avec `parent_id: "ROOT"`
-  - Cette double condition permet de maintenir la compatibilité avec les données existantes.
+2. **Affichage des Cartes**:
+   - Toutes les cartes affichées via le composant `CardItem`
+   - Bouton "Ouvrir le dossier" pour naviguer vers les sous-dossiers
+   - Navigation basée sur les URLs plutôt que sur l'état local
+   - Liens HTML standard (`<a>`) pour une navigation fiable
 
-- **Navigation dans les Dossiers**: 
-  - Chaque carte avec des enfants (`child_ids` non vide) affiche un bouton "Ouvrir le dossier"
-  - Ce bouton redirige vers `/{cardId}` où `cardId` est l'identifiant de la carte
-  - La page dynamique `[folderId]/page.tsx` utilise le composant `CardList` avec le paramètre `folderId`
+3. **Gestion des Erreurs**:
+   - Pages d'erreur personnalisées avec instrumentation Sentry
+   - Redirection vers la page 404 pour les dossiers inexistants
+   - Breadcrumbs Sentry pour suivre le parcours de navigation
   - Le composant `Breadcrumb` permet de naviguer facilement dans l'arborescence
 
 - **Filtrage des Cartes**: 
