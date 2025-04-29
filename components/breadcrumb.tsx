@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronRight, Home } from "lucide-react"
+import * as Sentry from "@sentry/nextjs"
+import Link from "next/link"
 import { useSupabase } from "@/utils/supabase/client"
 import { CardWithContent } from "@/types"
 
@@ -81,42 +83,72 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
     }
   }, [currentFolderId, supabase])
 
-  // Fonction pour naviguer vers un dossier
-  const navigateToFolder = (folderId: string | null) => {
-    console.log(`Navigation vers ${folderId ? `/${folderId}` : "/"}`);
-    if (folderId) {
-      window.location.href = `/${folderId}`;
-    } else {
-      window.location.href = "/";
-    }
+  // Fonction pour capturer les erreurs de navigation et les envoyer à Sentry
+  const captureNavigationError = (error: any, destination: string) => {
+    console.error(`Erreur de navigation vers ${destination}:`, error);
+    Sentry.captureException(error, {
+      tags: {
+        location: 'breadcrumb_navigation',
+        destination
+      },
+      extra: {
+        currentFolderId,
+        breadcrumbPath
+      }
+    });
   }
 
   return (
     <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4 overflow-x-auto pb-2">
-      <button
-        onClick={() => navigateToFolder(null)}
-        className="flex items-center hover:text-mush-green transition-colors"
+      <Link
+        href="/"
+        onClick={() => {
+          // Instrumentation Sentry pour le suivi de la navigation
+          Sentry.addBreadcrumb({
+            category: 'navigation',
+            message: 'Clic sur Accueil dans le fil d\'Ariane',
+            level: 'info',
+            data: {
+              destination: 'root'
+            }
+          });
+          console.log('Navigation vers la racine via Link');
+        }}
+        className="flex items-center hover:text-mush-green transition-colors no-underline text-gray-600"
       >
         <Home className="h-4 w-4 mr-1" />
         <span>Accueil</span>
-      </button>
+      </Link>
       
       {breadcrumbPath.map((item, index) => (
         <div key={item.id} className="flex items-center">
           <ChevronRight className="h-4 w-4 mx-1 text-gray-400" />
-          <button
-            onClick={() => {
-              // Ne pas naviguer si c'est déjà le dossier courant
-              if (index < breadcrumbPath.length - 1) {
-                navigateToFolder(item.id)
-              }
-            }}
-            className={`hover:text-mush-green transition-colors ${
-              index === breadcrumbPath.length - 1 ? "font-semibold text-mush-green" : ""
-            }`}
-          >
-            {item.title}
-          </button>
+          {index < breadcrumbPath.length - 1 ? (
+            <Link
+              href={`/${item.id}`}
+              onClick={() => {
+                // Instrumentation Sentry pour le suivi de la navigation
+                Sentry.addBreadcrumb({
+                  category: 'navigation',
+                  message: `Clic sur ${item.title} dans le fil d\'Ariane`,
+                  level: 'info',
+                  data: {
+                    folderId: item.id,
+                    folderTitle: item.title,
+                    url: `/${item.id}`
+                  }
+                });
+                console.log(`Navigation vers /${item.id} via Link du fil d'Ariane`);
+              }}
+              className="hover:text-mush-green transition-colors no-underline text-gray-600"
+            >
+              {item.title}
+            </Link>
+          ) : (
+            <span className="font-semibold text-mush-green">
+              {item.title}
+            </span>
+          )}
         </div>
       ))}
       

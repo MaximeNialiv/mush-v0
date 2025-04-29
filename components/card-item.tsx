@@ -6,6 +6,8 @@ import { ContentItem } from "./content-item"
 import { atom, useAtom } from "jotai"
 import { atomFamily } from "jotai/utils"
 import { useRouter } from "next/navigation"
+import * as Sentry from "@sentry/nextjs"
+import Link from "next/link"
 
 // Créer une famille d'atomes pour l'état d'expansion de chaque carte
 const expandedAtomFamily = atomFamily(
@@ -72,16 +74,48 @@ export function CardItem({ card }: CardItemProps) {
         {/* Bouton "Ouvrir le dossier" si la carte a des child_ids */}
         {card.child_ids && card.child_ids.length > 0 && (
           <div className="p-4">
-            <button
+            <Link 
+              href={`/${card.sequential_id}`}
               onClick={() => {
-                console.log(`Navigation vers /${card.sequential_id}`);
-                // Utiliser directement window.location.href pour une navigation fiable
-                window.location.href = `/${card.sequential_id}`;
+                // Instrumentation Sentry pour le suivi de la navigation
+                Sentry.addBreadcrumb({
+                  category: 'navigation',
+                  message: `Clic sur 'Ouvrir le dossier' pour la carte ${card.sequential_id}`,
+                  level: 'info',
+                  data: {
+                    cardId: card.sequential_id,
+                    childIds: card.child_ids,
+                    url: `/${card.sequential_id}`
+                  }
+                });
+                console.log(`Navigation vers /${card.sequential_id} via Link`);
               }}
-              className="w-full bg-mush-green hover:bg-mush-green/90 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center hover:shadow-md transform transition-transform hover:translate-y-[-2px]"
+              className="w-full bg-mush-green hover:bg-mush-green/90 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center hover:shadow-md transform transition-transform hover:translate-y-[-2px] no-underline"
             >
               <Folder className="w-5 h-5 mr-2 text-white" />
               📁 Ouvrir le dossier
+            </Link>
+            
+            {/* Bouton de secours avec window.location.href en cas de problème avec Link */}
+            <button
+              onClick={() => {
+                // Instrumentation Sentry pour le suivi de la navigation de secours
+                Sentry.addBreadcrumb({
+                  category: 'navigation',
+                  message: `Utilisation de la navigation de secours pour la carte ${card.sequential_id}`,
+                  level: 'warning',
+                  data: {
+                    cardId: card.sequential_id,
+                    childIds: card.child_ids,
+                    url: `/${card.sequential_id}`
+                  }
+                });
+                console.log(`Navigation de secours vers /${card.sequential_id} via window.location`);
+                window.location.href = `/${card.sequential_id}`;
+              }}
+              className="mt-2 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg text-sm flex items-center justify-center hover:shadow-md"
+            >
+              Navigation alternative
             </button>
           </div>
         )}
