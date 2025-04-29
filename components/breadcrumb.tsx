@@ -83,10 +83,11 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
 
   // Fonction pour naviguer vers un dossier
   const navigateToFolder = (folderId: string | null) => {
+    console.log(`Navigation vers ${folderId ? `/${folderId}` : "/"}`);
     if (folderId) {
-      router.push(`/${folderId}`)
+      window.location.href = `/${folderId}`;
     } else {
-      router.push("/")
+      window.location.href = "/";
     }
   }
 
