@@ -10,10 +10,23 @@ interface OpenGraphPreviewProps {
   showLinkInImage?: boolean
 }
 
+interface OGMetadata {
+  title: string
+  image: string
+  description: string
+  favicon: string
+  domain: string
+}
+
 export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPreviewProps) {
   const [loading, setLoading] = useState(true)
-  const [title, setTitle] = useState("")
-  const [thumbnailUrl, setThumbnailUrl] = useState("")
+  const [metadata, setMetadata] = useState<OGMetadata>({
+    title: "",
+    image: "",
+    description: "",
+    favicon: "",
+    domain: ""
+  })
 
   useEffect(() => {
     if (!url) {
@@ -21,34 +34,57 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
       return
     }
 
-    try {
-      // Extraire le domaine
-      const domain = new URL(url).hostname.replace("www.", "")
-
-      // Définir un titre par défaut
-      setTitle(`Contenu de ${domain}`)
-
-      // Vérifier si c'est une URL YouTube
-      if (url.includes("youtube.com") || url.includes("youtu.be")) {
-        const videoId = extractYouTubeVideoId(url)
-        if (videoId) {
-          setThumbnailUrl(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`)
-          setTitle("Vidéo YouTube")
-        } else {
-          setThumbnailUrl("/placeholder.svg?height=360&width=640")
+    const fetchMetadata = async () => {
+      try {
+        // Extraire le domaine par défaut
+        const domain = new URL(url).hostname.replace("www.", "")
+        
+        // Vérifier si c'est une URL YouTube
+        if (url.includes("youtube.com") || url.includes("youtu.be")) {
+          const videoId = extractYouTubeVideoId(url)
+          if (videoId) {
+            setMetadata({
+              title: "Vidéo YouTube",
+              image: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+              description: "",
+              favicon: "https://www.youtube.com/favicon.ico",
+              domain: "youtube.com"
+            })
+            setLoading(false)
+            return
+          }
         }
-      } else {
-        // Pour les autres URLs, utiliser une image par défaut
-        setThumbnailUrl(
-          `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`,
-        )
+        
+        // Pour les autres URLs, utiliser notre API
+        const response = await fetch(`/api/og-metadata?url=${encodeURIComponent(url)}`)
+        if (response.ok) {
+          const data = await response.json()
+          setMetadata({
+            title: data.title || `Contenu de ${domain}`,
+            image: data.image || "",
+            description: data.description || "",
+            favicon: data.favicon || "",
+            domain: data.domain || domain
+          })
+        } else {
+          throw new Error("Erreur lors de la récupération des métadonnées")
+        }
+      } catch (error) {
+        console.error("Erreur lors de l'analyse de l'URL:", error)
+        const domain = new URL(url).hostname.replace("www.", "")
+        setMetadata({
+          title: `Contenu de ${domain}`,
+          image: "",
+          description: "",
+          favicon: "",
+          domain: domain
+        })
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error("Erreur lors de l'analyse de l'URL:", error)
-      setThumbnailUrl("/placeholder.svg?height=360&width=640")
-    } finally {
-      setLoading(false)
     }
+    
+    fetchMetadata()
   }, [url])
 
   if (loading) {
@@ -64,21 +100,33 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
   const isPlayableMedia = ReactPlayer.canPlay(url)
 
   if (isPlayableMedia) {
-    return <MediaPlayer url={url} title={title} />
+    return <MediaPlayer url={url} title={metadata.title} />
   }
 
   // Pour les liens non-média
   return (
     <div>
       {!showLinkInImage && (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-mush-green font-medium block mb-2 underline"
-        >
-          {title || url}
-        </a>
+        <div className="flex items-center mb-2">
+          {metadata.favicon && (
+            <img 
+              src={metadata.favicon} 
+              alt="" 
+              className="w-4 h-4 mr-2"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          )}
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-mush-green font-medium underline truncate"
+          >
+            {metadata.title || url}
+          </a>
+        </div>
       )}
 
       <a
@@ -88,19 +136,40 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
         className="block rounded-xl overflow-hidden relative border border-gray-300"
       >
         <div className="aspect-video bg-gray-100">
-          <img
-            src={thumbnailUrl || "/placeholder.svg?height=360&width=640"}
-            alt={title}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = "/placeholder.svg?height=360&width=640"
-            }}
-          />
+          {metadata.image ? (
+            <img
+              src={metadata.image}
+              alt={metadata.title}
+              loading="lazy"
+              width="640"
+              height="360"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.svg?height=360&width=640"
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
+              <span className="text-lg font-medium">{metadata.domain || new URL(url).hostname}</span>
+            </div>
+          )}
         </div>
 
         {showLinkInImage && (
           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-2">
-            <p className="text-sm font-medium truncate">{title || url}</p>
+            <div className="flex items-center">
+              {metadata.favicon && (
+                <img 
+                  src={metadata.favicon} 
+                  alt="" 
+                  className="w-4 h-4 mr-2"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
+              )}
+              <p className="text-sm font-medium truncate">{metadata.title || url}</p>
+            </div>
           </div>
         )}
       </a>

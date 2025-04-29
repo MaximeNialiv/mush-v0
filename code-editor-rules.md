@@ -155,6 +155,49 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Utiliser la virtualisation pour les grandes listes
    - Implémenter des stratégies de debounce pour les événements fréquents
 
+## Optimisation des Performances
+
+### Stratégie de Réduction des Dépendances
+
+1. **Remplacement des Bibliothèques Lourdes**:
+   - Suppression de `recharts` (bibliothèque de graphiques non utilisée)
+   - Suppression de `embla-carousel-react` (carrousel non utilisé)
+   - Réduction progressive des dépendances Radix UI en faveur de composants Tailwind
+
+2. **Migration vers des Composants Tailwind**:
+   - Création de composants UI simplifiés dans `components/ui/tailwind/`
+   - Composants implémentés: Button, Input, Label, Checkbox, Dialog
+   - Utilisation des classes Tailwind existantes pour maintenir la cohérence visuelle
+   - Réduction des dépendances JavaScript tout en conservant l'esthétique
+
+3. **Optimisation des Prévisualisations de Liens**:
+   - Remplacement de l'API Microlink (captures d'écran complètes) par des métadonnées OpenGraph
+   - Création d'une API serverless `/api/og-metadata` pour extraire les métadonnées
+   - Utilisation de `node-html-parser` pour l'extraction légère des métadonnées
+   - Gestion spécifique des liens YouTube pour optimiser le chargement
+
+4. **Optimisation des Images**:
+   - Ajout de l'attribut `loading="lazy"` pour le chargement différé des images
+   - Spécification des dimensions (`width` et `height`) pour réduire le CLS (Cumulative Layout Shift)
+   - Gestion des erreurs de chargement avec des fallbacks appropriés
+
+### Bonnes Pratiques d'Optimisation
+
+1. **Lazy Loading**:
+   - Charger les composants et les données à la demande
+   - Utiliser `React.lazy()` et `Suspense` pour les composants volumineux
+   - Implémenter l'attribut `loading="lazy"` sur toutes les images
+
+2. **Réduction de la Taille du Bundle**:
+   - Éviter les bibliothèques volumineuses non essentielles
+   - Utiliser des imports dynamiques pour le code rarement utilisé
+   - Analyser régulièrement la taille du bundle avec des outils comme `next/bundle-analyzer`
+
+3. **Optimisation du Rendu**:
+   - Utiliser `React.memo` pour les composants qui reçoivent souvent les mêmes props
+   - Implémenter `useMemo` et `useCallback` pour les calculs coûteux
+   - Éviter les re-rendus inutiles en isolant les états qui changent fréquemment
+
 ## Monitoring des Erreurs avec Sentry
 
 ### Configuration
