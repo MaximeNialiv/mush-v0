@@ -79,7 +79,14 @@ export function Tweet({ tweet }: TweetProps) {
     <div className="p-4 hover:bg-gray-50 transition-colors">
       <div className="flex">
         <div className="mr-3">
-          <img src={tweet.user.avatar || "/placeholder.svg"} alt={tweet.user.name} className="w-12 h-12 rounded-full" />
+          <img 
+            src={tweet.user.avatar || "/placeholder.svg"} 
+            alt={tweet.user.name} 
+            width="48" 
+            height="48" 
+            loading="lazy" 
+            className="w-12 h-12 rounded-full object-cover" 
+          />
         </div>
         <div className="flex-1">
           <div className="flex items-center">

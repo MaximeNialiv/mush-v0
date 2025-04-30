@@ -112,6 +112,9 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
             <img 
               src={metadata.favicon} 
               alt="" 
+              width="16"
+              height="16"
+              loading="lazy"
               className="w-4 h-4 mr-2"
               onError={(e) => {
                 e.currentTarget.style.display = 'none'
@@ -144,6 +147,7 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
               width="640"
               height="360"
               className="w-full h-full object-cover"
+              decoding="async"
               onError={(e) => {
                 e.currentTarget.src = "/placeholder.svg?height=360&width=640"
               }}
@@ -162,6 +166,9 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
                 <img 
                   src={metadata.favicon} 
                   alt="" 
+                  width="16"
+                  height="16"
+                  loading="lazy"
                   className="w-4 h-4 mr-2"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none'

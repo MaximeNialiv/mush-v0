@@ -164,9 +164,14 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Suppression de `embla-carousel-react` (carrousel non utilisé)
    - Réduction progressive des dépendances Radix UI en faveur de composants Tailwind
 
-2. **Migration vers des Composants Tailwind**:
+2. **Purge des Composants Non Utilisés**:
+   - Suppression des composants UI non utilisés: Calendar, Carousel, Chart, Hover Card, Menubar, Navigation Menu, Progress, Slider, Toggle Group, Context Menu, Popover
+   - Conservation uniquement des composants activement utilisés dans l'application
+   - Réduction significative de la taille du bundle JavaScript
+
+3. **Migration vers des Composants Tailwind**:
    - Création de composants UI simplifiés dans `components/ui/tailwind/`
-   - Composants implémentés: Button, Input, Label, Checkbox, Dialog
+   - Composants implémentés: Button, Input, Label, Checkbox, Dialog, Tabs, Card, Separator, Sheet, Tooltip
    - Utilisation des classes Tailwind existantes pour maintenir la cohérence visuelle
    - Réduction des dépendances JavaScript tout en conservant l'esthétique
 
@@ -177,8 +182,10 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Gestion spécifique des liens YouTube pour optimiser le chargement
 
 4. **Optimisation des Images**:
-   - Ajout de l'attribut `loading="lazy"` pour le chargement différé des images
+   - Ajout de l'attribut `loading="lazy"` sur toutes les images de l'application
+   - Ajout de l'attribut `decoding="async"` pour les images importantes
    - Spécification des dimensions (`width` et `height`) pour réduire le CLS (Cumulative Layout Shift)
+   - Optimisation des images dans les composants: open-graph-preview, card-item, media-player, tweet
    - Gestion des erreurs de chargement avec des fallbacks appropriés
 
 ### Bonnes Pratiques d'Optimisation

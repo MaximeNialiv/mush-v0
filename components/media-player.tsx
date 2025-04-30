@@ -66,6 +66,10 @@ export function MediaPlayer({ url, title }: MediaPlayerProps) {
             <img
               src={thumbnailUrl || "/placeholder.svg"}
               alt={title || "Vignette YouTube"}
+              width="640"
+              height="360"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 flex items-center justify-center">
