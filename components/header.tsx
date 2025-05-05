@@ -21,15 +21,14 @@ export function Header() {
   return (
     <header className="sticky top-0 z-10 bg-white shadow-md border-b-2 border-gray-200">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="grid grid-cols-3 items-center">
           {/* Logo et breadcrumb (gauche) */}
-          <div className="flex-1">
+          <div className="col-span-1">
             <Breadcrumb currentFolderId={folderId} />
           </div>
           
-          {/* Barre de recherche et contrôles (droite) */}
-          <div className="flex items-center space-x-4">
-            {/* Barre de recherche */}
+          {/* Barre de recherche (centre) */}
+          <div className="col-span-1 flex justify-center">
             <div className="relative w-64">
               <input
                 type="text"
@@ -38,6 +37,10 @@ export function Header() {
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
             </div>
+          </div>
+          
+          {/* Contrôles (droite) */}
+          <div className="col-span-1 flex items-center justify-end space-x-4">
 
             {/* Boutons de vue */}
             <div className="flex items-center border border-gray-200 rounded-md overflow-hidden">
