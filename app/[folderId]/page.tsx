@@ -1,6 +1,6 @@
 "use client"
 
-import { CardList } from "@/components/card-list"
+import { CardContainer } from "@/components/card-container"
 import { Header } from "@/components/header"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -108,9 +108,9 @@ export default function FolderPage() {
   // Afficher un état de chargement
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col min-h-screen bg-mush-green/10">
         <Header />
-        <main className="mt-8">
+        <main className="flex-1 container mx-auto p-4 pb-8 max-w-5xl">
           <div className="flex justify-center items-center h-40">
             <Loader2 className="h-8 w-8 animate-spin text-mush-green" />
             <span className="ml-2 text-mush-green">Chargement du dossier...</span>
@@ -123,9 +123,9 @@ export default function FolderPage() {
   // Afficher un message d'erreur
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col min-h-screen bg-mush-green/10">
         <Header />
-        <main className="mt-8">
+        <main className="flex-1 container mx-auto p-4 pb-8 max-w-5xl">
           <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg">
             <p className="font-semibold text-lg">{error}</p>
             <p className="mt-2">Une erreur est survenue lors du chargement du dossier.</p>
@@ -152,11 +152,10 @@ export default function FolderPage() {
   // Afficher le contenu du dossier si tout est OK
   if (folderExists) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col min-h-screen bg-mush-green/10">
         <Header />
-        <main className="mt-8">
-
-          <CardList folderId={folderId} />
+        <main className="flex-1 container mx-auto p-4 pb-8 max-w-5xl">
+          <CardContainer folderId={folderId} />
         </main>
       </div>
     )

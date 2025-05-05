@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
-import { CardList } from "@/components/card-list"
-import { DataStatus } from "@/components/data-status"
+import { CardContainer } from "@/components/card-container"
 import { JotaiProvider } from "./jotai-provider"
 import AuthModal from "@/components/auth-modal"
 import { useSupabase } from "@/context/supabase-provider"
@@ -109,15 +108,7 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <div className="relative">
-                {/* Fond décoratif en origami */}
-                <div className="absolute -top-4 -left-4 w-32 h-32 bg-mush-green/20 rounded-lg transform rotate-12 -z-10"></div>
-                <div className="absolute top-12 -right-8 w-40 h-40 bg-mush-yellow/20 rounded-lg transform -rotate-6 -z-10"></div>
-                <CardList />
-              </div>
-              <div className="mt-4 mb-16">
-                <DataStatus />
-              </div>
+              <CardContainer />
             </>
           )}
         </main>
