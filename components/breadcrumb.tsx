@@ -104,6 +104,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
       {/* Logo */}
       <Link
         href="/"
+        prefetch={true}
         onClick={() => {
           // Instrumentation Sentry pour le suivi de la navigation
           Sentry.addBreadcrumb({
@@ -127,6 +128,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
       <nav className="flex items-center space-x-1 text-sm overflow-x-auto">
         <Link
           href="/"
+          prefetch={true}
           className="hover:text-mush-green transition-colors no-underline text-gray-600"
         >
           Accueil
@@ -140,6 +142,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
                 {index < breadcrumbPath.length - 1 ? (
                   <Link
                     href={`/${item.id}`}
+                    prefetch={true}
                     onClick={() => {
                       // Instrumentation Sentry pour le suivi de la navigation
                       Sentry.addBreadcrumb({
