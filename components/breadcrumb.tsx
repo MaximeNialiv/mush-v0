@@ -100,66 +100,78 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
   }
 
   return (
-    <nav className="flex items-center space-x-1 text-sm overflow-x-auto py-2 px-2 bg-white rounded-full shadow-sm border border-gray-200">
-      <Link
-        href="/"
-        onClick={() => {
-          // Instrumentation Sentry pour le suivi de la navigation
-          Sentry.addBreadcrumb({
-            category: 'navigation',
-            message: 'Clic sur Accueil dans le fil d\'Ariane',
-            level: 'info',
-            data: {
-              destination: 'root'
-            }
-          });
-          console.log('Navigation vers la racine via lien HTML standard');
-        }}
-        className="flex items-center hover:text-mush-green transition-colors no-underline text-gray-600 px-2 py-1"
-      >
-        <div className="w-6 h-6 mr-1">
-          <img src="/mush-logo.svg" alt="Mush Logo" className="w-full h-full" />
-        </div>
-        Accueil
-      </Link>
+    <div className="flex flex-col w-full">
+      {/* Première ligne: logo et recherche */}
+      <div className="flex items-center justify-between w-full pb-2">
+        <Link
+          href="/"
+          onClick={() => {
+            // Instrumentation Sentry pour le suivi de la navigation
+            Sentry.addBreadcrumb({
+              category: 'navigation',
+              message: 'Clic sur Accueil dans le fil d\'Ariane',
+              level: 'info',
+              data: {
+                destination: 'root'
+              }
+            });
+            console.log('Navigation vers la racine via lien HTML standard');
+          }}
+          className="flex items-center hover:text-mush-green transition-colors no-underline text-gray-600"
+        >
+          <div className="w-10 h-10 mr-2">
+            <img src="/mush-logo.svg" alt="Mush Logo" className="w-full h-full" />
+          </div>
+        </Link>
+      </div>
       
-      {breadcrumbPath.length > 0 && (
-        <>
-          {breadcrumbPath.map((item, index) => (
-            <div key={item.id} className="flex items-center">
-              <ChevronRight className="h-4 w-4 text-gray-400 mx-1" />
-              {index < breadcrumbPath.length - 1 ? (
-                <Link
-                  href={`/${item.id}`}
-                  onClick={() => {
-                    // Instrumentation Sentry pour le suivi de la navigation
-                    Sentry.addBreadcrumb({
-                      category: 'navigation',
-                      message: `Clic sur ${item.title} dans le fil d\'Ariane`,
-                      level: 'info',
-                      data: {
-                        folderId: item.id,
-                        folderTitle: item.title,
-                        url: `/${item.id}`
-                      }
-                    });
-                    console.log(`Navigation vers /${item.id} via lien HTML standard du fil d'Ariane`);
-                  }}
-                  className="hover:text-mush-green transition-colors no-underline text-gray-600 px-2 py-1"
-                >
-                  {item.title}
-                </Link>
-              ) : (
-                <span className="font-semibold text-mush-green px-2 py-1">
-                  {item.title}
-                </span>
-              )}
-            </div>
-          ))}
-        </>
-      )}
-      
-      {loading && <span className="text-gray-400 animate-pulse px-2">...</span>}
-    </nav>
+      {/* Deuxième ligne: fil d'ariane */}
+      <nav className="flex items-center space-x-1 text-sm overflow-x-auto py-1">
+        <Link
+          href="/"
+          className="hover:text-mush-green transition-colors no-underline text-gray-600 px-2 py-1"
+        >
+          Accueil
+        </Link>
+        
+        {breadcrumbPath.length > 0 && (
+          <>
+            {breadcrumbPath.map((item, index) => (
+              <div key={item.id} className="flex items-center">
+                <ChevronRight className="h-4 w-4 text-gray-400 mx-1" />
+                {index < breadcrumbPath.length - 1 ? (
+                  <Link
+                    href={`/${item.id}`}
+                    onClick={() => {
+                      // Instrumentation Sentry pour le suivi de la navigation
+                      Sentry.addBreadcrumb({
+                        category: 'navigation',
+                        message: `Clic sur ${item.title} dans le fil d\'Ariane`,
+                        level: 'info',
+                        data: {
+                          folderId: item.id,
+                          folderTitle: item.title,
+                          url: `/${item.id}`
+                        }
+                      });
+                      console.log(`Navigation vers /${item.id} via lien HTML standard du fil d'Ariane`);
+                    }}
+                    className="hover:text-mush-green transition-colors no-underline text-gray-600 px-2 py-1"
+                  >
+                    {item.title}
+                  </Link>
+                ) : (
+                  <span className="font-semibold text-mush-green px-2 py-1">
+                    {item.title}
+                  </span>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+        
+        {loading && <span className="text-gray-400 animate-pulse px-2">...</span>}
+      </nav>
+    </div>
   )
 }

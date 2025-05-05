@@ -21,24 +21,11 @@ export function Header() {
   return (
     <header className="sticky top-0 z-10 bg-white shadow-md border-b-2 border-gray-200">
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo et titre */}
-          <div className="flex flex-col">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-mush-green flex items-center justify-center mr-2 shadow-md">
-                  <span className="text-white font-bold text-lg">M</span>
-                </div>
-                <h1 className="text-xl font-bold">Mush•Quizz</h1>
-              </Link>
-            </div>
-            <div className="mt-2">
-              <Breadcrumb currentFolderId={folderId} />
-            </div>
-          </div>
-
+        <Breadcrumb currentFolderId={folderId} />
+        
+        <div className="flex items-center justify-end mt-2">
           {/* Barre de recherche */}
-          <div className="hidden md:flex relative flex-1 max-w-md mx-4">
+          <div className="flex relative flex-1 max-w-md">
             <input
               type="text"
               placeholder="Rechercher... (wip)"
