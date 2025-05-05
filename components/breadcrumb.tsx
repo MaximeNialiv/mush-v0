@@ -100,36 +100,34 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
   }
 
   return (
-    <div className="flex flex-col w-full">
-      {/* Première ligne: logo et recherche */}
-      <div className="flex items-center justify-between w-full pb-2">
-        <Link
-          href="/"
-          onClick={() => {
-            // Instrumentation Sentry pour le suivi de la navigation
-            Sentry.addBreadcrumb({
-              category: 'navigation',
-              message: 'Clic sur Accueil dans le fil d\'Ariane',
-              level: 'info',
-              data: {
-                destination: 'root'
-              }
-            });
-            console.log('Navigation vers la racine via lien HTML standard');
-          }}
-          className="flex items-center hover:text-mush-green transition-colors no-underline text-gray-600"
-        >
-          <div className="w-10 h-10 mr-2">
-            <img src="/mush-logo.svg" alt="Mush Logo" className="w-full h-full" />
-          </div>
-        </Link>
-      </div>
+    <div className="flex items-center">
+      {/* Logo */}
+      <Link
+        href="/"
+        onClick={() => {
+          // Instrumentation Sentry pour le suivi de la navigation
+          Sentry.addBreadcrumb({
+            category: 'navigation',
+            message: 'Clic sur le logo Mush',
+            level: 'info',
+            data: {
+              destination: 'root'
+            }
+          });
+          console.log('Navigation vers la racine via le logo');
+        }}
+        className="flex items-center hover:text-mush-green transition-colors no-underline mr-4"
+      >
+        <div className="w-10 h-10">
+          <img src="/mush-logo.svg" alt="Mush Logo" className="w-full h-full" />
+        </div>
+      </Link>
       
-      {/* Deuxième ligne: fil d'ariane */}
-      <nav className="flex items-center space-x-1 text-sm overflow-x-auto py-1">
+      {/* Fil d'ariane */}
+      <nav className="flex items-center space-x-1 text-sm overflow-x-auto">
         <Link
           href="/"
-          className="hover:text-mush-green transition-colors no-underline text-gray-600 px-2 py-1"
+          className="hover:text-mush-green transition-colors no-underline text-gray-600"
         >
           Accueil
         </Link>
@@ -156,12 +154,12 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
                       });
                       console.log(`Navigation vers /${item.id} via lien HTML standard du fil d'Ariane`);
                     }}
-                    className="hover:text-mush-green transition-colors no-underline text-gray-600 px-2 py-1"
+                    className="hover:text-mush-green transition-colors no-underline text-gray-600"
                   >
                     {item.title}
                   </Link>
                 ) : (
-                  <span className="font-semibold text-mush-green px-2 py-1">
+                  <span className="font-bold text-black">
                     {item.title}
                   </span>
                 )}
@@ -170,7 +168,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
           </>
         )}
         
-        {loading && <span className="text-gray-400 animate-pulse px-2">...</span>}
+        {loading && <span className="text-gray-400 animate-pulse">...</span>}
       </nav>
     </div>
   )
