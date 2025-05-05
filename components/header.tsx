@@ -32,11 +32,9 @@ export function Header() {
                 <h1 className="text-xl font-bold">Mush•Quizz</h1>
               </Link>
             </div>
-            {folderId ? (
+            <div className="mt-2">
               <Breadcrumb currentFolderId={folderId} />
-            ) : (
-              <span className="text-sm text-gray-600"></span>
-            )}
+            </div>
           </div>
 
           {/* Barre de recherche */}

@@ -9,7 +9,7 @@ import { useSupabase } from "@/utils/supabase/client"
 import { CardWithContent } from "@/types"
 
 interface BreadcrumbProps {
-  currentFolderId: string
+  currentFolderId?: string
 }
 
 interface BreadcrumbItem {
@@ -22,6 +22,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
   const supabase = useSupabase()
   const [breadcrumbPath, setBreadcrumbPath] = useState<BreadcrumbItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [rootFolder, setRootFolder] = useState<BreadcrumbItem>({ id: 'ROOT', title: 'Accueil' })
 
   // Fonction pour récupérer le chemin complet du dossier
   useEffect(() => {
@@ -31,41 +32,43 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
         // Initialiser le chemin avec le dossier courant
         const path: BreadcrumbItem[] = []
         
-        // Récupérer les informations du dossier courant
-        const { data: currentFolder, error } = await supabase
-          .from("cards")
-          .select("sequential_id, title, parent_id")
-          .eq("sequential_id", currentFolderId)
-          .single()
-        
-        if (error) throw error
-        
-        if (currentFolder) {
-          // Ajouter le dossier courant au chemin
-          path.unshift({
-            id: currentFolder.sequential_id,
-            title: currentFolder.title || `Dossier ${currentFolder.sequential_id}`,
-          })
+        if (currentFolderId) {
+          // Récupérer les informations du dossier courant
+          const { data: currentFolder, error } = await supabase
+            .from("cards")
+            .select("sequential_id, title, parent_id")
+            .eq("sequential_id", currentFolderId)
+            .single()
           
-          // Remonter l'arborescence pour trouver tous les parents
-          let parentId = currentFolder.parent_id
-          while (parentId && parentId !== "ROOT" && parentId !== null) {
-            const { data: parentFolder, error: parentError } = await supabase
-              .from("cards")
-              .select("sequential_id, title, parent_id")
-              .eq("sequential_id", parentId)
-              .single()
+          if (error) throw error
+          
+          if (currentFolder) {
+            // Ajouter le dossier courant au chemin
+            path.unshift({
+              id: currentFolder.sequential_id,
+              title: currentFolder.title || `Dossier ${currentFolder.sequential_id}`,
+            })
             
-            if (parentError) break
-            
-            if (parentFolder) {
-              path.unshift({
-                id: parentFolder.sequential_id,
-                title: parentFolder.title || `Dossier ${parentFolder.sequential_id}`,
-              })
-              parentId = parentFolder.parent_id
-            } else {
-              break
+            // Remonter l'arborescence pour trouver tous les parents
+            let parentId = currentFolder.parent_id
+            while (parentId && parentId !== "ROOT" && parentId !== null) {
+              const { data: parentFolder, error: parentError } = await supabase
+                .from("cards")
+                .select("sequential_id, title, parent_id")
+                .eq("sequential_id", parentId)
+                .single()
+              
+              if (parentError) break
+              
+              if (parentFolder) {
+                path.unshift({
+                  id: parentFolder.sequential_id,
+                  title: parentFolder.title || `Dossier ${parentFolder.sequential_id}`,
+                })
+                parentId = parentFolder.parent_id
+              } else {
+                break
+              }
             }
           }
         }
@@ -78,9 +81,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
       }
     }
     
-    if (currentFolderId) {
-      fetchBreadcrumbPath()
-    }
+    fetchBreadcrumbPath()
   }, [currentFolderId, supabase])
 
   // Fonction pour capturer les erreurs de navigation et les envoyer à Sentry
@@ -99,14 +100,14 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
   }
 
   return (
-    <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4 overflow-x-auto pb-2">
-      <a
+    <nav className="flex items-center space-x-1 text-sm overflow-x-auto py-2 px-2 bg-white rounded-full shadow-sm border border-gray-200">
+      <Link
         href="/"
         onClick={() => {
           // Instrumentation Sentry pour le suivi de la navigation
           Sentry.addBreadcrumb({
             category: 'navigation',
-            message: 'Clic sur l\'icône Home dans le fil d\'Ariane',
+            message: 'Clic sur Accueil dans le fil d\'Ariane',
             level: 'info',
             data: {
               destination: 'root'
@@ -114,44 +115,51 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
           });
           console.log('Navigation vers la racine via lien HTML standard');
         }}
-        className="flex items-center hover:text-mush-green transition-colors no-underline text-gray-600"
+        className="flex items-center hover:text-mush-green transition-colors no-underline text-gray-600 px-2 py-1"
       >
-        <Home className="h-4 w-4" />
-      </a>
-      
-      {breadcrumbPath.map((item, index) => (
-        <div key={item.id} className="flex items-center">
-          <ChevronRight className="h-4 w-4 mx-1 text-gray-400" />
-          {index < breadcrumbPath.length - 1 ? (
-            <a
-              href={`/${item.id}`}
-              onClick={() => {
-                // Instrumentation Sentry pour le suivi de la navigation
-                Sentry.addBreadcrumb({
-                  category: 'navigation',
-                  message: `Clic sur ${item.title} dans le fil d\'Ariane`,
-                  level: 'info',
-                  data: {
-                    folderId: item.id,
-                    folderTitle: item.title,
-                    url: `/${item.id}`
-                  }
-                });
-                console.log(`Navigation vers /${item.id} via lien HTML standard du fil d'Ariane`);
-              }}
-              className="hover:text-mush-green transition-colors no-underline text-gray-600"
-            >
-              {item.title}
-            </a>
-          ) : (
-            <span className="font-semibold text-mush-green">
-              {item.title}
-            </span>
-          )}
+        <div className="w-6 h-6 mr-1">
+          <img src="/mush-logo.svg" alt="Mush Logo" className="w-full h-full" />
         </div>
-      ))}
+        Accueil
+      </Link>
       
-      {loading && <span className="text-gray-400 animate-pulse">...</span>}
+      {breadcrumbPath.length > 0 && (
+        <>
+          {breadcrumbPath.map((item, index) => (
+            <div key={item.id} className="flex items-center">
+              <ChevronRight className="h-4 w-4 text-gray-400 mx-1" />
+              {index < breadcrumbPath.length - 1 ? (
+                <Link
+                  href={`/${item.id}`}
+                  onClick={() => {
+                    // Instrumentation Sentry pour le suivi de la navigation
+                    Sentry.addBreadcrumb({
+                      category: 'navigation',
+                      message: `Clic sur ${item.title} dans le fil d\'Ariane`,
+                      level: 'info',
+                      data: {
+                        folderId: item.id,
+                        folderTitle: item.title,
+                        url: `/${item.id}`
+                      }
+                    });
+                    console.log(`Navigation vers /${item.id} via lien HTML standard du fil d'Ariane`);
+                  }}
+                  className="hover:text-mush-green transition-colors no-underline text-gray-600 px-2 py-1"
+                >
+                  {item.title}
+                </Link>
+              ) : (
+                <span className="font-semibold text-mush-green px-2 py-1">
+                  {item.title}
+                </span>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+      
+      {loading && <span className="text-gray-400 animate-pulse px-2">...</span>}
     </nav>
   )
 }
