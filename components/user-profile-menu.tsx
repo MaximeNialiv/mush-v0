@@ -79,10 +79,15 @@ export function UserProfileMenu() {
               <p className="text-sm font-medium text-gray-900">Non connecté</p>
             </div>
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('open-auth-modal'))}
+              onClick={() => {
+                setIsMenuOpen(false); // Fermer le menu
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('open-auth-modal')); // Ouvrir la modale d'authentification
+                }, 100); // Petit délai pour éviter les conflits d'état
+              }}
               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
-              <span className="h-4 w-4 mr-2">⏻</span>
+              <span className="h-4 w-4 mr-2">⏽</span>
               Se connecter
             </button>
           </div>

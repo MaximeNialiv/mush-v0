@@ -126,13 +126,23 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
       
       {/* Fil d'ariane */}
       <nav className="flex items-center space-x-1 text-sm overflow-x-auto">
-        <Link
-          href="/"
-          prefetch={true}
-          className="hover:text-mush-green transition-colors no-underline text-gray-600"
+        <button
+          onClick={() => {
+            router.push('/');
+            // Instrumentation Sentry pour le suivi de la navigation
+            Sentry.addBreadcrumb({
+              category: 'navigation',
+              message: 'Clic sur Accueil dans le fil d\'Ariane',
+              level: 'info',
+              data: {
+                destination: 'root'
+              }
+            });
+          }}
+          className="hover:text-mush-green transition-colors no-underline text-gray-600 bg-transparent border-none cursor-pointer"
         >
           Accueil
-        </Link>
+        </button>
         
         {breadcrumbPath.length > 0 && (
           <>
@@ -140,10 +150,9 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
               <div key={item.id} className="flex items-center">
                 <Icon icon="ChevronRight" className="h-4 w-4 text-gray-400 mx-1" />
                 {index < breadcrumbPath.length - 1 ? (
-                  <Link
-                    href={`/${item.id}`}
-                    prefetch={true}
+                  <button
                     onClick={() => {
+                      router.push(`/${item.id}`);
                       // Instrumentation Sentry pour le suivi de la navigation
                       Sentry.addBreadcrumb({
                         category: 'navigation',
@@ -155,12 +164,12 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
                           url: `/${item.id}`
                         }
                       });
-                      console.log(`Navigation vers /${item.id} via lien HTML standard du fil d'Ariane`);
+                      console.log(`Navigation vers /${item.id} via le fil d'Ariane`);
                     }}
-                    className="hover:text-mush-green transition-colors no-underline text-gray-600"
+                    className="hover:text-mush-green transition-colors no-underline text-gray-600 bg-transparent border-none cursor-pointer"
                   >
                     {item.title}
-                  </Link>
+                  </button>
                 ) : (
                   <span className="font-bold text-black">
                     {item.title}

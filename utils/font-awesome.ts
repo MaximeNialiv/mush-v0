@@ -49,7 +49,9 @@ import {
   faGripVertical,
   faDotCircle,
   faChevronLeft,
-  faDatabase
+  faDatabase,
+  faTableCells,
+  faPlay
 } from '@fortawesome/free-solid-svg-icons';
 
 // Ajouter les icônes à la bibliothèque
@@ -99,6 +101,8 @@ library.add(
   faPanelLeft,
   faGripVertical,
   faDotCircle,
+  faTableCells,
+  faPlay,
   faChevronLeft,
   faDatabase
 );
@@ -163,7 +167,9 @@ export const iconMapping = {
   GripVertical: 'grip-vertical',
   Dot: 'dot-circle',
   ChevronLeft: 'chevron-left',
-  Database: 'database'
+  Database: 'database',
+  Grid: 'table-cells',
+  Play: 'play'
 };
 
 // Fonction utilitaire pour obtenir le nom d'icône Font Awesome équivalent

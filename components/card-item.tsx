@@ -101,30 +101,9 @@ export function CardItem({ card }: CardItemProps) {
               className="w-full bg-mush-green hover:bg-mush-green/90 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center hover:shadow-md transform transition-transform hover:translate-y-[-2px] no-underline"
             >
               <Icon icon="Folder" className="w-5 h-5 mr-2 text-white" />
-              📁 Ouvrir le dossier
+              Ouvrir le dossier
             </a>
             
-            {/* Bouton de secours avec window.location.href en cas de problème avec Link */}
-            <button
-              onClick={() => {
-                // Instrumentation Sentry pour le suivi de la navigation de secours
-                Sentry.addBreadcrumb({
-                  category: 'navigation',
-                  message: `Utilisation de la navigation de secours pour la carte ${card.sequential_id}`,
-                  level: 'warning',
-                  data: {
-                    cardId: card.sequential_id,
-                    childIds: card.child_ids,
-                    url: `/${card.sequential_id}`
-                  }
-                });
-                console.log(`Navigation de secours vers /${card.sequential_id} via window.location`);
-                window.location.href = `/${card.sequential_id}`;
-              }}
-              className="mt-2 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg text-sm flex items-center justify-center hover:shadow-md"
-            >
-              Navigation alternative
-            </button>
           </div>
         )}
       </div>

@@ -299,6 +299,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
     setPointsEarned(0)
     setError(null)
     setIsSubmitting(false) // S'assurer que le bouton de soumission est actif
+    // La correction est déjà masquée car elle dépend de submitted qui est maintenant false
     
     // Informer le parent pour mettre à jour l'affichage des points
     if (onComplete) {
