@@ -1,16 +1,25 @@
 import Link from "next/link"
-import { Home, Bell, Mail, User, Search, BookmarkIcon, MoreHorizontal, PenSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { 
+  HomeIcon, 
+  BellIcon, 
+  MailIcon, 
+  UserIcon, 
+  SearchIcon, 
+  BookmarkIcon, 
+  MoreHorizontalIcon, 
+  PenSquareIcon 
+} from "@/components/ui/icon"
 
 export function Sidebar() {
   const navItems = [
-    { icon: <Home className="h-6 w-6" />, label: "Accueil", href: "/" },
-    { icon: <Search className="h-6 w-6" />, label: "Explorer", href: "/explore" },
-    { icon: <Bell className="h-6 w-6" />, label: "Notifications", href: "/notifications" },
-    { icon: <Mail className="h-6 w-6" />, label: "Messages", href: "/messages" },
-    { icon: <BookmarkIcon className="h-6 w-6" />, label: "Signets", href: "/bookmarks" },
-    { icon: <User className="h-6 w-6" />, label: "Profil", href: "/profile" },
-    { icon: <MoreHorizontal className="h-6 w-6" />, label: "Plus", href: "/more" },
+    { icon: <HomeIcon size="lg" />, label: "Accueil", href: "/" },
+    { icon: <SearchIcon size="lg" />, label: "Explorer", href: "/explore" },
+    { icon: <BellIcon size="lg" />, label: "Notifications", href: "/notifications" },
+    { icon: <MailIcon size="lg" />, label: "Messages", href: "/messages" },
+    { icon: <BookmarkIcon size="lg" />, label: "Signets", href: "/bookmarks" },
+    { icon: <UserIcon size="lg" />, label: "Profil", href: "/profile" },
+    { icon: <MoreHorizontalIcon size="lg" />, label: "Plus", href: "/more" },
   ]
 
   return (
@@ -39,7 +48,7 @@ export function Sidebar() {
           ))}
         </nav>
         <Button className="rounded-full bg-sky-500 hover:bg-sky-600 mt-4 py-6 lg:py-4">
-          <PenSquare className="h-6 w-6 lg:hidden" />
+          <PenSquareIcon size="lg" className="lg:hidden" />
           <span className="hidden lg:inline font-bold">Poster</span>
         </Button>
         <div className="mt-auto mb-4">

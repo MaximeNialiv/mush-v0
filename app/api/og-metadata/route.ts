@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { parse } from 'node-html-parser';
 
+// Durée de cache en secondes (24 heures)
+const CACHE_MAX_AGE = 60 * 60 * 24;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
@@ -46,16 +49,23 @@ export async function GET(request: Request) {
       ? favicon 
       : new URL(favicon.startsWith('/') ? favicon : `/${favicon}`, url).toString();
     
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       title, 
       image, 
       description,
       favicon: faviconUrl,
       domain: new URL(url).hostname.replace('www.', '')
     });
+    
+    // Ajouter des en-têtes de cache
+    response.headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, s-maxage=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_MAX_AGE * 2}`);
+    response.headers.set('CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE}`);
+    response.headers.set('Vercel-CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE}`);
+    
+    return response;
   } catch (error) {
     console.error('Erreur lors de l\'extraction des métadonnées:', error);
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       error: 'Erreur lors de l\'extraction des métadonnées',
       title: new URL(url).hostname.replace('www.', ''),
       image: '',
@@ -63,5 +73,12 @@ export async function GET(request: Request) {
       favicon: '',
       domain: new URL(url).hostname.replace('www.', '')
     }, { status: 200 }); // Retourner 200 même en cas d'erreur pour éviter de casser l'UI
+    
+    // Ajouter des en-têtes de cache même en cas d'erreur, mais avec une durée plus courte
+    response.headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}, s-maxage=${CACHE_MAX_AGE / 4}`);
+    response.headers.set('CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}`);
+    response.headers.set('Vercel-CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}`);
+    
+    return response;
   }
 }

@@ -1,0 +1,172 @@
+// Configuration de Font Awesome avec tree-shaking
+import { library } from '@fortawesome/fontawesome-svg-core';
+
+// Icônes solid
+import { 
+  faHome, 
+  faBell, 
+  faEnvelope, 
+  faUser, 
+  faSearch, 
+  faBookmark, 
+  faEllipsisH, 
+  faPenToSquare,
+  faVideo,
+  faCommentSquare,
+  faBars,
+  faTree,
+  faHeart,
+  faComment,
+  faRetweet,
+  faShare,
+  faSpinner,
+  faSignOutAlt,
+  faList,
+  faCheck,
+  faTimes,
+  faExclamationCircle,
+  faChevronRight,
+  faEye,
+  faEyeSlash,
+  faPaperPlane,
+  faImage,
+  faMapMarkerAlt,
+  faSmile,
+  faCalendar,
+  faEllipsisV,
+  faFolder,
+  faTrash,
+  faEdit,
+  faQuestionCircle,
+  faTrophy,
+  faMusic,
+  faNewspaper,
+  faFileAlt,
+  faChevronDown,
+  faChevronUp,
+  faCircle,
+  faPanelLeft,
+  faGripVertical,
+  faDotCircle,
+  faChevronLeft,
+  faDatabase
+} from '@fortawesome/free-solid-svg-icons';
+
+// Ajouter les icônes à la bibliothèque
+library.add(
+  faHome, 
+  faBell, 
+  faEnvelope, 
+  faUser, 
+  faSearch, 
+  faBookmark, 
+  faEllipsisH, 
+  faPenToSquare,
+  faVideo,
+  faCommentSquare,
+  faBars,
+  faTree,
+  faHeart,
+  faComment,
+  faRetweet,
+  faShare,
+  faSpinner,
+  faSignOutAlt,
+  faList,
+  faCheck,
+  faTimes,
+  faExclamationCircle,
+  faChevronRight,
+  faEye,
+  faEyeSlash,
+  faPaperPlane,
+  faImage,
+  faMapMarkerAlt,
+  faSmile,
+  faCalendar,
+  faEllipsisV,
+  faFolder,
+  faTrash,
+  faEdit,
+  faQuestionCircle,
+  faTrophy,
+  faMusic,
+  faNewspaper,
+  faFileAlt,
+  faChevronDown,
+  faChevronUp,
+  faCircle,
+  faPanelLeft,
+  faGripVertical,
+  faDotCircle,
+  faChevronLeft,
+  faDatabase
+);
+
+// Mapping des icônes Lucide vers Font Awesome
+export const iconMapping = {
+  // Navigation et UI
+  Home: 'home',
+  Bell: 'bell',
+  Mail: 'envelope',
+  User: 'user',
+  Search: 'search',
+  BookmarkIcon: 'bookmark',
+  MoreHorizontal: 'ellipsis-h',
+  PenSquare: 'pen-to-square',
+  Video: 'video',
+  MessageSquare: 'comment-square',
+  Menu: 'bars',
+  TreesIcon: 'tree',
+  
+  // Actions
+  Heart: 'heart',
+  MessageCircle: 'comment',
+  Repeat: 'retweet',
+  Share: 'share',
+  Loader2: 'spinner',
+  LogOut: 'sign-out-alt',
+  Grid: 'th',
+  List: 'list',
+  
+  // Feedback et validation
+  Check: 'check',
+  X: 'times',
+  AlertCircle: 'exclamation-circle',
+  ChevronRight: 'chevron-right',
+  
+  // Formulaires et entrées
+  Eye: 'eye',
+  EyeOff: 'eye-slash',
+  Send: 'paper-plane',
+  Image: 'image',
+  MapPin: 'map-marker-alt',
+  Smile: 'smile',
+  Calendar: 'calendar',
+  
+  // Gestion de contenu
+  MoreVertical: 'ellipsis-v',
+  Folder: 'folder',
+  Trash: 'trash',
+  Edit: 'edit',
+  HelpCircle: 'question-circle',
+  Trophy: 'trophy',
+  Music: 'music',
+  Newspaper: 'newspaper',
+  FileText: 'file-alt',
+  
+  // UI avancée
+  ChevronDown: 'chevron-down',
+  ChevronUp: 'chevron-up',
+  Circle: 'circle',
+  PanelLeft: 'panel-left',
+  GripVertical: 'grip-vertical',
+  Dot: 'dot-circle',
+  ChevronLeft: 'chevron-left',
+  Database: 'database'
+};
+
+// Fonction utilitaire pour obtenir le nom d'icône Font Awesome équivalent
+export const getFaIconName = (lucideIconName: string): string => {
+  return iconMapping[lucideIconName as keyof typeof iconMapping] || lucideIconName.toLowerCase();
+};

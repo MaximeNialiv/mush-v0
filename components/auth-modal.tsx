@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Eye, EyeOff, Send } from "lucide-react"
+import { Icon } from "./ui/icon"
 import { useSupabase } from "@/context/supabase-provider"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -342,7 +342,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <Icon icon="EyeOff" size="sm" /> : <Icon icon="Eye" size="sm" />}
                   </button>
                 </div>
               </div>
@@ -408,7 +408,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 className="w-full bg-mush-green hover:bg-mush-green/90 flex items-center justify-center gap-2"
                 disabled={isLoading}
               >
-                <Send size={18} />
+                <Icon icon="Send" size="sm" />
                 {isLoading ? "Inscription en cours..." : "S'inscrire"}
               </Button>
             </form>
@@ -445,7 +445,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <Icon icon="EyeOff" size="sm" /> : <Icon icon="Eye" size="sm" />}
                   </button>
                 </div>
               </div>

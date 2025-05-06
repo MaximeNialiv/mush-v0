@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Heart, MessageCircle, Repeat, Share } from "lucide-react"
+import { HeartIcon, MessageCircleIcon, RepeatIcon, ShareIcon } from "@/components/ui/icon"
 import { useSupabase } from "@/utils/supabase/client"
 
 interface TweetProps {
@@ -101,7 +101,7 @@ export function Tweet({ tweet }: TweetProps) {
           <div className="mt-3 flex justify-between max-w-md">
             <button className="flex items-center text-gray-500 hover:text-sky-500 group">
               <div className="p-2 rounded-full group-hover:bg-sky-50">
-                <MessageCircle className="h-5 w-5" />
+                <MessageCircleIcon size="sm" />
               </div>
               <span className="ml-1 text-sm">{tweet.replies}</span>
             </button>
@@ -110,7 +110,7 @@ export function Tweet({ tweet }: TweetProps) {
               onClick={handleRetweet}
             >
               <div className="p-2 rounded-full group-hover:bg-green-50">
-                <Repeat className="h-5 w-5" />
+                <RepeatIcon size="sm" />
               </div>
               <span className="ml-1 text-sm">{retweets}</span>
             </button>
@@ -119,13 +119,13 @@ export function Tweet({ tweet }: TweetProps) {
               onClick={handleLike}
             >
               <div className="p-2 rounded-full group-hover:bg-red-50">
-                <Heart className="h-5 w-5" />
+                <HeartIcon size="sm" />
               </div>
               <span className="ml-1 text-sm">{likes}</span>
             </button>
             <button className="flex items-center text-gray-500 hover:text-sky-500 group">
               <div className="p-2 rounded-full group-hover:bg-sky-50">
-                <Share className="h-5 w-5" />
+                <ShareIcon size="sm" />
               </div>
             </button>
           </div>

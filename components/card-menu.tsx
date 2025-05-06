@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MoreVertical, Folder, Trash, Edit } from "lucide-react"
+import { Icon } from "./ui/icon"
 import { useSupabase } from "@/utils/supabase/client"
 import { CardWithContent } from "@/types"
 import { fetchAvailableFolders, moveCardToFolder } from "@/utils/folder-operations"
@@ -105,7 +105,7 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
         className="p-1 rounded-full hover:bg-gray-200 transition-colors"
         aria-label="Options"
       >
-        <MoreVertical className="h-5 w-5 text-gray-600" />
+        <Icon icon="MoreVertical" className="h-5 w-5 text-gray-600" />
       </button>
 
       {isOpen && (
@@ -114,7 +114,7 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
             onClick={() => setIsFolderMenuOpen(!isFolderMenuOpen)}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
           >
-            <Folder className="h-4 w-4 mr-2" />
+            <Icon icon="Folder" className="h-4 w-4 mr-2" />
             Déplacer vers...
           </button>
           
@@ -122,14 +122,14 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
           <button
             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
           >
-            <Edit className="h-4 w-4 mr-2" />
+            <Icon icon="Edit" className="h-4 w-4 mr-2" />
             Modifier
           </button>
           
           <button
             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
           >
-            <Trash className="h-4 w-4 mr-2" />
+            <Icon icon="Trash" className="h-4 w-4 mr-2" />
             Supprimer
           </button>
         </div>
@@ -154,7 +154,7 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
                   card.parent_id === null ? 'font-bold text-mush-green' : 'text-gray-700'
                 }`}
               >
-                <Folder className="h-4 w-4 mr-2" />
+                <Icon icon="Folder" className="h-4 w-4 mr-2" />
                 Racine
               </button>
               
@@ -166,7 +166,7 @@ export function CardMenu({ card, onCardMoved }: CardMenuProps) {
                     card.parent_id === folder.sequential_id ? 'font-bold text-mush-green' : 'text-gray-700'
                   }`}
                 >
-                  <Folder className="h-4 w-4 mr-2" />
+                  <Icon icon="Folder" className="h-4 w-4 mr-2" />
                   {folder.title}
                 </button>
               ))}

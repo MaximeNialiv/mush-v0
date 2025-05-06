@@ -2,7 +2,7 @@
 
 import { useAtom } from "jotai"
 import { mushroomCountAtom, viewModeAtom, currentFolderIdAtom } from "@/store/atoms"
-import { Search, Grid, List, Bell } from "lucide-react"
+import { Icon } from "./ui/icon"
 import Link from "next/link"
 import { UserProfileMenu } from "@/components/user-profile-menu"
 import { usePathname, useParams } from "next/navigation"
@@ -35,7 +35,7 @@ export function Header() {
                 placeholder="Rechercher... (wip)"
                 className="w-full py-2 pl-10 pr-4 border-2 border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-mush-green shadow-sm"
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+              <Icon icon="Search" className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
             </div>
           </div>
           
@@ -49,14 +49,14 @@ export function Header() {
                 className={`p-2 ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
                 aria-label="Vue liste"
               >
-                <List className="h-5 w-5" />
+                <Icon icon="List" className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
                 aria-label="Vue grille"
               >
-                <Grid className="h-5 w-5" />
+                <Icon icon="Grid" className="h-5 w-5" />
               </button>
             </div>
 

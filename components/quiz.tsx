@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { Content } from "@/types"
-import { Check, X, AlertCircle } from "lucide-react"
+import { Icon } from "./ui/icon"
 import { useSupabase } from "@/context/supabase-provider"
 import { useAtom } from "jotai"
 import { mushroomCountAtom } from "@/store/atoms"
@@ -366,10 +366,10 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
                 >
                   <div className={`flex-shrink-0 w-6 h-6 border-2 rounded-md mr-3 flex items-center justify-center ${submitted ? checkboxColor : (isSelected ? 'border-mush-green' : 'border-gray-300')}`}>
                     {/* Afficher une coche verte quand l'utilisateur sélectionne une réponse avant soumission */}
-                    {!submitted && isSelected && <Check className="h-4 w-4 text-mush-green" />}
+                    {!submitted && isSelected && <Icon icon="Check" className="h-4 w-4 text-mush-green" />}
                     
                     {/* Afficher une coche de la couleur appropriée quand la réponse est sélectionnée après soumission */}
-                    {submitted && isSelected && <Check className={`h-4 w-4 ${isCorrectAnswer ? 'text-green-600' : 'text-red-600'}`} />}
+                    {submitted && isSelected && <Icon icon="Check" className={`h-4 w-4 ${isCorrectAnswer ? 'text-green-600' : 'text-red-600'}`} />}
                   </div>
                   <span className={`${textColor} flex-grow`}>{answer}</span>
                 </div>
@@ -379,7 +379,7 @@ export function Quiz({ content, cardId, onComplete, onClose }: QuizProps) {
 
           {error && (
             <div className="bg-red-50 p-3 rounded-lg mt-4 flex items-start">
-              <AlertCircle className="text-red-500 h-5 w-5 mt-0.5 mr-2 flex-shrink-0" />
+              <Icon icon="AlertCircle" className="text-red-500 h-5 w-5 mt-0.5 mr-2 flex-shrink-0" />
               <p className="text-red-800 text-sm">{error}</p>
             </div>
           )}

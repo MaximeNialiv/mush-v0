@@ -1,8 +1,14 @@
 "use client"
 
-import { Video, MessageSquare, Menu, TreesIcon as Tree, Home } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { 
+  VideoIcon, 
+  MessageSquareIcon, 
+  MenuIcon, 
+  TreesIcon, 
+  HomeIcon 
+} from "@/components/ui/icon"
 
 export function NavigationBar() {
   const pathname = usePathname()
@@ -16,11 +22,11 @@ export function NavigationBar() {
   }
 
   const navItems: NavItem[] = [
-    { icon: <Home className="w-6 h-6" />, href: "/", label: "Accueil" },
-    { icon: <Tree className="w-6 h-6" />, href: "/mush", label: "Mush" },
-    { icon: <Video className="w-6 h-6" />, href: "/videos", label: "Vidéos" },
-    { icon: <MessageSquare className="w-6 h-6" />, href: "/messages", label: "Messages" },
-    { icon: <Menu className="w-6 h-6" />, href: "/menu", label: "Menu" },
+    { icon: <HomeIcon size="lg" />, href: "/", label: "Accueil" },
+    { icon: <TreesIcon size="lg" />, href: "/mush", label: "Mush" },
+    { icon: <VideoIcon size="lg" />, href: "/videos", label: "Vidéos" },
+    { icon: <MessageSquareIcon size="lg" />, href: "/messages", label: "Messages" },
+    { icon: <MenuIcon size="lg" />, href: "/menu", label: "Menu" },
   ]
 
   return (

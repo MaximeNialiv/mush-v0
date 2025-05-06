@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { User } from "@supabase/supabase-js"
 import { useSupabase } from "@/context/supabase-provider"
-import { LogOut } from "lucide-react"
+import { LogOutIcon } from "@/components/ui/icon"
 import { toast } from "sonner"
 
 export default function AuthStatus() {
@@ -65,7 +65,7 @@ export default function AuthStatus() {
         className="mt-4 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
         title="Déconnexion"
       >
-        <LogOut size={16} />
+        <LogOutIcon size="xs" />
       </button>
     </div>
   )

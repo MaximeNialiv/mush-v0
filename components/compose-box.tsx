@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Image, MapPin, Smile, Calendar } from "lucide-react"
+import { Icon } from "./ui/icon"
 
 export function ComposeBox({ onTweet }: { onTweet: (tweet: string) => void }) {
   const [content, setContent] = useState("")
@@ -33,16 +33,16 @@ export function ComposeBox({ onTweet }: { onTweet: (tweet: string) => void }) {
             <div className="flex items-center justify-between mt-2">
               <div className="flex space-x-2 text-sky-500">
                 <button type="button" className="p-2 rounded-full hover:bg-sky-50">
-                  <Image className="h-5 w-5" />
+                  <Icon icon="Image" className="h-5 w-5" />
                 </button>
                 <button type="button" className="p-2 rounded-full hover:bg-sky-50">
-                  <MapPin className="h-5 w-5" />
+                  <Icon icon="MapPin" className="h-5 w-5" />
                 </button>
                 <button type="button" className="p-2 rounded-full hover:bg-sky-50">
-                  <Smile className="h-5 w-5" />
+                  <Icon icon="Smile" className="h-5 w-5" />
                 </button>
                 <button type="button" className="p-2 rounded-full hover:bg-sky-50">
-                  <Calendar className="h-5 w-5" />
+                  <Icon icon="Calendar" className="h-5 w-5" />
                 </button>
               </div>
               <Button

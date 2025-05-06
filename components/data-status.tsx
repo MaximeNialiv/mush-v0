@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useSupabase } from "@/utils/supabase/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Database } from "lucide-react"
+import { Icon } from "./ui/icon"
 
 export function DataStatus() {
   const supabase = useSupabase()

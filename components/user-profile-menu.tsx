@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { User } from "@supabase/supabase-js"
 import { useSupabase } from "@/utils/supabase/client"
-import { LogOut } from "lucide-react"
+import { Icon } from "./ui/icon"
 import { toast } from "sonner"
 
 export function UserProfileMenu() {
@@ -114,7 +114,7 @@ export function UserProfileMenu() {
             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             onClick={handleLogout}
           >
-            <LogOut className="h-4 w-4 mr-2" />
+            <Icon icon="LogOut" className="h-4 w-4 mr-2" />
             Se déconnecter
           </button>
         </div>

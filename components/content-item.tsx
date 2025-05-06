@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { Content } from "@/types"
-import { HelpCircle, Trophy, Music, Video, Newspaper, FileText } from "lucide-react"
+import { Icon } from "./ui/icon"
 import { OpenGraphPreview } from "./open-graph-preview"
 import { Quiz } from "./quiz"
 import { atom, useAtom } from "jotai"
@@ -38,18 +38,18 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
     const commonColor = "bg-mush-green/10 border-mush-green/30 text-mush-green"
     
     if (content.type === "quiz") {
-      return { icon: <Trophy className="w-4 h-4 mr-1" />, label: "Quiz", color: commonColor }
+      return { icon: <Icon icon="Trophy" className="w-4 h-4 mr-1" />, label: "Quiz", color: commonColor }
     }
     if (content.media_url?.includes("podcast") || content.media_url?.includes(".mp3")) {
-      return { icon: <Music className="w-4 h-4 mr-1" />, label: "Podcast", color: commonColor }
+      return { icon: <Icon icon="Music" className="w-4 h-4 mr-1" />, label: "Podcast", color: commonColor }
     }
     if (content.media_url?.includes("video") || content.media_url?.includes("youtube") || content.media_url?.includes(".mp4")) {
-      return { icon: <Video className="w-4 h-4 mr-1" />, label: "Vidéo", color: commonColor }
+      return { icon: <Icon icon="Video" className="w-4 h-4 mr-1" />, label: "Vidéo", color: commonColor }
     }
     if (content.media_url?.includes("article") || content.description?.includes("article")) {
-      return { icon: <Newspaper className="w-4 h-4 mr-1" />, label: "Article", color: commonColor }
+      return { icon: <Icon icon="Newspaper" className="w-4 h-4 mr-1" />, label: "Article", color: commonColor }
     }
-    return { icon: <FileText className="w-4 h-4 mr-1" />, label: "Document", color: commonColor }
+    return { icon: <Icon icon="FileText" className="w-4 h-4 mr-1" />, label: "Document", color: commonColor }
   }
   
   // Vérifier si l'utilisateur a déjà complété ce quiz
@@ -168,7 +168,7 @@ export function ContentItem({ content, cardId }: ContentItemProps) {
             className={`mt-3 w-full ${hasCompletedQuiz ? 'bg-mush-green/70' : 'bg-mush-green'} hover:bg-mush-green/90 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center hover:shadow-md transform transition-transform hover:translate-y-[-2px]`}
             onClick={() => setShowQuiz(true)}
           >
-            <HelpCircle className="w-5 h-5 mr-2 text-white" />
+            <Icon icon="HelpCircle" className="w-5 h-5 mr-2 text-white" />
             {hasCompletedQuiz ? 'Réessayer le quiz' : 'Répondre au quiz'}
           </button>
         )}

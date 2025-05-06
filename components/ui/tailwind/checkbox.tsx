@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { Check } from "lucide-react"
+import { Icon } from "../icon"
 
 export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
@@ -33,7 +33,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           )}
         >
           {(props.checked !== undefined ? props.checked : checked) && (
-            <Check className="h-3 w-3 text-white" />
+            <Icon icon="Check" className="h-3 w-3 text-white" />
           )}
         </div>
       </div>

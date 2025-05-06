@@ -5,6 +5,9 @@ import SupabaseProvider from '@/context/supabase-provider'
 import dynamic from 'next/dynamic'
 import * as Sentry from '@sentry/nextjs'
 
+// Import Font Awesome config
+import '@/utils/font-awesome'
+
 // Import dynamique de l'ErrorBoundary pour éviter les problèmes de SSR
 const ErrorBoundary = dynamic(
   () => import('@/components/error-boundary'),

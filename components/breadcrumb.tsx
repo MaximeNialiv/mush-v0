@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronRight, Home } from "lucide-react"
+import { Icon } from "./ui/icon"
 import * as Sentry from "@sentry/nextjs"
 import Link from "next/link"
 import { useSupabase } from "@/utils/supabase/client"
@@ -138,7 +138,7 @@ export function Breadcrumb({ currentFolderId }: BreadcrumbProps) {
           <>
             {breadcrumbPath.map((item, index) => (
               <div key={item.id} className="flex items-center">
-                <ChevronRight className="h-4 w-4 text-gray-400 mx-1" />
+                <Icon icon="ChevronRight" className="h-4 w-4 text-gray-400 mx-1" />
                 {index < breadcrumbPath.length - 1 ? (
                   <Link
                     href={`/${item.id}`}

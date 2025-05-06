@@ -1,7 +1,7 @@
 "use client"
 
 import type { CardWithContent } from "@/types"
-import { FileText, Music, Video, Newspaper, Trophy, Folder } from "lucide-react"
+import { Icon } from "./ui/icon"
 import { ContentItem } from "./content-item"
 import { atom, useAtom } from "jotai"
 import { atomFamily } from "jotai/utils"
@@ -99,7 +99,7 @@ export function CardItem({ card }: CardItemProps) {
               }}
               className="w-full bg-mush-green hover:bg-mush-green/90 text-white py-3 px-4 rounded-lg font-bold flex items-center justify-center hover:shadow-md transform transition-transform hover:translate-y-[-2px] no-underline"
             >
-              <Folder className="w-5 h-5 mr-2 text-white" />
+              <Icon icon="Folder" className="w-5 h-5 mr-2 text-white" />
               📁 Ouvrir le dossier
             </a>
             

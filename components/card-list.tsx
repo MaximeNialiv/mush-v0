@@ -4,7 +4,7 @@ import { useCards } from "@/hooks/use-cards"
 import { useAtom } from "jotai"
 import { viewModeAtom } from "@/store/atoms"
 import { CardItem } from "@/components/card-item"
-import { Loader2 } from "lucide-react"
+import { Loader2Icon } from "@/components/ui/icon"
 
 interface CardListProps {
   folderId?: string
@@ -17,7 +17,7 @@ export function CardList({ folderId }: CardListProps = {}) {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-40">
-        <Loader2 className="h-8 w-8 animate-spin text-mush-green" />
+        <Loader2Icon size="xl" className="animate-spin text-mush-green" />
       </div>
     )
   }
