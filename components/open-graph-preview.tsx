@@ -5,6 +5,7 @@ import { MediaPlayer } from "./media-player"
 import ReactPlayer from "react-player/lazy"
 import { extractYouTubeVideoId } from "@/utils/media-utils"
 import { getOGMetadata, type OGMetadata } from "@/utils/cache-utils"
+import { OptimizedImage } from "./optimized-image"
 
 interface OpenGraphPreviewProps {
   url: string
@@ -125,16 +126,14 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
       <div ref={previewRef}>
         <div className="flex items-center mb-2">
           {metadata.favicon && (
-            <img 
+            <OptimizedImage 
               src={metadata.favicon} 
               alt="" 
-              width="16"
-              height="16"
-              loading="lazy"
+              width={16}
+              height={16}
               className="w-4 h-4 mr-2"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
+              onError={() => {}}
+              fallbackSrc=""
             />
           )}
           <span className="text-mush-green font-medium truncate">{metadata.title || url}</span>
@@ -146,18 +145,15 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
         >
           <div className="aspect-video bg-gray-100">
             {metadata.image ? (
-              <img
+              <OptimizedImage
                 src={metadata.image}
-                alt={metadata.title}
-                loading="lazy"
-                width="640"
-                height="360"
+                alt={metadata.title || ''}
+                width={640}
+                height={360}
                 className="w-full h-full object-cover"
-                decoding="async"
-                fetchpriority="high"
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder.svg?height=360&width=640"
-                }}
+                priority={true}
+                quality={85}
+                fallbackSrc="/placeholder.svg?height=360&width=640"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
@@ -181,16 +177,14 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
       {!showLinkInImage && (
         <div className="flex items-center mb-2">
           {metadata.favicon && (
-            <img 
+            <OptimizedImage 
               src={metadata.favicon} 
               alt="" 
-              width="16"
-              height="16"
-              loading="lazy"
+              width={16}
+              height={16}
               className="w-4 h-4 mr-2"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
+              onError={() => {}}
+              fallbackSrc=""
             />
           )}
           <a
@@ -212,18 +206,15 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
       >
         <div className="aspect-video bg-gray-100">
           {metadata.image ? (
-            <img
+            <OptimizedImage
               src={metadata.image}
-              alt={metadata.title}
-              loading="lazy"
-              width="640"
-              height="360"
+              alt={metadata.title || ''}
+              width={640}
+              height={360}
               className="w-full h-full object-cover"
-              decoding="async"
-              fetchpriority="high"
-              onError={(e) => {
-                e.currentTarget.src = "/placeholder.svg?height=360&width=640"
-              }}
+              priority={true}
+              quality={85}
+              fallbackSrc="/placeholder.svg?height=360&width=640"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
@@ -236,16 +227,14 @@ export function OpenGraphPreview({ url, showLinkInImage = false }: OpenGraphPrev
           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-2">
             <div className="flex items-center">
               {metadata.favicon && (
-                <img 
+                <OptimizedImage 
                   src={metadata.favicon} 
                   alt="" 
-                  width="16"
-                  height="16"
-                  loading="lazy"
+                  width={16}
+                  height={16}
                   className="w-4 h-4 mr-2"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
+                  onError={() => {}}
+                  fallbackSrc=""
                 />
               )}
               <p className="text-sm font-medium truncate">{metadata.title || url}</p>

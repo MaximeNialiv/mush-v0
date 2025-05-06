@@ -49,7 +49,7 @@ export async function GET(request: Request) {
       ? favicon 
       : new URL(favicon.startsWith('/') ? favicon : `/${favicon}`, url).toString();
     
-    const response = NextResponse.json({ 
+    const apiResponse = NextResponse.json({ 
       title, 
       image, 
       description,
@@ -58,14 +58,14 @@ export async function GET(request: Request) {
     });
     
     // Ajouter des en-têtes de cache
-    response.headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, s-maxage=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_MAX_AGE * 2}`);
-    response.headers.set('CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE}`);
-    response.headers.set('Vercel-CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE}`);
+    apiResponse.headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, s-maxage=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_MAX_AGE * 2}`);
+    apiResponse.headers.set('CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE}`);
+    apiResponse.headers.set('Vercel-CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE}`);
     
-    return response;
+    return apiResponse;
   } catch (error) {
     console.error('Erreur lors de l\'extraction des métadonnées:', error);
-    const response = NextResponse.json({ 
+    const errorResponse = NextResponse.json({ 
       error: 'Erreur lors de l\'extraction des métadonnées',
       title: new URL(url).hostname.replace('www.', ''),
       image: '',
@@ -75,10 +75,10 @@ export async function GET(request: Request) {
     }, { status: 200 }); // Retourner 200 même en cas d'erreur pour éviter de casser l'UI
     
     // Ajouter des en-têtes de cache même en cas d'erreur, mais avec une durée plus courte
-    response.headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}, s-maxage=${CACHE_MAX_AGE / 4}`);
-    response.headers.set('CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}`);
-    response.headers.set('Vercel-CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}`);
+    errorResponse.headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}, s-maxage=${CACHE_MAX_AGE / 4}`);
+    errorResponse.headers.set('CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}`);
+    errorResponse.headers.set('Vercel-CDN-Cache-Control', `public, max-age=${CACHE_MAX_AGE / 4}`);
     
-    return response;
+    return errorResponse;
   }
 }

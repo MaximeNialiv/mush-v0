@@ -8,6 +8,7 @@ import { atomFamily } from "jotai/utils"
 import { useRouter } from "next/navigation"
 import * as Sentry from "@sentry/nextjs"
 import Link from "next/link"
+import { OptimizedImage } from "./optimized-image"
 
 // Créer une famille d'atomes pour l'état d'expansion de chaque carte
 const expandedAtomFamily = atomFamily(
@@ -50,13 +51,13 @@ export function CardItem({ card }: CardItemProps) {
             {/* Photo de profil du créateur ou initiales */}
             <div className="w-10 h-10 rounded-full bg-mush-green flex items-center justify-center mr-3 text-white">
               {card.ownerAvatar ? (
-                <img 
+                <OptimizedImage 
                   src={card.ownerAvatar} 
-                  alt={card.ownerName || card.owner} 
-                  width="40" 
-                  height="40" 
-                  loading="lazy" 
+                  alt={card.ownerName || card.owner || ''} 
+                  width={40} 
+                  height={40} 
                   className="w-10 h-10 rounded-full object-cover" 
+                  fallbackSrc="/placeholder-avatar.svg"
                 />
               ) : (
                 <span className="font-bold">{ownerInitials}</span>

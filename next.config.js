@@ -8,9 +8,23 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['vmrtygakzgwammtcoqts.supabase.co'],
+    domains: ['vmrtygakzgwammtcoqts.supabase.co', 'img.youtube.com'],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
   },
-  // Ajoutez d'autres configurations Next.js ici si nécessaire
+  // Optimisations de performance
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // Compression et optimisation
+  compress: true,
+  poweredByHeader: false,
+  // Optimisation du chargement
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['@fortawesome/free-solid-svg-icons', '@fortawesome/free-brands-svg-icons'],
+  },
 };
 
 // Configuration Sentry avancée

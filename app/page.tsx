@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { CardContainer } from "@/components/card-container"
 import { JotaiProvider } from "./jotai-provider"
-import AuthModal from "@/components/auth-modal"
+import { LazyAuthModal } from "@/components/lazy-components"
 import { useSupabase } from "@/context/supabase-provider"
 
 export default function Home() {
@@ -112,7 +112,7 @@ export default function Home() {
             </>
           )}
         </main>
-        <AuthModal 
+        <LazyAuthModal 
           isOpen={isAuthModalOpen} 
           onClose={() => setIsAuthModalOpen(false)} 
         />

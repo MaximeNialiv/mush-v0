@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import ReactPlayer from "react-player/lazy"
 import { extractYouTubeVideoId, extractSpotifyId } from "@/utils/media-utils"
+import { OptimizedImage } from "./optimized-image"
 
 interface MediaPlayerProps {
   url: string
@@ -88,15 +89,15 @@ export function MediaPlayer({ url, title }: MediaPlayerProps) {
           onClick={() => setHasClicked(true)}
         >
           <div className="aspect-video w-full">
-            <img
+            <OptimizedImage
               src={thumbnailUrl || "/placeholder.svg"}
               alt={title || "Vignette YouTube"}
-              width="640"
-              height="360"
-              loading="lazy"
-              decoding="async"
+              width={640}
+              height={360}
               className="w-full h-full object-cover"
-              fetchpriority="high"
+              priority={true}
+              quality={85}
+              fallbackSrc="/placeholder.svg?height=360&width=640"
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">

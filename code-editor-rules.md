@@ -163,9 +163,10 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Suppression de `recharts` (bibliothèque de graphiques non utilisée)
    - Suppression de `embla-carousel-react` (carrousel non utilisé)
    - Réduction progressive des dépendances Radix UI en faveur de composants Tailwind
+   - Remplacement de `lucide-react` par `@fortawesome/react-fontawesome` pour les icônes
 
 2. **Purge des Composants Non Utilisés**:
-   - Suppression des composants UI non utilisés: Calendar, Carousel, Chart, Hover Card, Menubar, Navigation Menu, Progress, Slider, Toggle Group, Context Menu, Popover
+   - Suppression des composants UI non utilisés: Calendar, Carousel, Chart, Hover Card, Menubar, Navigation Menu, Progress, Slider, Toggle Group, Context Menu, Popover, Accordion
    - Conservation uniquement des composants activement utilisés dans l'application
    - Réduction significative de la taille du bundle JavaScript
 
@@ -175,30 +176,55 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Utilisation des classes Tailwind existantes pour maintenir la cohérence visuelle
    - Réduction des dépendances JavaScript tout en conservant l'esthétique
 
-3. **Optimisation des Prévisualisations de Liens**:
+4. **Optimisation des Prévisualisations de Liens**:
    - Remplacement de l'API Microlink (captures d'écran complètes) par des métadonnées OpenGraph
    - Création d'une API serverless `/api/og-metadata` pour extraire les métadonnées
    - Utilisation de `node-html-parser` pour l'extraction légère des métadonnées
    - Gestion spécifique des liens YouTube pour optimiser le chargement
 
-4. **Optimisation des Images**:
+5. **Optimisation des Images**:
+   - Création d'un composant `OptimizedImage` utilisant Next.js Image pour les images locales
    - Ajout de l'attribut `loading="lazy"` sur toutes les images de l'application
    - Ajout de l'attribut `decoding="async"` pour les images importantes
    - Spécification des dimensions (`width` et `height`) pour réduire le CLS (Cumulative Layout Shift)
-   - Optimisation des images dans les composants: open-graph-preview, card-item, media-player, tweet
-   - Gestion des erreurs de chargement avec des fallbacks appropriés
+   - Optimisation des images dans les composants: open-graph-preview, card-item, media-player
+   - Gestion des erreurs de chargement avec des placeholders appropriés
+   - Configuration des formats d'image modernes (WebP, AVIF) dans next.config.js
+
+### Techniques d'Optimisation Avancées
+
+1. **Lazy Loading des Composants**:
+   - Création d'un fichier `components/lazy-components.tsx` pour centraliser les imports dynamiques
+   - Chargement paresseux des composants non critiques: AuthModal, Quiz, MediaPlayer, OpenGraphPreview, ComposeBox
+   - Utilisation de `next/dynamic` avec `{ ssr: false }` pour les composants client-side uniquement
+   - Implémentation de fallbacks visuels pendant le chargement
+
+2. **Configuration Next.js Optimisée**:
+   - Activation de `swcMinify` pour une minification plus efficace
+   - Suppression des console.log en production avec `compiler.removeConsole`
+   - Activation de la compression avec `compress: true`
+   - Désactivation de l'en-tête `X-Powered-By` avec `poweredByHeader: false`
+   - Optimisation CSS avec `experimental.optimizeCss`
+   - Optimisation des imports de packages avec `experimental.optimizePackageImports`
+
+3. **Stratégies de Mise en Cache**:
+   - Configuration des en-têtes de cache pour les ressources statiques
+   - Mise en cache des métadonnées OpenGraph avec des durées appropriées
+   - Utilisation de `minimumCacheTTL` pour les images dans next.config.js
 
 ### Bonnes Pratiques d'Optimisation
 
 1. **Lazy Loading**:
    - Charger les composants et les données à la demande
-   - Utiliser `React.lazy()` et `Suspense` pour les composants volumineux
+   - Utiliser `next/dynamic` pour les imports dynamiques
    - Implémenter l'attribut `loading="lazy"` sur toutes les images
+   - Prioriser les ressources critiques avec `fetchpriority="high"`
 
 2. **Réduction de la Taille du Bundle**:
    - Éviter les bibliothèques volumineuses non essentielles
    - Utiliser des imports dynamiques pour le code rarement utilisé
    - Analyser régulièrement la taille du bundle avec des outils comme `next/bundle-analyzer`
+   - Supprimer les dépendances inutilisées du fichier package.json
 
 3. **Optimisation du Rendu**:
    - Utiliser `React.memo` pour les composants qui reçoivent souvent les mêmes props
