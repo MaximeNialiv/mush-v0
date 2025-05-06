@@ -163,7 +163,10 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Suppression de `recharts` (bibliothèque de graphiques non utilisée)
    - Suppression de `embla-carousel-react` (carrousel non utilisé)
    - Réduction progressive des dépendances Radix UI en faveur de composants Tailwind
-   - Remplacement de `lucide-react` par `@fortawesome/react-fontawesome` pour les icônes
+   - Remplacement complet de `lucide-react` par `@fortawesome/react-fontawesome` pour les icônes
+     - Migration des icônes `Eye` et `EyeOff` vers `faEye` et `faEyeSlash`
+     - Migration de `Loader2` vers `faSpinner` avec animation
+     - Utilisation d'alias pour les icônes non disponibles directement (ex: `faBars as faPanelLeft`)
 
 2. **Purge des Composants Non Utilisés**:
    - Suppression des composants UI non utilisés: Calendar, Carousel, Chart, Hover Card, Menubar, Navigation Menu, Progress, Slider, Toggle Group, Context Menu, Popover, Accordion
@@ -211,6 +214,20 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Configuration des en-têtes de cache pour les ressources statiques
    - Mise en cache des métadonnées OpenGraph avec des durées appropriées
    - Utilisation de `minimumCacheTTL` pour les images dans next.config.js
+
+4. **Correction des Erreurs de Build**:
+   - Résolution des erreurs d'importation d'icônes Font Awesome manquantes
+     - Remplacement de `faCommentSquare` par `faSquare`
+     - Remplacement de `faSignOutAlt` par `faRightFromBracket`
+     - Remplacement de `faTimes` par `faXmark`
+     - Remplacement de `faEllipsisV` par `faEllipsisVertical`
+     - Création d'alias pour les icônes non disponibles
+   - Correction des importations dynamiques dans `lazy-components.tsx`
+     - Utilisation des noms d'exportation corrects au lieu de `default`
+     - Mise à jour des interfaces de props pour correspondre aux implémentations
+   - Installation des dépendances manquantes
+     - `critters` pour l'optimisation CSS
+     - `@radix-ui/react-accordion` et autres composants Radix UI
 
 ### Bonnes Pratiques d'Optimisation
 

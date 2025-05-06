@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useSupabase } from "@/utils/supabase/client"
 import * as Sentry from "@sentry/nextjs"
-import { Loader2 } from "lucide-react"
+import { Icon } from "@/components/ui/icon"
 
 export default function FolderPage() {
   const params = useParams()
@@ -112,7 +112,7 @@ export default function FolderPage() {
         <Header />
         <main className="flex-1 container mx-auto p-4 pb-8 max-w-5xl">
           <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-8 w-8 animate-spin text-mush-green" />
+            <Icon icon="spinner" className="h-8 w-8 animate-spin text-mush-green" />
             <span className="ml-2 text-mush-green">Chargement du dossier...</span>
           </div>
         </main>

@@ -7,10 +7,12 @@ type AuthModalProps = {
   onClose: () => void;
 };
 
+// Mise à jour pour correspondre à l'interface du composant Quiz
 type QuizProps = {
-  data: any;
-  cardId?: string;
+  content: any;
+  cardId: string;
   onComplete?: (points: number) => void;
+  onClose?: () => void;
 };
 
 type MediaPlayerProps = {
@@ -24,9 +26,7 @@ type OpenGraphPreviewProps = {
 };
 
 type ComposeBoxProps = {
-  onSubmit: (content: string) => void;
-  placeholder?: string;
-  className?: string;
+  onTweet: (tweet: string) => void;
 };
 
 // Lazy-loaded components with loading fallbacks
@@ -39,30 +39,29 @@ export const LazyAuthModal = dynamic<AuthModalProps>(
 );
 
 export const LazyQuiz = dynamic<QuizProps>(
-  () => import('./quiz').then(mod => mod.default || mod),
+  () => import('./quiz').then(mod => mod.Quiz),
   {
     loading: () => <div className="w-full p-4 rounded-md border border-border bg-card"><div className="h-4 w-3/4 bg-muted rounded animate-pulse mb-2"></div><div className="h-4 w-1/2 bg-muted rounded animate-pulse"></div></div>,
   }
 );
 
 export const LazyMediaPlayer = dynamic<MediaPlayerProps>(
-  () => import('./media-player').then(mod => mod.default || mod),
+  () => import('./media-player').then(mod => mod.MediaPlayer),
   {
     loading: () => <div className="w-full aspect-video bg-muted rounded-md flex items-center justify-center"><div className="animate-pulse h-12 w-12 rounded-full bg-background/50"></div></div>,
-    ssr: false, // Désactiver le SSR pour éviter les problèmes avec les API du navigateur
   }
 );
 
 export const LazyOpenGraphPreview = dynamic<OpenGraphPreviewProps>(
-  () => import('./open-graph-preview').then(mod => mod.default || mod),
+  () => import('./open-graph-preview').then(mod => mod.OpenGraphPreview),
   {
-    loading: () => <div className="w-full p-4 border rounded-md border-border"><div className="h-4 w-3/4 bg-muted rounded animate-pulse mb-2"></div><div className="h-20 bg-muted rounded animate-pulse"></div></div>,
+    loading: () => <div className="w-full aspect-video bg-muted rounded-md animate-pulse"></div>,
   }
 );
 
 export const LazyComposeBox = dynamic<ComposeBoxProps>(
-  () => import('./compose-box').then(mod => mod.default || mod),
+  () => import('./compose-box').then(mod => mod.ComposeBox),
   {
-    loading: () => <div className="w-full p-4 border rounded-md border-border bg-card"><div className="h-24 bg-muted rounded animate-pulse"></div></div>,
+    loading: () => <div className="w-full p-4 rounded-md border border-border bg-card"><div className="h-4 w-full bg-muted rounded animate-pulse"></div></div>,
   }
 );

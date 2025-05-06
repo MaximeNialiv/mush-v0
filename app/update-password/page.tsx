@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff } from "lucide-react"
+import { Icon } from "@/components/ui/icon"
 import { useSupabase } from "@/context/supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -108,7 +108,7 @@ export default function UpdatePasswordPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <Icon icon="eye-slash" size="sm" /> : <Icon icon="eye" size="sm" />}
                     </button>
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export default function UpdatePasswordPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showConfirmPassword ? <Icon icon="eye-slash" size="sm" /> : <Icon icon="eye" size="sm" />}
                     </button>
                   </div>
                 </div>

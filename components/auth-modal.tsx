@@ -342,7 +342,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <Icon icon="EyeOff" size="sm" /> : <Icon icon="Eye" size="sm" />}
+                    {showPassword ? <Icon icon="eye-slash" size="sm" /> : <Icon icon="eye" size="sm" />}
                   </button>
                 </div>
               </div>
@@ -363,7 +363,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showConfirmPassword ? <Icon icon="eye-slash" size="sm" /> : <Icon icon="eye" size="sm" />}
                   </button>
                 </div>
               </div>
@@ -445,7 +445,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <Icon icon="EyeOff" size="sm" /> : <Icon icon="Eye" size="sm" />}
+                    {showPassword ? <Icon icon="eye-slash" size="sm" /> : <Icon icon="eye" size="sm" />}
                   </button>
                 </div>
               </div>
