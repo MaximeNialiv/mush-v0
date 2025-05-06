@@ -166,7 +166,10 @@ Mush est une application de cartes d'apprentissage avec une structure arborescen
    - Remplacement complet de `lucide-react` par `@fortawesome/react-fontawesome` pour les icônes
      - Migration des icônes `Eye` et `EyeOff` vers `faEye` et `faEyeSlash`
      - Migration de `Loader2` vers `faSpinner` avec animation
+     - Migration de `Grid` vers `faTableCells` pour l'affichage en grille
+     - Migration de `Play` vers `faPlay` pour les prévisualisations vidéo
      - Utilisation d'alias pour les icônes non disponibles directement (ex: `faBars as faPanelLeft`)
+     - Correction des mappings dupliqués pour éviter les erreurs TypeScript
 
 2. **Purge des Composants Non Utilisés**:
    - Suppression des composants UI non utilisés: Calendar, Carousel, Chart, Hover Card, Menubar, Navigation Menu, Progress, Slider, Toggle Group, Context Menu, Popover, Accordion

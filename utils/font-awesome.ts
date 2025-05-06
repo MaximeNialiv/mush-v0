@@ -130,7 +130,6 @@ export const iconMapping = {
   Share: 'share',
   Loader2: 'spinner',
   LogOut: 'sign-out-alt',
-  Grid: 'th',
   List: 'list',
   
   // Feedback et validation
